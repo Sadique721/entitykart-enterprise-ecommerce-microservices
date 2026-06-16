@@ -56,7 +56,7 @@
                 </a>
                 
                 <!-- Backend Environment Selector -->
-                <div class="backend-selector-wrapper" ng-if="!isMobileWebView()">
+                <div class="backend-selector-wrapper">
                     <button class="btn btn-backend-selector" ng-click="toggleBackendMenu()" ng-class="{'docker-mode': getActivePort() === '9080', 'local-mode': getActivePort() === '9901'}">
                         <i class="fa-solid" ng-class="{'fa-cubes': getActivePort() === '9080', 'fa-laptop-code': getActivePort() === '9901'}"></i>
                         <span>{{ getActivePort() === '9080' ? 'Docker API' : 'Local API' }}</span>

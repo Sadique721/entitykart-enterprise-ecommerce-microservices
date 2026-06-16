@@ -9,8 +9,14 @@ app.constant('API_BASE', (function() {
         var protocol = window.location.protocol;
         var host = window.location.hostname;
         
-        // Mobile WebView / APK context: always auto-select from bridge or default fallback
+        var savedIp = localStorage.getItem('API_IP');
+        var savedPort = localStorage.getItem('API_PORT') || '9080';
+
+        // Mobile WebView / APK context: check localStorage custom IP first
         if (protocol === 'file:' || (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function')) {
+            if (savedIp && savedIp !== 'localhost' && savedIp !== '127.0.0.1' && savedIp.trim() !== '') {
+                return 'http://' + savedIp.trim() + ':' + savedPort;
+            }
             if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
                 return window.AndroidBridge.getApiBase();
             }

@@ -658,6 +658,7 @@
   ✅ Enhanced Product catalog with Available/Unavailable status tracking and Edit/Delete controls.
   ✅ Integrated Payments History and Reviews Moderation tabs (CRUD for reviews) on frontend.
   ✅ Updated user-service and product-service with update/delete mapping methods and count metrics.
+  ✅ Exposed Backend Environment Selector / Dynamic IP Selector on mobile webview and fixed localStorage IP retrieval logic to support seamless connection over local shared network without rebuilds.
 
   [2026-06-16] v1.0.0
   ─────────────────────────────────────────────────────────────
