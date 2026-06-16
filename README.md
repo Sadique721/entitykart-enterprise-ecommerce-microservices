@@ -11,6 +11,8 @@
   <img src="https://img.shields.io/badge/AngularJS-E23237?style=for-the-badge&logo=angularjs&logoColor=white">
   <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white">
   <img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white">
+  <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white">
+  <img src="https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white">
 </p>
 
 <p align="center">
@@ -90,8 +92,10 @@ flowchart TB
 - ⭐ **Reviews & Ratings** – Write/edit/delete reviews, rating statistics
 - ↩️ **Returns & Refunds** – Request return, admin approval, automated refund
 - 📧 **Notifications** – Email via Gmail SMTP (Kafka-driven, async)
-- 👑 **Admin Panel** – Manage products, orders, payments, returns, reviews
+- 👑 **Admin Panel** – Manage products, orders, payments, returns, reviews, export reports (Excel & Word)
+- 🖼️ **Cloudinary Media Upload** – Upload product images directly from admin panel to Cloudinary CDN
 - 📱 **Android App** – Native WebView wrapper (Kotlin + Jetpack Compose)
+- 🦋 **Flutter App** – Cross-platform WebView wrapper (Flutter + webview_flutter)
 
 ---
 
@@ -186,7 +190,7 @@ Entitykart/
 ├── discovery-server/            # Eureka server (port 9900 local)
 ├── api-gateway/                 # Spring Cloud Gateway (port 9901 local)
 ├── user-service/                # Users, JWT auth (port 9902 local)
-├── product-service/             # Products, categories, GraphQL (port 9903 local)
+├── product-service/             # Products, categories, GraphQL, Cloudinary upload (port 9903 local)
 ├── cart-service/                # Cart, checkout events (port 9904 local)
 ├── order-service/               # Orders, status (port 9905 local)
 ├── payment-service/             # Payments, Authorize.Net (port 9906 local)
@@ -209,9 +213,18 @@ Entitykart/
 │       │   └── MainActivity.kt  # WebView entry point
 │       └── res/xml/
 │           └── network_security_config.xml
+├── flutter/                     # Flutter WebView Client (Cross-platform wrapper)
+│   ├── lib/
+│   │   ├── main.dart            # MaterialApp entry point
+│   │   └── webview_screen.dart  # WebViewWidget + AndroidBridge injection
+│   ├── assets/                  # Frontend files for Flutter assets bundle
+│   ├── android/                 # Android Gradle configs for Flutter
+│   └── pubspec.yaml             # Flutter dependencies
 ├── docker-compose.yml           # Full stack orchestration
+├── metadata.json                # Project metadata & build information
 ├── .env                         # Environment variables (DO NOT COMMIT)
 ├── HOW_TO_START.txt             # Step-by-step startup guide
+├── app-debug.apk                # Pre-compiled debug APK (ready to install)
 └── README.md
 ```
 
@@ -289,13 +302,20 @@ Open: `http://localhost:3000`
 
 ---
 
-## 📱 Android APK
+## 📱 Mobile Applications
 
-The Android app wraps the AngularJS frontend in a **WebView**.
+### Native Android App (Kotlin + WebView)
+
+The Android app wraps the AngularJS frontend in a **WebView** with a native Kotlin bridge.
 
 **APK Location (after build):**
 ```
 android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+**Pre-compiled APK (ready to install):**
+```
+Entitykart/app-debug.apk          # Root workspace copy
 ```
 
 **Build command:**
@@ -304,9 +324,38 @@ cd android
 .\gradlew assembleDebug
 ```
 
-**For physical device:** Update `BACKEND_API_BASE` in `MainActivity.kt` to your PC's LAN IP:
-```kotlin
-private val BACKEND_API_BASE = "http://192.168.1.YOUR_IP:9901"
+**For physical device:** Use the in-app Dynamic IP Selector (top-right environment menu) to enter your PC's LAN IP. No code changes needed.
+
+### Flutter WebView Client (Cross-platform)
+
+A complete Flutter-based wrapper is available in `flutter/` directory.
+
+**Build command:**
+```bash
+cd flutter
+flutter build apk --debug
+```
+
+> **Note:** Flutter SDK must be installed separately. A pre-compiled APK is staged at `flutter/build/app/outputs/flutter-apk/app-debug.apk`.
+
+---
+
+## 🖼️ Cloudinary Image Upload
+
+Product images can be uploaded directly from the **Admin Panel → Add Product** modal:
+
+1. Click **"Or Upload Product Image to Cloudinary"** file selector
+2. Select an image file (max 10MB)
+3. The image uploads automatically to Cloudinary CDN
+4. A preview is displayed and the URL auto-fills into the product form
+
+**Backend endpoint:** `POST /api/products/upload-image` (multipart/form-data)
+
+**Configuration** (via environment variables):
+```
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 ---
@@ -354,10 +403,12 @@ jobs:
 - Kubernetes deployment with Helm charts
 - Redis caching for product catalogue
 - Elasticsearch + Kibana for search & analytics
-- GraphQL federation
+- GraphQL federation across services
 - AI‑based product recommendation engine
 - WebSocket live order tracking
-- iOS app
+- iOS native app (SwiftUI)
+- Multi-vendor marketplace support
+- Payment gateway diversification (Stripe, Razorpay)
 
 ---
 

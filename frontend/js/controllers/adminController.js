@@ -94,6 +94,35 @@ app.controller('adminController', [
             $scope.showAddProductModal = false;
         };
 
+        $scope.uploadProductImageFile = function(element) {
+            var file = element.files[0];
+            if (!file) return;
+            productService.uploadProductImage(file).then(function(url) {
+                $scope.newProduct.mainImageURL = url;
+                $scope.$emit('showToast', {
+                    title: 'Image Uploaded',
+                    message: 'Product image successfully uploaded to Cloudinary.',
+                    type: 'success'
+                });
+                if (!$scope.$$phase) {
+                    $scope.$apply();
+                }
+            }).catch(function(err) {
+                var errorMsg = 'Failed to upload image.';
+                if (err && err.data) {
+                    errorMsg = err.data.error || err.data.message || errorMsg;
+                }
+                $scope.$emit('showToast', {
+                    title: 'Upload Failed',
+                    message: errorMsg,
+                    type: 'error'
+                });
+                if (!$scope.$$phase) {
+                    $scope.$apply();
+                }
+            });
+        };
+
         $scope.addProductSubmit = function() {
             // Generate mock SKU if none provided
             if (!$scope.newProduct.sku) {

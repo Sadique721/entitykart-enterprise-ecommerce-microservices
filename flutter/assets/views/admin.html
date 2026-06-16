@@ -611,6 +611,16 @@
                         <label>Product Image URL (Optional)</label>
                         <input type="url" class="form-control" ng-model="newProduct.mainImageURL" placeholder="http://example.com/image.jpg">
                     </div>
+                    <div class="form-group">
+                        <label>Or Upload Product Image to Cloudinary</label>
+                        <input type="file" class="form-control" onchange="angular.element(this).scope().uploadProductImageFile(this)" accept="image/*">
+                    </div>
+                    <div class="form-group" ng-if="newProduct.mainImageURL">
+                        <label>Image Preview</label>
+                        <div style="margin-top: 0.5rem; text-align: center;">
+                            <img ng-src="{{newProduct.mainImageURL}}" alt="Product Image" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary-glass" ng-click="closeProductModal()">Cancel</button>

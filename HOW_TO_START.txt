@@ -582,4 +582,90 @@
 
   3. Native Android Build Output Path:
      d:\Temp\MKEG\Entitykart\android\app\build\outputs\apk\debug\app-debug.apk
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 6 – CLOUDINARY IMAGE UPLOAD CONFIGURATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Cloudinary is used for product image uploads from the Admin Panel.
+  
+  REQUIRED ENVIRONMENT VARIABLES:
+  ┌───────────────────────────────────────────────────────────┐
+  │  CLOUDINARY_CLOUD_NAME = your_cloud_name                 │
+  │  CLOUDINARY_API_KEY    = your_api_key                    │
+  │  CLOUDINARY_API_SECRET = your_api_secret                 │
+  └───────────────────────────────────────────────────────────┘
+
+  These are already defined in the .env file at project root.
+
+  HOW IT WORKS:
+  ─────────────────────────────────────────────────────────────
+  1. Admin Panel → "Add Product" modal → "Upload Product Image to Cloudinary"
+  2. Select image file (max 10MB, supports jpg/png/webp/gif)
+  3. Frontend sends file via multipart POST to: /api/products/upload-image
+  4. product-service receives it via CloudinaryService → uploads to Cloudinary CDN
+  5. Returns the secure HTTPS URL → auto-populates into the product imageUrl field
+  6. Image preview is displayed in the modal before saving
+
+  BACKEND FILES:
+  ─────────────────────────────────────────────────────────────
+  Config : product-service/src/main/java/.../config/CloudinaryConfig.java
+  Service: product-service/src/main/java/.../service/CloudinaryService.java
+  API    : product-service/src/main/java/.../controller/ProductController.java
+           → POST /api/products/upload-image (multipart/form-data)
+
+  FRONTEND FILES (all 3 copies – Web, Android assets, Flutter assets):
+  ─────────────────────────────────────────────────────────────
+  Service   : js/services/productService.js → uploadProductImage()
+  Controller: js/controllers/adminController.js → uploadProductImageFile()
+  View      : views/admin.html → file input + preview section
+
+  DEPENDENCY (product-service build.gradle.kts):
+  ─────────────────────────────────────────────────────────────
+  implementation("com.cloudinary:cloudinary-http44:1.36.0")
+
+  CLOUDINARY DASHBOARD:
+  ─────────────────────────────────────────────────────────────
+  Sign up / manage at: https://cloudinary.com/console
+  All uploaded images are stored in: entitykart/products/ folder
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PROJECT METADATA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  A complete machine-readable metadata file is available at:
+  d:\Temp\MKEG\Entitykart\metadata.json
+
+  It contains:
+  • Project info, version, and author details
+  • All 11 microservice configurations (ports, databases, descriptions)
+  • Kafka topic-producer-consumer mappings
+  • Feign client inter-service dependency map
+  • Frontend client configurations (Web, Android, Flutter)
+  • Cloudinary integration details
+  • Admin feature inventory
+  • Security features list
+  • Full environment variable reference
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CHANGELOG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [2026-06-16] v1.0.0
+  ─────────────────────────────────────────────────────────────
+  ✅ Integrated Cloudinary SDK (cloudinary-http44:1.36.0) into product-service
+  ✅ Added CloudinaryConfig.java and CloudinaryService.java
+  ✅ Added POST /api/products/upload-image endpoint to ProductController
+  ✅ Updated frontend (Web + Android assets + Flutter assets):
+     - productService.js → uploadProductImage()
+     - adminController.js → uploadProductImageFile()
+     - admin.html → file input + image preview UI
+  ✅ Updated .env with CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+  ✅ Rebuilt Android APK with updated frontend assets
+  ✅ Created metadata.json with complete project metadata
+  ✅ Updated README.md with Cloudinary section, Flutter section, updated badges
+  ✅ Updated HOW_TO_START.txt with Cloudinary setup instructions
+
+================================================================================
+  END OF GUIDE – Happy Coding! 🚀
 ================================================================================

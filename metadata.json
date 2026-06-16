@@ -1,0 +1,227 @@
+{
+  "project": {
+    "name": "EntityKart",
+    "displayName": "EntityKart – Enterprise E-commerce Microservices Platform",
+    "description": "A cloud-native, microservices-based e-commerce platform built with Java 17, Spring Boot 3, Spring Cloud, Apache Kafka, and Docker. Features a responsive AngularJS SPA frontend, native Android and Flutter mobile clients, Cloudinary media storage, and full CI/CD with GitHub Actions.",
+    "version": "1.0.0",
+    "license": "MIT",
+    "repository": "https://github.com/Sadique721/entitykart-enterprise-ecommerce-microservices",
+    "homepage": "https://github.com/Sadique721/entitykart-enterprise-ecommerce-microservices#readme"
+  },
+  "author": {
+    "name": "Md Sadique Amin",
+    "email": "mdsadiqueamin721786@gmail.com",
+    "github": "https://github.com/Sadique721",
+    "linkedin": "https://www.linkedin.com/in/md-sadique-amin-b6a948198/"
+  },
+  "build": {
+    "lastBuildDate": "2026-06-16T15:50:00Z",
+    "javaVersion": "17",
+    "springBootVersion": "3.3.4",
+    "springCloudVersion": "2023.0.3",
+    "gradleVersion": "9.3.0",
+    "kotlinVersion": "2.0.21",
+    "angularjsVersion": "1.8.3",
+    "androidCompileSdk": 36,
+    "androidMinSdk": 24,
+    "androidTargetSdk": 36,
+    "flutterMinSdk": "3.0.0",
+    "dockerComposeVersion": "3.8"
+  },
+  "architecture": {
+    "type": "Microservices",
+    "serviceDiscovery": "Netflix Eureka",
+    "apiGateway": "Spring Cloud Gateway",
+    "messaging": "Apache Kafka (with Zookeeper)",
+    "database": "MySQL 8 (Local / Aiven Cloud)",
+    "orm": "Spring Data JPA / Hibernate",
+    "security": "JWT (validated at API Gateway)",
+    "mediaStorage": "Cloudinary (cloudinary-http44 SDK)",
+    "paymentGateway": "Authorize.Net (sandbox)",
+    "emailService": "Gmail SMTP (Kafka-driven async)",
+    "containerization": "Docker & Docker Compose",
+    "cicd": "GitHub Actions"
+  },
+  "microservices": [
+    {
+      "name": "discovery-server",
+      "description": "Netflix Eureka Service Registry",
+      "localPort": 9900,
+      "dockerHostPort": 9876,
+      "dockerContainerPort": 8761,
+      "database": null
+    },
+    {
+      "name": "api-gateway",
+      "description": "Spring Cloud Gateway with JWT validation and route filtering",
+      "localPort": 9901,
+      "dockerHostPort": 9080,
+      "dockerContainerPort": 8080,
+      "database": null
+    },
+    {
+      "name": "user-service",
+      "description": "User registration, authentication, JWT token generation, profile management",
+      "localPort": 9902,
+      "dockerHostPort": 9081,
+      "dockerContainerPort": 8081,
+      "database": "user_service"
+    },
+    {
+      "name": "product-service",
+      "description": "Product catalog, categories, sub-categories, inventory, GraphQL, Cloudinary image upload",
+      "localPort": 9903,
+      "dockerHostPort": 9082,
+      "dockerContainerPort": 8082,
+      "database": "product_service"
+    },
+    {
+      "name": "cart-service",
+      "description": "Shopping cart operations, quantity management, checkout event publishing",
+      "localPort": 9904,
+      "dockerHostPort": 9083,
+      "dockerContainerPort": 8083,
+      "database": "cart_service"
+    },
+    {
+      "name": "order-service",
+      "description": "Order creation, status tracking, cancellation, order history",
+      "localPort": 9905,
+      "dockerHostPort": 9084,
+      "dockerContainerPort": 8084,
+      "database": "order_service"
+    },
+    {
+      "name": "payment-service",
+      "description": "Authorize.Net payment processing, COD, UPI, refund management",
+      "localPort": 9906,
+      "dockerHostPort": 9085,
+      "dockerContainerPort": 8085,
+      "database": "payment_service"
+    },
+    {
+      "name": "wishlist-service",
+      "description": "Wishlist CRUD operations with product service integration",
+      "localPort": 9907,
+      "dockerHostPort": 9086,
+      "dockerContainerPort": 9086,
+      "database": "wishlist_service"
+    },
+    {
+      "name": "review-service",
+      "description": "Product reviews and ratings, statistics, admin report exports (Excel & Word)",
+      "localPort": 9908,
+      "dockerHostPort": 9087,
+      "dockerContainerPort": 8087,
+      "database": "review_service"
+    },
+    {
+      "name": "return-service",
+      "description": "Return requests, admin approval workflow, automated refund processing",
+      "localPort": 9909,
+      "dockerHostPort": 9088,
+      "dockerContainerPort": 8088,
+      "database": "return_service"
+    },
+    {
+      "name": "notification-service",
+      "description": "Kafka consumer for async email notifications via Gmail SMTP, admin report dispatch",
+      "localPort": 9910,
+      "dockerHostPort": 9089,
+      "dockerContainerPort": 8089,
+      "database": "notification_service"
+    }
+  ],
+  "kafkaTopics": [
+    { "topic": "user-events", "producer": "user-service", "consumers": ["notification-service"] },
+    { "topic": "cart-checkout-events", "producer": "cart-service", "consumers": ["order-service"] },
+    { "topic": "order-events", "producer": "order-service", "consumers": ["payment-service", "notification-service"] },
+    { "topic": "payment-events", "producer": "payment-service", "consumers": ["notification-service"] },
+    { "topic": "return-events", "producer": "return-service", "consumers": ["notification-service"] }
+  ],
+  "feignClientMap": [
+    { "consumer": "cart-service", "provider": "product-service", "purpose": "Validate product price/stock before adding to cart" },
+    { "consumer": "order-service", "provider": "product-service", "purpose": "Get product info during order creation" },
+    { "consumer": "order-service", "provider": "user-service", "purpose": "Fetch customer details for order enrichment" },
+    { "consumer": "wishlist-service", "provider": "product-service", "purpose": "Validate product existence for wishlist" },
+    { "consumer": "review-service", "provider": "order-service", "purpose": "Verify purchase before allowing review" },
+    { "consumer": "payment-service", "provider": "order-service", "purpose": "Fetch order details for payment processing" },
+    { "consumer": "return-service", "provider": "payment-service", "purpose": "Trigger refund on return approval" },
+    { "consumer": "return-service", "provider": "order-service", "purpose": "Validate order exists for return request" }
+  ],
+  "frontendClients": [
+    {
+      "name": "Web Frontend",
+      "technology": "AngularJS 1.8 SPA",
+      "path": "frontend/",
+      "devServer": "lite-server / http-server",
+      "devPort": 3000,
+      "description": "Responsive glassmorphic dark-mode SPA with Bootstrap 5, Font Awesome icons"
+    },
+    {
+      "name": "Native Android App",
+      "technology": "Kotlin + Jetpack Compose + WebView",
+      "path": "android/",
+      "appId": "com.entitykart.app",
+      "minSdk": 24,
+      "targetSdk": 36,
+      "apkOutput": "android/app/build/outputs/apk/debug/app-debug.apk",
+      "description": "Hybrid WebView wrapper with native Kotlin bridge for API URL injection"
+    },
+    {
+      "name": "Flutter WebView Client",
+      "technology": "Flutter + webview_flutter + shared_preferences",
+      "path": "flutter/",
+      "appId": "com.entitykart.app",
+      "apkOutput": "flutter/build/app/outputs/flutter-apk/app-debug.apk",
+      "description": "Cross-platform WebView wrapper with dynamic API bridge injection"
+    }
+  ],
+  "cloudinaryIntegration": {
+    "service": "product-service",
+    "sdkDependency": "com.cloudinary:cloudinary-http44:1.36.0",
+    "uploadEndpoint": "POST /api/products/upload-image",
+    "maxFileSize": "10MB",
+    "storageFolder": "entitykart/products",
+    "configClass": "com.entitykart.productservice.config.CloudinaryConfig",
+    "serviceClass": "com.entitykart.productservice.service.CloudinaryService",
+    "envVariables": [
+      "CLOUDINARY_CLOUD_NAME",
+      "CLOUDINARY_API_KEY",
+      "CLOUDINARY_API_SECRET"
+    ]
+  },
+  "adminFeatures": [
+    "Product CRUD (Create, Read, Update, Delete)",
+    "Category & Sub-category management",
+    "Order status management (PLACED → SHIPPED → DELIVERED)",
+    "Return request approval / rejection workflow",
+    "Automated refund processing via payment-service",
+    "Review statistics dashboard (avg rating, distribution chart)",
+    "Report exports (Excel .xlsx & Word .doc) for Orders, Products, Users, Payments, Returns, Reviews, Wishlist",
+    "Email report dispatch to administrator mailboxes",
+    "Cloudinary product image upload with preview",
+    "Dev History & Plans tracker with interactive checklist"
+  ],
+  "securityFeatures": [
+    "JWT token-based authentication validated at API Gateway",
+    "Role-based access control (USER / ADMIN)",
+    "BCrypt password encryption",
+    "Android WebView hardened (no file access, HTTPS enforced except local dev)",
+    "Network Security Config restricts cleartext to dev IPs only",
+    "CORS configured at API Gateway level"
+  ],
+  "environmentVariables": {
+    "database": ["DB_HOST", "DB_PORT", "DB_USERNAME", "DB_PASSWORD"],
+    "security": ["JWT_SECRET"],
+    "email": ["MAIL_USERNAME", "MAIL_PASSWORD"],
+    "cloudinary": ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"],
+    "payment": ["AUTHORIZE_NET_API_LOGIN_ID", "AUTHORIZE_NET_TRANSACTION_KEY", "AUTHORIZE_NET_ENVIRONMENT"],
+    "application": ["APP_URL", "ADMIN_EMAIL"]
+  },
+  "apkOutputPaths": {
+    "workspaceRoot": "app-debug.apk",
+    "nativeAndroidBuild": "android/app/build/outputs/apk/debug/app-debug.apk",
+    "flutterStaged": "flutter/build/app/outputs/flutter-apk/app-debug.apk"
+  }
+}

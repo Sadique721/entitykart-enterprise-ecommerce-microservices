@@ -1,7 +1,7 @@
 /**
  * Product and Category Service
  */
-app.service('productService', ['apiService', '$q', function(apiService, $q) {
+app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function(apiService, $q, $http, API_BASE) {
     
     // A robust list of premium mock products in case API is empty/fails
     var mockProducts = [
@@ -278,5 +278,16 @@ app.service('productService', ['apiService', '$q', function(apiService, $q) {
                 newSub.categoryId = categoryId;
                 return newSub;
             });
+    };
+
+    this.uploadProductImage = function(file) {
+        var fd = new FormData();
+        fd.append('file', file);
+        return $http.post(API_BASE + '/api/products/upload-image', fd, {
+            transformRequest: angular.identity,
+            headers: {'Content-Type': undefined}
+        }).then(function(response) {
+            return response.data.url;
+        });
     };
 }]);

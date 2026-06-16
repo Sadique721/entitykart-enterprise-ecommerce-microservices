@@ -26,6 +26,7 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.kafka:spring-kafka")
     implementation("com.entitykart:common-service:1.0.0")
+    implementation("com.cloudinary:cloudinary-http44:1.36.0")
     runtimeOnly("com.mysql:mysql-connector-j")
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")

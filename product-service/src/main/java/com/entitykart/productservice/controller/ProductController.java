@@ -2,12 +2,18 @@ package com.entitykart.productservice.controller;
 
 import com.entitykart.productservice.dto.ProductDTO;
 import com.entitykart.productservice.service.ProductService;
+import com.entitykart.productservice.service.CloudinaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
@@ -15,10 +21,22 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final CloudinaryService cloudinaryService;
 
     @PostMapping
     public ProductDTO createProduct(@RequestBody ProductDTO productDTO) {
         return productService.createProduct(productDTO);
+    }
+
+    @PostMapping("/upload-image")
+    public ResponseEntity<Map<String, String>> uploadProductImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String url = cloudinaryService.uploadImage(file);
+            return ResponseEntity.ok(Map.of("url", url));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}")
