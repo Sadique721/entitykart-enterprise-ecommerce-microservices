@@ -1,0 +1,234 @@
+<div class="page-container" ng-init="initCheckout()">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fa fa-shield-halved"></i> Secure Checkout</h2>
+            <p class="text-secondary">Complete your order in 2 easy steps</p>
+        </div>
+    </div>
+
+    <!-- Step Progress -->
+    <div class="checkout-steps">
+        <div class="step" ng-class="{active: checkoutStep >= 1, done: checkoutStep > 1}">
+            <div class="step-circle"><i class="fa fa-location-dot"></i></div>
+            <span>Delivery Address</span>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" ng-class="{active: checkoutStep >= 2, done: checkoutStep > 2}">
+            <div class="step-circle"><i class="fa fa-credit-card"></i></div>
+            <span>Payment</span>
+        </div>
+    </div>
+
+    <div class="checkout-layout" style="margin-top: 2rem;">
+
+        <!-- Left Side: Address & Payment -->
+        <div>
+            <form ng-submit="submitCheckout()">
+
+                <!-- Step 1: Address Selection Panel -->
+                <div class="card-glass checkout-section" style="margin-bottom: 2rem;">
+                    <h3><i class="fa fa-location-dot text-accent"></i> Shipping Address</h3>
+
+                    <!-- Existing Addresses as Cards -->
+                    <div class="address-cards" ng-if="userAddresses.length > 0">
+                        <div class="address-card" ng-repeat="addr in userAddresses"
+                             ng-class="{selected: selectedAddressId == addr.id}"
+                             ng-click="selectedAddressId = addr.id">
+                            <div class="address-card-radio">
+                                <div class="radio-dot" ng-class="{active: selectedAddressId == addr.id}"></div>
+                            </div>
+                            <div class="address-card-info">
+                                <strong>{{ addr.fullName }}</strong>
+                                <span ng-if="addr.isDefault" class="badge-default">Default</span>
+                                <p>{{ addr.streetAddress }}, {{ addr.city }}</p>
+                                <p>{{ addr.state }} - {{ addr.zipCode }}</p>
+                                <p><i class="fa fa-phone"></i> {{ addr.phone }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" ng-if="userAddresses.length === 0">
+                        <i class="fa fa-circle-info"></i> No saved addresses found. Add a new one below.
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-secondary-glass btn-sm" ng-click="showAddAddressForm = !showAddAddressForm">
+                            <i class="fa" ng-class="showAddAddressForm ? 'fa-xmark' : 'fa-plus'"></i>
+                            {{ showAddAddressForm ? 'Cancel' : 'Add New Address' }}
+                        </button>
+                    </div>
+
+                    <!-- Add New Address Form -->
+                    <div ng-if="showAddAddressForm" class="add-address-form">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" class="form-control" ng-model="newAddress.fullName" placeholder="Recipient name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" class="form-control" ng-model="newAddress.phone" placeholder="+91 9876543210" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Street Address</label>
+                            <input type="text" class="form-control" ng-model="newAddress.streetAddress" placeholder="House No., Street, Area" required>
+                        </div>
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label>City</label>
+                                <input type="text" class="form-control" ng-model="newAddress.city" placeholder="City" required>
+                            </div>
+                            <div class="form-group">
+                                <label>State</label>
+                                <input type="text" class="form-control" ng-model="newAddress.state" placeholder="State" required>
+                            </div>
+                            <div class="form-group">
+                                <label>PIN Code</label>
+                                <input type="text" class="form-control" ng-model="newAddress.zipCode" placeholder="500001" maxlength="6" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary-gradient btn-sm" ng-click="addNewAddress()">
+                            <i class="fa fa-save"></i> Save Address
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Payment Details -->
+                <div class="card-glass checkout-section">
+                    <h3><i class="fa fa-credit-card text-accent"></i> Payment Information</h3>
+
+                    <!-- Payment Method Tabs -->
+                    <div class="payment-tabs">
+                        <button type="button" class="payment-tab" ng-class="{active: paymentMethod === 'card'}" ng-click="paymentMethod = 'card'">
+                            <i class="fa fa-credit-card"></i> Credit/Debit Card
+                        </button>
+                        <button type="button" class="payment-tab" ng-class="{active: paymentMethod === 'upi'}" ng-click="paymentMethod = 'upi'">
+                            <i class="fa fa-mobile-screen-button"></i> UPI
+                        </button>
+                        <button type="button" class="payment-tab" ng-class="{active: paymentMethod === 'cod'}" ng-click="paymentMethod = 'cod'">
+                            <i class="fa fa-money-bill"></i> Cash on Delivery
+                        </button>
+                    </div>
+
+                    <!-- Card Payment -->
+                    <div ng-if="paymentMethod === 'card'" class="payment-form">
+                        <div class="form-group">
+                            <label>Cardholder Name</label>
+                            <input type="text" class="form-control" ng-model="paymentData.cardName" placeholder="As on card" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Card Number</label>
+                            <div style="position: relative;">
+                                <input type="text" class="form-control" ng-model="paymentData.cardNumber"
+                                       placeholder="1234 5678 9012 3456" maxlength="19" required>
+                                <div class="card-brand-icons">
+                                    <i class="fa-brands fa-cc-visa"></i>
+                                    <i class="fa-brands fa-cc-mastercard"></i>
+                                    <i class="fa-brands fa-cc-amex"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Expiry Date</label>
+                                <input type="text" class="form-control" ng-model="paymentData.expiry" placeholder="MM/YY" maxlength="5" required>
+                            </div>
+                            <div class="form-group">
+                                <label>CVV / CVC <i class="fa fa-circle-question text-secondary"></i></label>
+                                <input type="password" class="form-control" ng-model="paymentData.cvv" placeholder="•••" maxlength="4" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UPI Payment -->
+                    <div ng-if="paymentMethod === 'upi'" class="payment-form">
+                        <div class="form-group">
+                            <label>UPI ID</label>
+                            <input type="text" class="form-control" ng-model="paymentData.upiId" placeholder="yourname@upi" required>
+                        </div>
+                        <div class="upi-apps">
+                            <div class="upi-app-btn" ng-click="paymentData.upiId = 'pay@gpay'">
+                                <i class="fa-brands fa-google-pay"></i> GPay
+                            </div>
+                            <div class="upi-app-btn" ng-click="paymentData.upiId = 'pay@phonepe'">
+                                PhonePe
+                            </div>
+                            <div class="upi-app-btn" ng-click="paymentData.upiId = 'pay@paytm'">
+                                Paytm
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COD -->
+                    <div ng-if="paymentMethod === 'cod'" class="payment-form">
+                        <div class="alert alert-info" style="margin: 0;">
+                            <i class="fa fa-circle-info"></i>
+                            <div>
+                                <strong>Cash on Delivery</strong>
+                                <p style="margin: 0.3rem 0 0;">Please keep exact change ready at the time of delivery. An additional ₹49 COD fee applies.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary-gradient btn-block btn-lg">
+                        <i class="fa fa-shield-halved"></i>
+                        Place Order Securely · ₹{{ (cartTotal * 1.18) | number:2 }}
+                    </button>
+                    <p class="text-secondary" style="text-align: center; margin-top: 1rem; font-size: 0.85rem;">
+                        <i class="fa fa-lock"></i> Your payment info is encrypted and secure
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Side: Order Review Summary -->
+        <div>
+            <div class="card-glass cart-summary" style="position: sticky; top: 5rem;">
+                <h3><i class="fa fa-receipt"></i> Order Review</h3>
+
+                <div style="max-height: 280px; overflow-y: auto; margin-bottom: 1.5rem;">
+                    <div class="checkout-item-row" ng-repeat="item in cartItems">
+                        <div class="checkout-item-img">
+                            <img ng-src="{{ item.mainImageURL }}" alt="{{ item.productName }}"
+                                 onerror="this.style.display='none'">
+                        </div>
+                        <div style="flex: 1;">
+                            <span class="checkout-item-name">{{ item.productName }}</span>
+                            <span class="text-secondary" style="font-size: 0.85rem; display: block;">Qty: {{ item.quantity }} × ₹{{ item.price | number:2 }}</span>
+                        </div>
+                        <span style="font-weight: 600; white-space: nowrap;">₹{{ item.subtotal | number:2 }}</span>
+                    </div>
+                </div>
+
+                <div class="summary-row">
+                    <span class="text-secondary">Subtotal</span>
+                    <span>₹{{ cartTotal | number:2 }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="text-secondary">Shipping</span>
+                    <span class="text-accent font-semibold">FREE</span>
+                </div>
+                <div class="summary-row">
+                    <span class="text-secondary">GST (18%)</span>
+                    <span>₹{{ (cartTotal * 0.18) | number:2 }}</span>
+                </div>
+                <hr class="summary-divider">
+                <div class="summary-row total">
+                    <span>Grand Total</span>
+                    <span class="price-now">₹{{ (cartTotal * 1.18) | number:2 }}</span>
+                </div>
+
+                <div class="trust-badges" style="margin-top: 1.5rem;">
+                    <span><i class="fa fa-shield-check text-accent"></i> 256-bit SSL</span>
+                    <span><i class="fa fa-rotate-left text-accent"></i> Easy Returns</span>
+                    <span><i class="fa fa-truck text-accent"></i> Free Shipping</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

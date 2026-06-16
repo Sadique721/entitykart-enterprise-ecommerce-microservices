@@ -1,0 +1,65 @@
+{
+  "title": "Entitykart Developer History & Implementation Plans",
+  "lastUpdated": "2026-06-16T13:35:00Z",
+  "phases": [
+    {
+      "id": 1,
+      "name": "Database Migration to Local MySQL",
+      "status": "Completed & Verified",
+      "badgeClass": "approved",
+      "date": "June 16, 2026",
+      "icon": "fa-database",
+      "description": "Transitioned application profiles and configuration defaults from cloud Aiven DB to local standalone MySQL environments.",
+      "achievements": [
+        "Updated .env variables to target local host connections (port 3306, user root, pass 0721)",
+        "Modified application.yml defaults for all 9 database-backed microservices",
+        "Updated setup instructions in HOW_TO_START.txt with schema SQL scripts",
+        "Verified all services clean compilation using build_all.bat"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Monolith Feature Extraction & Services Integration",
+      "status": "Completed & Integrated",
+      "badgeClass": "approved",
+      "date": "June 16, 2026",
+      "icon": "fa-puzzle-piece",
+      "description": "Added new monolith features directly into microservice-based APIs and synchronized frontend controllers.",
+      "achievements": [
+        "Implemented secure Forget Password and Reset Password flows with UUID tokens and expiration timers",
+        "Integrated Welcome Email Kafka event listener triggers on user registration",
+        "Exposed reviews statistics endpoints (/stats, /distribution) in review-service",
+        "Created consolidated multi-service admin exporters in notification-service generating Excel (.xlsx) and Word (.doc) using Apache POI library",
+        "Added AngularJS front-end routes, views, controllers and forms for forget-password, reset-password, and admin reports operations"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Dev Dashboard & History Integration",
+      "status": "In Progress",
+      "badgeClass": "pending",
+      "date": "June 16, 2026",
+      "icon": "fa-history",
+      "description": "Creating an admin dashboard viewer that allows team developers to trace project migration milestones and see active plans/tasks.",
+      "achievements": [
+        "Defined a structured dev-history.json static database store",
+        "Created an interactive timeline display inside the Admin dashboard views",
+        "Added real-time progress tracing and design document shortcut downloads"
+      ]
+    }
+  ],
+  "upcomingPlans": [
+    {
+      "task": "Perform end-to-end load testing on the consolidated gateway API",
+      "priority": "Medium"
+    },
+    {
+      "task": "Migrate notification templates to Thymeleaf templates rather than hardcoded HTML strings",
+      "priority": "Low"
+    },
+    {
+      "task": "Sync latest compiled APK assets with updated AngularJS code",
+      "priority": "High"
+    }
+  ]
+}

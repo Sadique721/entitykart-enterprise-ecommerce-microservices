@@ -1,0 +1,94 @@
+<div class="page-container" ng-init="initReturns()">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fa fa-rotate-left text-accent"></i> Return & Refund Requests</h2>
+            <p class="text-secondary">Track your return requests and refund status</p>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" ng-if="returnsList.length === 0" style="margin-top: 2rem;">
+        <div class="empty-state-icon">
+            <i class="fa fa-rotate-left"></i>
+        </div>
+        <h3>No returns found</h3>
+        <p>You haven't submitted any return requests yet.</p>
+        <a href="#!/orders" class="btn btn-primary-gradient">
+            <i class="fa fa-box-open"></i> View My Orders
+        </a>
+    </div>
+
+    <!-- Returns List -->
+    <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1.2rem;" ng-if="returnsList.length > 0">
+        <div class="card-glass return-card" ng-repeat="ret in returnsList">
+            <div class="return-card-header">
+                <!-- Icon with status color -->
+                <div class="return-icon-ring" ng-class="{
+                    'status-pending': ret.returnStatus === 'PENDING',
+                    'status-approved': ret.returnStatus === 'APPROVED',
+                    'status-rejected': ret.returnStatus === 'REJECTED',
+                    'status-processed': ret.returnStatus === 'PROCESSED'
+                }">
+                    <i class="fa" ng-class="{
+                        'fa-clock': ret.returnStatus === 'PENDING',
+                        'fa-check': ret.returnStatus === 'APPROVED' || ret.returnStatus === 'PROCESSED',
+                        'fa-xmark': ret.returnStatus === 'REJECTED'
+                    }"></i>
+                </div>
+
+                <div class="return-card-info">
+                    <div class="return-meta-row">
+                        <span class="return-id">Return #{{ ret.returnId }}</span>
+                        <span class="status-badge" ng-class="ret.returnStatus.toLowerCase()">
+                            {{ ret.returnStatus }}
+                        </span>
+                        <span class="status-badge" ng-class="'pay-' + (ret.refundStatus || 'pending').toLowerCase()">
+                            Refund: {{ ret.refundStatus || 'PENDING' }}
+                        </span>
+                    </div>
+
+                    <h3 class="return-product-name">
+                        <a href="#!/product/{{ ret.productId }}" class="text-accent">
+                            {{ ret.productName || ('Product #' + ret.productId) }}
+                        </a>
+                    </h3>
+
+                    <div class="return-details-grid">
+                        <div>
+                            <span class="meta-label">Reason</span>
+                            <span class="meta-value">{{ ret.reason }}</span>
+                        </div>
+                        <div>
+                            <span class="meta-label">Requested On</span>
+                            <span class="meta-value">{{ ret.requestedAt | date:'dd MMM yyyy' }}</span>
+                        </div>
+                        <div ng-if="ret.processedAt">
+                            <span class="meta-label">Processed On</span>
+                            <span class="meta-value">{{ ret.processedAt | date:'dd MMM yyyy' }}</span>
+                        </div>
+                        <div ng-if="ret.refundAmount">
+                            <span class="meta-label">Refund Amount</span>
+                            <span class="meta-value price-now">₹{{ ret.refundAmount | number:2 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="return-timeline" ng-if="ret.returnStatus !== 'REJECTED'">
+                        <div class="timeline-step" ng-class="{active: true}">
+                            <i class="fa fa-paper-plane"></i> Submitted
+                        </div>
+                        <div class="timeline-arrow">→</div>
+                        <div class="timeline-step" ng-class="{active: ret.returnStatus === 'APPROVED' || ret.returnStatus === 'PROCESSED'}">
+                            <i class="fa fa-check-circle"></i> Approved
+                        </div>
+                        <div class="timeline-arrow">→</div>
+                        <div class="timeline-step" ng-class="{active: ret.returnStatus === 'PROCESSED'}">
+                            <i class="fa fa-money-bill-transfer"></i> Refunded
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

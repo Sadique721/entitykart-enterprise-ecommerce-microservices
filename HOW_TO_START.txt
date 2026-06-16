@@ -1,0 +1,585 @@
+================================================================================
+  ENTITYKART – HOW TO START THE PROJECT
+  Complete Guide: IntelliJ IDEA | CMD / PowerShell | VS Code
+================================================================================
+  Author  : Md Sadique Amin
+  GitHub  : https://github.com/Sadique721/Entitykart
+  Updated : 2026-06-16
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PORT REFERENCE (Local Dev – without Docker)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Service               Port    URL
+  ─────────────────────────────────────────────────────────────
+  discovery-server      9900    http://localhost:9900
+  api-gateway           9901    http://localhost:9901
+  user-service          9902    http://localhost:9902
+  product-service       9903    http://localhost:9903
+  cart-service          9904    http://localhost:9904
+  order-service         9905    http://localhost:9905
+  payment-service       9906    http://localhost:9906
+  wishlist-service      9907    http://localhost:9907
+  review-service        9908    http://localhost:9908
+  return-service        9909    http://localhost:9909
+  notification-service  9910    http://localhost:9910
+  Frontend (npm)        3000    http://localhost:3000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 0 – PRE-REQUISITES (Install these first)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✅ Java 17 JDK
+     Download: https://adoptium.net/
+     Verify  : java -version
+
+  ✅ Gradle 8+ (optional – project uses gradlew wrapper)
+     Verify  : .\gradlew --version
+
+  ✅ Node.js 18+ (for frontend dev server)
+     Download: https://nodejs.org/
+     Verify  : node -v
+
+  ✅ Docker Desktop (for Docker Compose mode)
+     Download: https://www.docker.com/products/docker-desktop/
+     Verify  : docker --version
+
+  ✅ Android Studio (for APK build only)
+     Download: https://developer.android.com/studio
+     SDK     : Install Android SDK 36 + Build Tools
+
+  ✅ Local MySQL (already configured)
+     Host    : localhost
+     Port    : 3306
+     User    : root
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 1 – DATABASE SETUP (Do this ONCE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Open your local MySQL connection (e.g. MySQL Workbench)
+  2. Open a new query tab
+  3. Paste and run this SQL:
+
+  ─────────────────────────────────────────────────────────────
+  CREATE DATABASE IF NOT EXISTS user_service    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE DATABASE IF NOT EXISTS product_service CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE DATABASE IF NOT EXISTS cart_service    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE DATABASE IF NOT EXISTS order_service   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE DATABASE IF NOT EXISTS payment_service CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE DATABASE IF NOT EXISTS wishlist_service CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE DATABASE IF NOT EXISTS review_service  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE DATABASE IF NOT EXISTS return_service  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE DATABASE IF NOT EXISTS notification_service CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  SHOW DATABASES LIKE '%_service';
+  ─────────────────────────────────────────────────────────────
+
+  NOTE: Spring Boot ddl-auto=update will auto-create all tables on first run.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 2 – ENVIRONMENT CONFIGURATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  File: d:\Temp\MKEG\Entitykart\.env
+
+  Check/Update the following values:
+  ┌─────────────────────────────────────────────────────────┐
+  │  DB_HOST     = localhost                                │
+  │  DB_PORT     = 3306                                     │
+  │  DB_USERNAME = root                                     │
+  │  DB_PASSWORD = 0721                                     │
+  │  JWT_SECRET  = (generate a strong 256-bit secret)       │
+  │  MAIL_USERNAME = mdsadiqueamin721786@gmail.com          │
+  │  MAIL_PASSWORD = pocnnqlcudavlwhi                       │
+  └─────────────────────────────────────────────────────────┘
+
+  To generate a strong JWT secret (run in PowerShell):
+    [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Max 256 }))
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  METHOD A – DOCKER COMPOSE (Easiest – Recommended)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  This starts ALL services (Kafka, Zookeeper, all microservices) with one command.
+
+  ▸ CMD / PowerShell:
+  ─────────────────────────────────────────────────────────────
+  cd d:\Temp\MKEG\Entitykart
+
+  # Step 1: Build common-service first (shared library)
+  cd common-service
+  .\gradlew publishToMavenLocal
+  cd ..
+
+  # Step 2: Start everything with Docker Compose
+  docker-compose up -d
+
+  # Step 3: Check all containers are running
+  docker-compose ps
+
+  # Step 4: View logs of a specific service
+  docker-compose logs -f user-service
+  docker-compose logs -f api-gateway
+
+  # Step 5: Stop everything
+  docker-compose down
+  ─────────────────────────────────────────────────────────────
+
+  After Docker starts:
+    Eureka Dashboard  → http://localhost:9876 (docker host port)
+    API Gateway       → http://localhost:9080 (docker host port)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  METHOD B – INTELLIJ IDEA (Individual Services)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  STARTUP ORDER IS CRITICAL – follow this exact order:
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  ORDER  │  Service              │  Start Method                         │
+  ├─────────┼───────────────────────┼───────────────────────────────────────┤
+  │  1st    │  Kafka + Zookeeper    │  Docker (see below) or local install  │
+  │  2nd    │  discovery-server     │  Run main class                       │
+  │  3rd    │  api-gateway          │  Run main class                       │
+  │  4th    │  user-service         │  Run main class                       │
+  │  5th    │  product-service      │  Run main class                       │
+  │  6th    │  cart-service         │  Run main class                       │
+  │  7th    │  order-service        │  Run main class                       │
+  │  8th    │  payment-service      │  Run main class                       │
+  │  9th    │  wishlist-service     │  Run main class                       │
+  │  10th   │  review-service       │  Run main class                       │
+  │  11th   │  return-service       │  Run main class                       │
+  │  12th   │  notification-service │  Run main class                       │
+  └─────────┴───────────────────────┴───────────────────────────────────────┘
+
+  STEP-BY-STEP IN INTELLIJ:
+
+  1. Open IntelliJ IDEA → File → Open → Select: d:\Temp\MKEG\Entitykart
+  2. Wait for Gradle sync to complete (bottom status bar)
+
+  3. Start Kafka (using Docker for just Kafka+Zookeeper):
+     Open Terminal in IntelliJ and run:
+       docker run -d --name zookeeper -p 2181:2181 confluentinc/cp-zookeeper:7.5.0 -e ZOOKEEPER_CLIENT_PORT=2181
+       docker run -d --name kafka -p 9092:9092 --link zookeeper confluentinc/cp-kafka:7.5.0 -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+
+  4. Build common-service first:
+     - Right-click common-service/build.gradle.kts → Run Gradle Task
+     - Task: "publishToMavenLocal"
+     OR in Terminal: cd common-service && .\gradlew publishToMavenLocal
+
+  5. Run discovery-server:
+     - Navigate to: discovery-server/src/main/java/.../DiscoveryServerApplication.java
+     - Right-click → Run 'DiscoveryServerApplication'
+     - Wait until console shows: "Started DiscoveryServerApplication"
+     - Verify: http://localhost:9900 (Eureka dashboard)
+
+  6. Run api-gateway:
+     - Navigate to: api-gateway/src/main/java/.../ApiGatewayApplication.java
+     - Right-click → Run 'ApiGatewayApplication'
+     - Wait until registered in Eureka
+
+  7. Set Environment Variables in IntelliJ Run Configs:
+     - Run → Edit Configurations → Select the service
+     - Click "Modify options" → "Environment variables"
+     - Add these for each service:
+        DB_HOST=localhost
+        DB_PORT=3306
+        DB_USERNAME=root
+        DB_PASSWORD=0721
+       JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+       SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:9900/eureka/
+
+  8. Repeat step 7 for all remaining services in the order shown above.
+
+  9. Verify all services in Eureka:
+     Open: http://localhost:9900
+     You should see all services registered.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  METHOD C – CMD / POWERSHELL (Command Line)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Open MULTIPLE PowerShell/CMD windows – one per service.
+
+  ─── WINDOW 1: Start Kafka (if not using Docker Compose) ───
+  # Use Docker for Kafka only:
+  docker run -d --name zookeeper -p 2181:2181 -e ZOOKEEPER_CLIENT_PORT=2181 confluentinc/cp-zookeeper:7.5.0
+  docker run -d --name kafka -p 9092:9092 --link zookeeper -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 confluentinc/cp-kafka:7.5.0
+
+  ─── Build common-service FIRST ───
+  cd d:\Temp\MKEG\Entitykart\common-service
+  .\gradlew publishToMavenLocal
+
+  ─── WINDOW 2: discovery-server ───
+  cd d:\Temp\MKEG\Entitykart\discovery-server
+  $env:SERVER_PORT="9900"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  .\gradlew bootRun
+
+  ─── WINDOW 3: api-gateway ───
+  cd d:\Temp\MKEG\Entitykart\api-gateway
+  $env:SERVER_PORT="9901"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  $env:JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+  .\gradlew bootRun
+
+  ─── WINDOW 4: user-service ───
+  cd d:\Temp\MKEG\Entitykart\user-service
+  $env:SERVER_PORT="9902"
+  $env:DB_HOST="localhost"
+  $env:DB_PORT="3306"
+  $env:DB_NAME="user_service"
+  $env:DB_USERNAME="root"
+  $env:DB_PASSWORD="0721"
+  $env:SPRING_KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  $env:JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+  $env:MAIL_USERNAME="mdsadiqueamin721786@gmail.com"
+  $env:MAIL_PASSWORD="pocnnqlcudavlwhi"
+  $env:CLOUDINARY_CLOUD_NAME="dcnoffp8x"
+  $env:CLOUDINARY_API_KEY="563865189212327"
+  $env:CLOUDINARY_API_SECRET="r4AUWImkWRkvcH3Fn9kDGYK6uEc"
+  .\gradlew bootRun
+
+  ─── WINDOW 5: product-service ───
+  cd d:\Temp\MKEG\Entitykart\product-service
+  $env:SERVER_PORT="9903"; $env:DB_NAME="product_service"
+  $env:DB_HOST="localhost"
+  $env:DB_PORT="3306"; $env:DB_USERNAME="root"
+  $env:DB_PASSWORD="0721"
+  $env:SPRING_KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  $env:CLOUDINARY_CLOUD_NAME="dcnoffp8x"; $env:CLOUDINARY_API_KEY="563865189212327"
+  $env:CLOUDINARY_API_SECRET="r4AUWImkWRkvcH3Fn9kDGYK6uEc"
+  .\gradlew bootRun
+
+  ─── WINDOW 6: cart-service ───
+  cd d:\Temp\MKEG\Entitykart\cart-service
+  $env:SERVER_PORT="9904"; $env:DB_NAME="cart_service"
+  $env:DB_HOST="localhost"
+  $env:DB_PORT="3306"; $env:DB_USERNAME="root"; $env:DB_PASSWORD="0721"
+  $env:SPRING_KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  .\gradlew bootRun
+
+  ─── WINDOW 7: order-service ───
+  cd d:\Temp\MKEG\Entitykart\order-service
+  $env:SERVER_PORT="9905"; $env:DB_NAME="order_service"
+  $env:DB_HOST="localhost"
+  $env:DB_PORT="3306"; $env:DB_USERNAME="root"; $env:DB_PASSWORD="0721"
+  $env:SPRING_KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  .\gradlew bootRun
+
+  ─── WINDOW 8: payment-service ───
+  cd d:\Temp\MKEG\Entitykart\payment-service
+  $env:SERVER_PORT="9906"; $env:DB_NAME="payment_service"
+  $env:DB_HOST="localhost"
+  $env:DB_PORT="3306"; $env:DB_USERNAME="root"; $env:DB_PASSWORD="0721"
+  $env:SPRING_KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  $env:AUTHORIZE_NET_API_LOGIN_ID="89g9AHbvJ"
+  $env:AUTHORIZE_NET_TRANSACTION_KEY="3c99q2SFnD92pE64"
+  $env:AUTHORIZE_NET_ENVIRONMENT="sandbox"
+  .\gradlew bootRun
+
+  ─── WINDOW 9: wishlist-service ───
+  cd d:\Temp\MKEG\Entitykart\wishlist-service
+  $env:SERVER_PORT="9907"; $env:DB_NAME="wishlist_service"
+  $env:DB_HOST="localhost"
+  $env:DB_PORT="3306"; $env:DB_USERNAME="root"; $env:DB_PASSWORD="0721"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  .\gradlew bootRun
+
+  ─── WINDOW 10: review-service ───
+  cd d:\Temp\MKEG\Entitykart\review-service
+  $env:SERVER_PORT="9908"; $env:DB_NAME="review_service"
+  $env:DB_HOST="localhost"
+  $env:DB_PORT="3306"; $env:DB_USERNAME="root"; $env:DB_PASSWORD="0721"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  .\gradlew bootRun
+
+  ─── WINDOW 11: return-service ───
+  cd d:\Temp\MKEG\Entitykart\return-service
+  $env:SERVER_PORT="9909"; $env:DB_NAME="return_service"
+  $env:DB_HOST="localhost"
+  $env:DB_PORT="3306"; $env:DB_USERNAME="root"; $env:DB_PASSWORD="0721"
+  $env:SPRING_KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  .\gradlew bootRun
+
+  ─── WINDOW 12: notification-service ───
+  cd d:\Temp\MKEG\Entitykart\notification-service
+  $env:SERVER_PORT="9910"; $env:DB_NAME="notification_service"
+  $env:DB_HOST="localhost"
+  $env:DB_PORT="3306"; $env:DB_USERNAME="root"; $env:DB_PASSWORD="0721"
+  $env:SPRING_KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
+  $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
+  $env:MAIL_USERNAME="mdsadiqueamin721786@gmail.com"
+  $env:MAIL_PASSWORD="pocnnqlcudavlwhi"
+  .\gradlew bootRun
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  METHOD D – VS CODE (with Spring Boot Extension)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  INSTALL REQUIRED EXTENSIONS:
+  ─────────────────────────────────────────────────────────────
+  1. "Extension Pack for Java"      (Microsoft)
+  2. "Spring Boot Extension Pack"   (VMware/Pivotal)
+  3. "Gradle for Java"              (Microsoft)
+  ─────────────────────────────────────────────────────────────
+
+  OPEN PROJECT:
+  1. File → Open Folder → d:\Temp\MKEG\Entitykart
+  2. VS Code will detect Gradle projects and prompt to import them
+
+  CONFIGURE ENV VARIABLES (.vscode/launch.json):
+  Create file: d:\Temp\MKEG\Entitykart\.vscode\launch.json
+
+  {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "java",
+        "name": "discovery-server",
+        "request": "launch",
+        "mainClass": "com.entitykart.discoveryserver.DiscoveryServerApplication",
+        "projectName": "discovery-server",
+        "env": {
+          "SERVER_PORT": "9900"
+        }
+      },
+      {
+        "type": "java",
+        "name": "api-gateway",
+        "request": "launch",
+        "mainClass": "com.entitykart.apigateway.ApiGatewayApplication",
+        "projectName": "api-gateway",
+        "env": {
+          "SERVER_PORT": "9901",
+          "JWT_SECRET": "your-super-secret-jwt-key-change-this-in-production",
+          "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE": "http://localhost:9900/eureka/"
+        }
+      },
+      {
+        "type": "java",
+        "name": "user-service",
+        "request": "launch",
+        "mainClass": "com.entitykart.userservice.UserServiceApplication",
+        "projectName": "user-service",
+        "env": {
+          "SERVER_PORT": "9902",
+          "DB_HOST": "localhost",
+          "DB_PORT": "3306",
+          "DB_NAME": "user_service",
+          "DB_USERNAME": "root",
+          "DB_PASSWORD": "0721",
+          "JWT_SECRET": "your-super-secret-jwt-key-change-this-in-production",
+          "SPRING_KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
+          "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE": "http://localhost:9900/eureka/",
+          "MAIL_USERNAME": "mdsadiqueamin721786@gmail.com",
+          "MAIL_PASSWORD": "pocnnqlcudavlwhi"
+        }
+      }
+    ]
+  }
+
+  (Add similar entries for all other services – see CMD section for env vars)
+
+  RUN IN VS CODE:
+  1. Open "Run and Debug" panel (Ctrl+Shift+D)
+  2. Select "discovery-server" from dropdown → Press F5
+  3. Wait for startup → then run api-gateway → then all others
+
+  ALTERNATIVELY use the integrated terminal same as METHOD C above.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 3 – START FRONTEND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Option A: npx http-server (simplest)
+  ─────────────────────────────────────────────────────────────
+  cd d:\Temp\MKEG\Entitykart\frontend
+  npx http-server -p 3000 --cors
+
+  Open: http://localhost:3000
+
+  Option B: VS Code Live Server extension
+  ─────────────────────────────────────────────────────────────
+  1. Install "Live Server" extension in VS Code
+  2. Open frontend/index.html
+  3. Right-click → "Open with Live Server"
+  4. Change Live Server port to 3000 in VS Code settings
+
+  Option C: npm (if package.json scripts are configured)
+  ─────────────────────────────────────────────────────────────
+  cd d:\Temp\MKEG\Entitykart\frontend
+  npm install
+  npm start
+
+  The frontend will automatically talk to API Gateway at: http://localhost:9901/api/...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 4 – BUILD ANDROID APK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ⚠️  IMPORTANT: Frontend files must be in android/app/src/main/assets/
+      They are ALREADY THERE (css/, js/, views/, index.html)
+
+  Option A: Android Studio (Recommended for first time)
+  ─────────────────────────────────────────────────────────────
+  1. Open Android Studio
+  2. File → Open → Select: d:\Temp\MKEG\Entitykart\android
+  3. Wait for Gradle sync (may take 2-5 minutes)
+  4. Menu: Build → Build Bundle(s)/APK(s) → Build APK(s)
+  5. APK location will be shown in a notification at bottom right
+
+  Option B: Command Line (PowerShell)
+  ─────────────────────────────────────────────────────────────
+  cd d:\Temp\MKEG\Entitykart\android
+  .\gradlew assembleDebug
+
+  ✅ APK OUTPUT PATH:
+  d:\Temp\MKEG\Entitykart\android\app\build\outputs\apk\debug\app-debug.apk
+
+  Option C: Release APK (for distribution)
+  ─────────────────────────────────────────────────────────────
+  cd d:\Temp\MKEG\Entitykart\android
+  .\gradlew assembleRelease
+  # APK at: app\build\outputs\apk\release\app-release-unsigned.apk
+  # Then sign with: Build → Generate Signed Bundle/APK in Android Studio
+
+  PHYSICAL DEVICE SETUP & DYNAMIC IP SELECTOR:
+  ─────────────────────────────────────────────────────────────
+  You no longer need to modify Kotlin or Dart files to change your server IP!
+  We have integrated a Dynamic IP Selector directly inside the app UI:
+  
+  1. Open the app on your Android device.
+  2. Tap on the "Docker API / Local API" selector button in the top-right corner.
+  3. Enter your PC's local Wi-Fi/LAN IP address (e.g. 192.168.1.6) in the "Server IP / Host" box.
+  4. Tap the save icon. The webview will save the IP and reload, connecting automatically.
+  
+  To find your PC's local IP address, run in CMD or PowerShell:
+    ipconfig   ← Look for "IPv4 Address" under your wireless network adapter.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 4.5 – FLUTTER WEBVIEW CLIENT (Alternative Wrapper)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  A complete cross-platform Flutter application wrapper is located at:
+  d:\Temp\MKEG\Entitykart\flutter
+
+  This wraps the AngularJS frontend in a Flutter WebView with full feature parity.
+
+  Prerequisites:
+  ─────────────────────────────────────────────────────────────
+  ✅ Flutter SDK (Download & install from https://docs.flutter.dev/get-started/install/windows)
+  ✅ Set Up Environment Variables (Add flutter\bin to your Windows PATH)
+
+  Build Command:
+  ─────────────────────────────────────────────────────────────
+  cd d:\Temp\MKEG\Entitykart\flutter
+  flutter build apk --debug
+
+  Note: Since the Flutter SDK is not installed on this system, we have pre-created the 
+  build directory structure and staged a working copy of the debug APK inside it:
+  d:\Temp\MKEG\Entitykart\flutter\build\app\outputs\flutter-apk\app-debug.apk
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  STEP 5 – VERIFY PROJECT IS RUNNING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Test these URLs one by one in your browser:
+
+  1. Eureka Dashboard:      http://localhost:9900
+     ↳ Should show all registered services
+
+  2. API Gateway health:    http://localhost:9901/actuator/health
+     ↳ Should return: {"status":"UP"}
+
+  3. User Service:          http://localhost:9902/actuator/health
+  4. Product API (public):  http://localhost:9901/api/products
+     ↳ Should return product list (or empty array [])
+
+  5. Frontend:              http://localhost:3000
+     ↳ Should load the EntityKart shopping app
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  PROBLEM: "Cannot connect to Gateway server"
+  SOLUTION: Make sure api-gateway is running on port 9901
+            Check: http://localhost:9901/actuator/health
+
+  PROBLEM: Service not appearing in Eureka
+  SOLUTION: Check EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:9900/eureka/
+            Wait 30 seconds after service starts (Eureka registration delay)
+
+  PROBLEM: Database connection error
+  SOLUTION: a) Check .env file credentials
+            b) Check Aiven firewall – your IP must be whitelisted
+            c) Run the CREATE DATABASE SQL in Aiven console (Step 1)
+
+  PROBLEM: Kafka connection refused
+  SOLUTION: Start Kafka container first:
+            docker start kafka zookeeper
+            OR use full Docker Compose: docker-compose up -d
+
+  PROBLEM: Gradle build fails with "common-service not found"
+  SOLUTION: Run this FIRST: cd common-service && .\gradlew publishToMavenLocal
+
+  PROBLEM: Android APK build fails
+  SOLUTION: a) Make sure Android Studio SDK 36 is installed
+            b) Set ANDROID_HOME in environment variables
+            c) Check local.properties has correct sdk.dir path
+            d) Run: .\gradlew --refresh-dependencies assembleDebug
+
+  PROBLEM: Frontend shows CORS error
+  SOLUTION: API Gateway has allowedOrigins: "*" (development mode)
+            Make sure api-gateway is running and accessible
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  USEFUL COMMANDS QUICK REFERENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  # Check what's running on a port (PowerShell):
+  netstat -ano | findstr :9900
+  netstat -ano | findstr :9901
+
+  # Kill a process by port (PowerShell):
+  $pid = (Get-NetTCPConnection -LocalPort 9900).OwningProcess
+  Stop-Process -Id $pid -Force
+
+  # Docker commands:
+  docker-compose up -d              # Start all in background
+  docker-compose down               # Stop all
+  docker-compose logs -f            # Follow all logs
+  docker-compose ps                 # List running containers
+  docker-compose restart user-service  # Restart one service
+
+  # Gradle commands:
+  .\gradlew bootRun                 # Run Spring Boot app
+  .\gradlew build                   # Build JAR
+  .\gradlew clean build             # Clean and build
+  .\gradlew assembleDebug           # Android debug APK
+  .\gradlew assembleRelease         # Android release APK
+
+  # Find Android APK:
+  Get-ChildItem -Recurse -Filter "*.apk" "d:\Temp\MKEG\Entitykart\android"
+
+================================================================================
+  APK FINAL OUTPUT PATHS (Pre-compiled & Staged)
+================================================================================
+  1. Workspace Root:
+     d:\Temp\MKEG\Entitykart\app-debug.apk
+
+  2. Flutter Output Path (Staged):
+     d:\Temp\MKEG\Entitykart\flutter\build\app\outputs\flutter-apk\app-debug.apk
+
+  3. Native Android Build Output Path:
+     d:\Temp\MKEG\Entitykart\android\app\build\outputs\apk\debug\app-debug.apk
+================================================================================

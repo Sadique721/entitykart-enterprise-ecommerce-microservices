@@ -1,0 +1,49 @@
+name: User Service CI/CD
+
+on:
+  push:
+    paths:
+      - 'common-service/**'
+      - 'user-service/**'
+      - '.github/workflows/user-service-ci.yml'
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.5
+
+      - name: Build common-service
+        working-directory: common-service
+        run: gradle publishToMavenLocal
+
+      - name: Build user-service
+        working-directory: user-service
+        run: gradle build
+
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./user-service
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/user-service:latest

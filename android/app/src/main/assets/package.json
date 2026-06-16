@@ -1,0 +1,12 @@
+{
+  "name": "entitykart-frontend",
+  "version": "1.0.0",
+  "description": "Premium AngularJS Frontend for Entitykart Microservices",
+  "main": "index.html",
+  "scripts": {
+    "start": "lite-server"
+  },
+  "dependencies": {
+    "lite-server": "^2.6.1"
+  }
+}

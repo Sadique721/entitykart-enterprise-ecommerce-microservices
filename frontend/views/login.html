@@ -1,0 +1,70 @@
+<div class="auth-container">
+    <div class="card-glass auth-card">
+        <div class="auth-header">
+            <div class="auth-icon-ring">
+                <i class="fa fa-unlock-keyhole"></i>
+            </div>
+            <h2>Welcome Back</h2>
+            <p class="text-secondary">Sign in to access your orders, wishlist & more</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div class="alert alert-error" ng-if="errorMessage">
+            <i class="fa fa-circle-exclamation"></i>
+            <span>{{ errorMessage }}</span>
+        </div>
+
+        <form ng-submit="login()" novalidate>
+            <div class="form-group">
+                <label><i class="fa fa-envelope"></i> Email Address</label>
+                <input type="email" class="form-control" ng-model="loginData.email"
+                       placeholder="customer@example.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa fa-lock"></i> Password</label>
+                <div class="password-input-wrapper">
+                    <input type="{{ showPassword ? 'text' : 'password' }}" class="form-control"
+                           ng-model="loginData.password" placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" class="password-toggle" ng-click="showPassword = !showPassword">
+                        <i class="fa" ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group-inline">
+                <label class="checkbox-label">
+                    <input type="checkbox" ng-model="rememberMe"> Remember me
+                </label>
+                <a href="#!/forgot-password" class="text-accent link-sm">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary-gradient btn-block btn-lg">
+                <i class="fa fa-sign-in-alt"></i> Sign In
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+            <span>Demo Credentials</span>
+        </div>
+
+        <!-- Prototype credentials hint -->
+        <div class="demo-credentials">
+            <div class="demo-row" ng-click="loginData.email='customer@example.com'; loginData.password='password'">
+                <span class="demo-badge customer">Customer</span>
+                <span class="demo-email">customer@example.com</span>
+                <span class="demo-pass">/ password</span>
+            </div>
+            <div class="demo-row" ng-click="loginData.email='admin@example.com'; loginData.password='adminpassword'">
+                <span class="demo-badge admin">Admin</span>
+                <span class="demo-email">admin@example.com</span>
+                <span class="demo-pass">/ adminpassword</span>
+            </div>
+        </div>
+
+        <p class="auth-footer-text">
+            Don't have an account? <a href="#!/register" class="text-accent font-semibold">Create Account</a>
+        </p>
+    </div>
+</div>

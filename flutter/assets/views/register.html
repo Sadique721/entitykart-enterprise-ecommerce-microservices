@@ -1,0 +1,69 @@
+<div class="auth-container">
+    <div class="card-glass auth-card">
+        <div class="auth-header">
+            <div class="auth-icon-ring">
+                <i class="fa fa-user-plus"></i>
+            </div>
+            <h2>Create Account</h2>
+            <p class="text-secondary">Join Entitykart and start your premium shopping journey</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div class="alert alert-error" ng-if="errorMessage">
+            <i class="fa fa-circle-exclamation"></i>
+            <span>{{ errorMessage }}</span>
+        </div>
+
+        <form ng-submit="register()" novalidate>
+            <div class="form-group">
+                <label><i class="fa fa-user"></i> Full Name</label>
+                <input type="text" class="form-control" ng-model="registerData.name"
+                       placeholder="John Doe" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa fa-envelope"></i> Email Address</label>
+                <input type="email" class="form-control" ng-model="registerData.email"
+                       placeholder="john.doe@example.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa fa-lock"></i> Password</label>
+                <div class="password-input-wrapper">
+                    <input type="{{ showPassword ? 'text' : 'password' }}" class="form-control"
+                           ng-model="registerData.password" placeholder="Min 6 characters" required
+                           autocomplete="new-password">
+                    <button type="button" class="password-toggle" ng-click="showPassword = !showPassword">
+                        <i class="fa" ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                </div>
+                <div class="password-strength" ng-if="registerData.password.length > 0">
+                    <div class="strength-bar">
+                        <span class="strength-fill"
+                              ng-class="{'weak': registerData.password.length < 6, 'medium': registerData.password.length >= 6 && registerData.password.length < 10, 'strong': registerData.password.length >= 10}"
+                              ng-style="{'width': (registerData.password.length / 12 * 100) + '%'}"></span>
+                    </div>
+                    <span class="strength-label text-secondary" ng-if="registerData.password.length < 6">Weak</span>
+                    <span class="strength-label" style="color: #f59e0b" ng-if="registerData.password.length >= 6 && registerData.password.length < 10">Medium</span>
+                    <span class="strength-label text-accent" ng-if="registerData.password.length >= 10">Strong</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa fa-shield-halved"></i> Register As</label>
+                <select class="form-control" ng-model="registerData.role" required>
+                    <option value="USER">🛍️ Customer Account</option>
+                    <option value="ADMIN">🔑 Administrator Account</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary-gradient btn-block btn-lg">
+                <i class="fa fa-user-plus"></i> Create My Account
+            </button>
+        </form>
+
+        <p class="auth-footer-text">
+            Already have an account? <a href="#!/login" class="text-accent font-semibold">Sign In</a>
+        </p>
+    </div>
+</div>

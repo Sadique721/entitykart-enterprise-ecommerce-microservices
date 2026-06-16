@@ -1,0 +1,19 @@
+type Product {
+  productId: ID!
+  productName: String!
+  description: String
+  brand: String
+  price: Float
+  mrp: Float
+  stockQuantity: Int
+  sku: String
+  mainImageURL: String
+  categoryId: ID
+  subCategoryId: ID
+  sellerId: ID
+  discountPercent: Float
+}
+
+type Query {
+  product(id: ID!): Product
+}

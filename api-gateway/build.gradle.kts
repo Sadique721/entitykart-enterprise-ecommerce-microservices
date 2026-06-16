@@ -1,0 +1,38 @@
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.java
+import org.gradle.kotlin.dsl.repositories
+
+plugins {
+    java
+    id("org.springframework.boot") version "3.3.4"
+}
+
+group = "com.entitykart"
+version = "1.0.0"
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.3.4"))
+    implementation(platform("org.springframework.cloud:spring-cloud-dependencies:2023.0.3"))
+    implementation("org.springframework.cloud:spring-cloud-starter-gateway")
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+    compileOnly("org.projectlombok:lombok:1.18.30")
+    annotationProcessor("org.projectlombok:lombok:1.18.30")
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    archiveFileName.set("api-gateway.jar")
+}

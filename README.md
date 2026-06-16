@@ -1,0 +1,397 @@
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:22d3ee,100:8b5cf6&height=200&section=header&text=EntityKart&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Cloud-Native%20Microservices%20E-commerce&descAlignY=60&descAlign=50" width="100%">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Java_17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white">
+  <img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
+  <img src="https://img.shields.io/badge/Spring_Cloud-6DB33F?style=for-the-badge&logo=spring&logoColor=white">
+  <img src="https://img.shields.io/badge/Apache_Kafka-231F20?style=for-the-badge&logo=apachekafka&logoColor=white">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
+  <img src="https://img.shields.io/badge/AngularJS-E23237?style=for-the-badge&logo=angularjs&logoColor=white">
+  <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white">
+  <img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white">
+</p>
+
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&duration=3000&pause=500&color=22D3EE&center=true&vCenter=true&width=600&lines=Java+%2F+Spring+Boot+Microservices;API+Gateway+%2B+Service+Discovery;Event-Driven+with+Kafka;Docker+%2B+CI%2FCD;Android+App+%2B+AngularJS+Frontend" alt="Typing SVG">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/stars/Sadique721/Entitykart?style=for-the-badge&color=22d3ee" alt="Stars">
+  <img src="https://img.shields.io/github/forks/Sadique721/Entitykart?style=for-the-badge&color=8b5cf6" alt="Forks">
+  <img src="https://img.shields.io/github/license/Sadique721/Entitykart?style=for-the-badge&color=10b981" alt="License">
+</p>
+
+---
+
+## 📌 Overview
+
+**EntityKart** is a modern, cloud‑ready **e‑commerce platform** built with a **microservices architecture**. Refactored into **9 independently deployable services**, an **API Gateway**, **Service Discovery (Eureka)**, and **event‑driven communication via Apache Kafka**. The frontend is a responsive **AngularJS single‑page application**, and there is a native **Android app** (Kotlin + Jetpack Compose + WebView). The entire stack is containerized with **Docker** and automated through **GitHub Actions CI/CD**.
+
+---
+
+## 🏗 Architecture
+
+```mermaid
+flowchart TB
+    A[AngularJS Frontend / Android App] -->|HTTP /api| B[API Gateway :9901]
+
+    B --> C[user-service :9902]
+    B --> D[product-service :9903]
+    B --> E[cart-service :9904]
+    B --> F[order-service :9905]
+    B --> G[payment-service :9906]
+    B --> H[wishlist-service :9907]
+    B --> I[review-service :9908]
+    B --> J[return-service :9909]
+
+    B -..->|Service Lookup| K[Eureka Discovery :9900]
+    C -..-> K
+    D -..-> K
+    E -..-> K
+    F -..-> K
+    G -..-> K
+    H -..-> K
+    I -..-> K
+    J -..-> K
+
+    F -->|Kafka| L[notification-service :9910]
+    G -->|Kafka| L
+    J -->|Kafka| L
+
+    style B fill:#8b5cf6,color:#fff
+    style K fill:#22d3ee,color:#000
+    style L fill:#22d3ee,color:#000
+```
+
+---
+
+## 🔄 Kafka Event Flow
+
+| Event | Producer | Consumer(s) |
+|-------|----------|-------------|
+| `user-events` | user-service | notification-service (welcome email) |
+| `cart-checkout-events` | cart-service | order-service |
+| `order-events` | order-service | payment-service, notification-service |
+| `payment-events` | payment-service | notification-service |
+| `return-events` | return-service | notification-service |
+
+---
+
+## ✨ Features
+
+- 🔐 **User Management** – Registration, JWT authentication, profile, address book
+- 📦 **Product Catalog** – Categories, sub‑categories, inventory, search/filtering, GraphQL
+- 🛒 **Shopping Cart** – Add/remove items, quantity update, checkout event
+- 💳 **Checkout & Payment** – Authorize.Net integration, COD, UPI, net banking
+- 📋 **Order Management** – Place, track, cancel, view order history
+- ❤️ **Wishlist** – Save favourite products
+- ⭐ **Reviews & Ratings** – Write/edit/delete reviews, rating statistics
+- ↩️ **Returns & Refunds** – Request return, admin approval, automated refund
+- 📧 **Notifications** – Email via Gmail SMTP (Kafka-driven, async)
+- 👑 **Admin Panel** – Manage products, orders, payments, returns, reviews
+- 📱 **Android App** – Native WebView wrapper (Kotlin + Jetpack Compose)
+
+---
+
+## 🧰 Technology Stack
+
+### Backend
+
+| Category | Technologies |
+|----------|--------------|
+| Core | Java 17, Spring Boot 3.2, Spring Cloud 2023.0.0 |
+| Microservices | Spring Cloud Gateway, Netflix Eureka, OpenFeign |
+| Security | Spring Security, JWT (validated at Gateway) |
+| Messaging | Apache Kafka (Zookeeper, producers / consumers) |
+| Database | MySQL 8 (Aiven Cloud), Spring Data JPA, Hibernate |
+| Media | Cloudinary (image upload) |
+| Build Tool | Gradle (Kotlin DSL) |
+
+### Frontend
+
+| Technology | Role |
+|------------|------|
+| AngularJS 1.8 | Single Page Application (SPA) |
+| Bootstrap 5 | Responsive UI |
+| JavaScript ES6 | Dynamic client logic |
+| HTML5 / CSS3 | Structure & styling |
+| Font Awesome | Icons |
+
+### Mobile (Android)
+
+| Technology | Role |
+|------------|------|
+| Kotlin | Language |
+| Jetpack Compose | UI framework |
+| WebView | Loads AngularJS frontend from assets |
+| JavascriptInterface | Native bridge for backend URL injection |
+
+### DevOps & Cloud
+
+| Tool | Purpose |
+|------|---------|
+| Docker & Docker Compose | Containerization & local orchestration |
+| Aiven Cloud | Managed MySQL database |
+| Cloudinary | Cloud image storage |
+| GitHub Actions | CI/CD – build, test, push images |
+| Git / GitHub | Version control & repository hosting |
+
+---
+
+## 🧩 Microservices Port Reference
+
+### Local Development (without Docker)
+
+| Service | Port | Database | Responsibility |
+|---------|------|----------|----------------|
+| discovery-server | **9900** | – | Eureka service registry |
+| api-gateway | **9901** | – | Routing, JWT validation |
+| user-service | **9902** | user_service | Users, authentication, JWT |
+| product-service | **9903** | product_service | Products, categories, inventory |
+| cart-service | **9904** | cart_service | Cart operations, checkout event |
+| order-service | **9905** | order_service | Order creation, status |
+| payment-service | **9906** | payment_service | Authorize.Net, refunds |
+| wishlist-service | **9907** | wishlist_service | Wishlist CRUD |
+| review-service | **9908** | review_service | Reviews, ratings |
+| return-service | **9909** | return_service | Return requests, refunds |
+| notification-service | **9910** | notification_service | Email notifications (Kafka consumer) |
+
+### Docker (port mapping: HOST → CONTAINER)
+
+| Service | Host Port | Container Port |
+|---------|-----------|----------------|
+| Eureka (Discovery) | 9876 | 8761 |
+| API Gateway | 9080 | 8080 |
+| User Service | 9081 | 8081 |
+| Product Service | 9082 | 8082 |
+| Cart Service | 9083 | 8083 |
+| Order Service | 9084 | 8084 |
+| Payment Service | 9085 | 8085 |
+| Wishlist Service | 9086 | 8086 |
+| Review Service | 9087 | 8087 |
+| Return Service | 9088 | 8088 |
+| Notification Service | 9089 | 8089 |
+
+> **Note:** In Docker, each service's `SERVER_PORT` env var overrides the application.yml default.
+
+---
+
+## 📂 Project Structure
+
+```text
+Entitykart/
+├── common-service/              # Shared JAR (exception handling, Kafka config)
+├── discovery-server/            # Eureka server (port 9900 local)
+├── api-gateway/                 # Spring Cloud Gateway (port 9901 local)
+├── user-service/                # Users, JWT auth (port 9902 local)
+├── product-service/             # Products, categories, GraphQL (port 9903 local)
+├── cart-service/                # Cart, checkout events (port 9904 local)
+├── order-service/               # Orders, status (port 9905 local)
+├── payment-service/             # Payments, Authorize.Net (port 9906 local)
+├── wishlist-service/            # Wishlist CRUD (port 9907 local)
+├── review-service/              # Reviews & ratings (port 9908 local)
+├── return-service/              # Returns & refunds (port 9909 local)
+├── notification-service/        # Email notifications (port 9910 local)
+├── frontend/                    # AngularJS SPA
+│   ├── index.html
+│   ├── css/style.css
+│   ├── js/
+│   │   ├── app.js
+│   │   ├── controllers/
+│   │   └── services/
+│   └── views/                   # HTML partials
+├── android/                     # Android App (Kotlin + Compose + WebView)
+│   └── app/src/main/
+│       ├── assets/              # Frontend files copied here for APK
+│       ├── java/com/example/entitykart/
+│       │   └── MainActivity.kt  # WebView entry point
+│       └── res/xml/
+│           └── network_security_config.xml
+├── docker-compose.yml           # Full stack orchestration
+├── .env                         # Environment variables (DO NOT COMMIT)
+├── HOW_TO_START.txt             # Step-by-step startup guide
+└── README.md
+```
+
+---
+
+## ⚡ Quick Start
+
+### Prerequisites
+
+- Java 17+
+- Gradle 8+
+- Node.js 18+ (for frontend dev server)
+- Docker Desktop (for Docker mode)
+- Android Studio (for APK build)
+
+### 1️⃣ Setup Aiven Database
+
+Run the SQL in your Aiven MySQL console (see `HOW_TO_START.txt` for the full SQL script):
+
+```sql
+CREATE DATABASE IF NOT EXISTS user_service CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS product_service CHARACTER SET utf8mb4;
+-- ... (9 databases total)
+```
+
+### 2️⃣ Configure Environment
+
+```bash
+# Edit .env file with your actual values
+# DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD are already set
+# Update JWT_SECRET to a strong random value
+```
+
+### 3️⃣ Build Common Service First
+
+```bash
+cd common-service
+./gradlew publishToMavenLocal
+```
+
+### 4️⃣ Start with Docker Compose (Recommended)
+
+```bash
+cd Entitykart
+docker-compose up -d
+```
+
+### 5️⃣ Start Frontend
+
+```bash
+cd frontend
+npx http-server -p 3000
+```
+
+Open: `http://localhost:3000`
+
+### 6️⃣ Access Points
+
+| Component | URL |
+|-----------|-----|
+| Frontend | http://localhost:3000 |
+| API Gateway | http://localhost:9901 |
+| Eureka Dashboard | http://localhost:9900 |
+| Kafka | localhost:9092 (internal) |
+
+> For full step-by-step instructions (IntelliJ, CMD, VS Code), see **`HOW_TO_START.txt`** in the project root.
+
+---
+
+## 🐳 Docker Compose Notes
+
+- All secrets come from `.env` file — never hardcode
+- `depends_on` with `service_healthy` ensures correct startup order
+- Kafka + Zookeeper start first, then discovery-server, then all microservices
+
+---
+
+## 📱 Android APK
+
+The Android app wraps the AngularJS frontend in a **WebView**.
+
+**APK Location (after build):**
+```
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+**Build command:**
+```powershell
+cd android
+.\gradlew assembleDebug
+```
+
+**For physical device:** Update `BACKEND_API_BASE` in `MainActivity.kt` to your PC's LAN IP:
+```kotlin
+private val BACKEND_API_BASE = "http://192.168.1.YOUR_IP:9901"
+```
+
+---
+
+## 🔐 Security
+
+- JWT tokens validated by API Gateway filter on every request
+- Role‑based access (USER / ADMIN) enforced at Gateway level
+- Passwords encrypted with BCrypt
+- Android WebView hardened (no file access, HTTPS enforced except local dev)
+- Network Security Config restricts cleartext to dev IPs only
+
+---
+
+## 📦 CI/CD with GitHub Actions
+
+Every service has its own workflow in `.github/workflows/`:
+
+```yaml
+name: User Service CI/CD
+on:
+  push:
+    paths: ['common-service/**', 'user-service/**']
+    branches: [main]
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build common-service
+        run: cd common-service && ./gradlew publishToMavenLocal
+      - name: Build user-service
+        run: cd user-service && ./gradlew build
+      - name: Build & push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./user-service
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/user-service:latest
+```
+
+---
+
+## 🚀 Future Enhancements
+
+- Kubernetes deployment with Helm charts
+- Redis caching for product catalogue
+- Elasticsearch + Kibana for search & analytics
+- GraphQL federation
+- AI‑based product recommendation engine
+- WebSocket live order tracking
+- iOS app
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📜 License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
+
+---
+
+## 👨‍💻 Author
+
+**Md Sadique Amin**
+Software Engineer | Java & Spring Boot Developer | AI Enthusiast
+
+<p align="left">
+  <a href="https://www.linkedin.com/in/md-sadique-amin-b6a948198/"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white"></a>
+  <a href="https://github.com/Sadique721"><img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="mailto:mdsadiqueamin721786@gmail.com"><img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white"></a>
+</p>
+
+---
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:22d3ee,100:8b5cf6&height=120&section=footer&width=100%">
+</p>
+
+<p align="center">⭐ If this project helps you, don't forget to star the repository! ⭐</p>

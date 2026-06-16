@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="entitykartApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entitykart - Modern E-Commerce Platform</title>
+    
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body ng-controller="mainController">
+
+    <!-- Header & Navigation Bar -->
+    <header class="navbar-container">
+        <nav class="navbar">
+            <div class="nav-logo">
+                <a href="#/!">
+                    <span class="logo-accent">Entity</span>kart
+                </a>
+            </div>
+            
+            <div class="nav-search">
+                <form ng-submit="searchProducts()">
+                    <div class="search-input-wrapper">
+                        <i class="fa fa-search search-icon"></i>
+                        <input type="text" ng-model="searchQuery" placeholder="Search premium products, brands...">
+                    </div>
+                </form>
+            </div>
+            
+            <div class="nav-links">
+                <a href="#!/products" class="nav-item" ng-class="{active: isActive('/products')}">
+                    <i class="fa-solid fa-store"></i> Shop
+                </a>
+                <a href="#!/wishlist" class="nav-item" ng-class="{active: isActive('/wishlist')}" ng-if="isLoggedIn()">
+                    <i class="fa-regular fa-heart"></i> Wishlist
+                </a>
+                <a href="#!/cart" class="nav-item cart-btn-badge" ng-class="{active: isActive('/cart')}">
+                    <i class="fa-solid fa-shopping-bag"></i>
+                    <span>Cart</span>
+                    <span class="badge" ng-if="getCartCount() > 0">{{ getCartCount() }}</span>
+                </a>
+                <a href="#!/orders" class="nav-item" ng-class="{active: isActive('/orders')}" ng-if="isLoggedIn()">
+                    <i class="fa-solid fa-box-open"></i> Orders
+                </a>
+                <a href="#!/admin" class="nav-item admin-badge" ng-class="{active: isActive('/admin')}" ng-if="isAdmin()">
+                    <i class="fa-solid fa-user-shield"></i> Admin
+                </a>
+                
+                <!-- Backend Environment Selector -->
+                <div class="backend-selector-wrapper" ng-if="!isMobileWebView()">
+                    <button class="btn btn-backend-selector" ng-click="toggleBackendMenu()" ng-class="{'docker-mode': getActivePort() === '9080', 'local-mode': getActivePort() === '9901'}">
+                        <i class="fa-solid" ng-class="{'fa-cubes': getActivePort() === '9080', 'fa-laptop-code': getActivePort() === '9901'}"></i>
+                        <span>{{ getActivePort() === '9080' ? 'Docker API' : 'Local API' }}</span>
+                        <i class="fa fa-chevron-down selector-arrow"></i>
+                    </button>
+                    <div class="backend-dropdown-menu" ng-show="backendMenuOpen">
+                        <a href="" ng-click="selectBackend('9080')" ng-class="{selected: getActivePort() === '9080'}">
+                            <i class="fa-solid fa-cubes"></i>
+                            <div class="menu-desc">
+                                <strong>Docker Compose API</strong>
+                                <small>Port 9080 (Gateway)</small>
+                            </div>
+                        </a>
+                        <a href="" ng-click="selectBackend('9901')" ng-class="{selected: getActivePort() === '9901'}">
+                            <i class="fa-solid fa-laptop-code"></i>
+                            <div class="menu-desc">
+                                <strong>Local Dev API</strong>
+                                <small>Port 9901 (Standalone)</small>
+                            </div>
+                        </a>
+                        <!-- Custom Host configuration for Mobile / WebView testing -->
+                        <div class="custom-ip-entry" style="padding: 12px; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.2);">
+                            <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 6px;"><i class="fa fa-network-wired"></i> Server IP / Host</label>
+                            <div style="display: flex; gap: 6px;">
+                                <input type="text" class="form-control" ng-model="customIp" placeholder="e.g. 192.168.1.6" style="padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); width: 100%; color: var(--text-primary);">
+                                <button type="button" class="btn btn-primary-gradient btn-sm" ng-click="saveCustomIp(customIp)" style="padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; min-width: 36px;" title="Save IP"><i class="fa fa-save"></i></button>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.7rem; display: block; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Target: {{ getActiveHost() }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Authentication Status -->
+                <div class="auth-section">
+                    <div ng-if="!isLoggedIn()" class="auth-buttons">
+                        <a href="#!/login" class="btn btn-secondary-glass">Login</a>
+                        <a href="#!/register" class="btn btn-primary-gradient">Sign Up</a>
+                    </div>
+                    <div ng-if="isLoggedIn()" class="user-dropdown-wrapper">
+                        <div class="user-profile-trigger" ng-click="toggleUserMenu()">
+                            <div class="avatar">{{ getUserInitials() }}</div>
+                            <span class="user-name">{{ getUserName() }}</span>
+                            <i class="fa fa-chevron-down dropdown-arrow"></i>
+                        </div>
+                        <div class="user-dropdown-menu" ng-show="userMenuOpen">
+                            <a href="#!/orders" ng-click="closeUserMenu()"><i class="fa-solid fa-receipt"></i> My Orders</a>
+                            <a href="#!/wishlist" ng-click="closeUserMenu()"><i class="fa-solid fa-heart"></i> My Wishlist</a>
+                            <a href="#!/returns" ng-click="closeUserMenu()"><i class="fa-solid fa-rotate-left"></i> My Returns</a>
+                            <hr class="dropdown-divider">
+                            <a href="" ng-click="logout()"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Global Loading Overlay -->
+    <div class="loading-overlay" ng-show="isLoading()">
+        <div class="spinner-wrapper">
+            <div class="spinner"></div>
+            <p class="loading-text">Loading Entitykart...</p>
+        </div>
+    </div>
+
+    <!-- Main View Container (Dynamically injected routes) -->
+    <main class="main-content">
+        <div ng-view class="view-slide-animation"></div>
+    </main>
+
+    <!-- Global Toast Notifications -->
+    <div class="toast-container">
+        <div class="toast-card" ng-repeat="toast in toasts" ng-class="toast.type">
+            <div class="toast-icon">
+                <i class="fa" ng-class="{'fa-check-circle': toast.type === 'success', 'fa-exclamation-circle': toast.type === 'error', 'fa-info-circle': toast.type === 'info'}"></i>
+            </div>
+            <div class="toast-message">
+                <h4>{{ toast.title }}</h4>
+                <p>{{ toast.message }}</p>
+            </div>
+            <button class="toast-close" ng-click="removeToast($index)">&times;</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer-container">
+        <div class="footer-grid">
+            <div class="footer-info">
+                <h3>Entity<span class="text-accent">kart</span></h3>
+                <p>Experience the future of e-commerce. Seamless microservices, robust payment workflows, and real-time event-driven notifications.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-github"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4>Shop</h4>
+                <ul>
+                    <li><a href="#!/products">All Products</a></li>
+                    <li><a href="#!/products?category=Electronics">Electronics</a></li>
+                    <li><a href="#!/products?category=Apparel">Apparel</a></li>
+                    <li><a href="#!/products?category=Home">Home Decor</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Customer Help</h4>
+                <ul>
+                    <li><a href="#!/orders">Track Orders</a></li>
+                    <li><a href="#!/returns">Return & Refund Policy</a></li>
+                    <li><a href="#!/cart">Shipping Information</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Contact</h4>
+                <ul>
+                    <li><i class="fa fa-envelope"></i> support@entitykart.com</li>
+                    <li><i class="fa fa-phone"></i> +1 (555) 019-2834</li>
+                    <li><i class="fa fa-location-dot"></i> Tech Park, Building 4, Bengaluru</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Entitykart. All rights reserved. Powered by Spring Boot Microservices.</p>
+        </div>
+    </footer>
+
+    <!-- AngularJS Framework and Dependencies -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+
+    <!-- Core AngularJS App Configuration -->
+    <script src="js/app.js"></script>
+
+    <!-- AngularJS Services -->
+    <script src="js/services/apiService.js"></script>
+    <script src="js/services/authService.js"></script>
+    <script src="js/services/productService.js"></script>
+    <script src="js/services/cartService.js"></script>
+    <script src="js/services/orderService.js"></script>
+    <script src="js/services/wishlistService.js"></script>
+    <script src="js/services/reviewService.js"></script>
+
+    <!-- AngularJS Controllers -->
+    <script src="js/controllers/mainController.js"></script>
+    <script src="js/controllers/authController.js"></script>
+    <script src="js/controllers/productController.js"></script>
+    <script src="js/controllers/cartController.js"></script>
+    <script src="js/controllers/orderController.js"></script>
+    <script src="js/controllers/wishlistController.js"></script>
+    <script src="js/controllers/returnController.js"></script>
+    <script src="js/controllers/adminController.js"></script>
+
+</body>
+</html>

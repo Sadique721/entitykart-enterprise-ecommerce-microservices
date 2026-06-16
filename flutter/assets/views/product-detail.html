@@ -1,0 +1,247 @@
+<div class="page-container" ng-init="initDetails()">
+    <div ng-if="selectedProduct">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="#!/">Home</a>
+        <i class="fa fa-chevron-right"></i>
+        <a href="#!/products">Products</a>
+        <i class="fa fa-chevron-right"></i>
+        <span>{{ selectedProduct.productName }}</span>
+    </div>
+
+    <!-- Product Detail Layout -->
+    <div class="product-detail-layout">
+
+        <!-- Left Side: Image Gallery -->
+        <div class="product-gallery">
+            <div class="product-gallery-main">
+                <img ng-src="{{ selectedProduct.mainImageURL }}" alt="{{ selectedProduct.productName }}"
+                     class="product-img gallery-main-img"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="product-img-placeholder gallery-placeholder" style="display:none;">
+                    <i class="fa fa-box-open"></i>
+                    <span>Product Image</span>
+                </div>
+                <!-- Discount Badge -->
+                <div class="gallery-badge" ng-if="selectedProduct.discountPercent > 0">
+                    {{ selectedProduct.discountPercent }}% OFF
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Product Info & Buy Box -->
+        <div class="product-detail-info">
+
+            <!-- Brand & Title -->
+            <span class="detail-brand">{{ selectedProduct.brand }}</span>
+            <h1 class="detail-title">{{ selectedProduct.productName }}</h1>
+
+            <!-- Rating Summary -->
+            <div class="rating-row" ng-if="ratingStats">
+                <div class="stars-container">
+                    <i class="fa fa-star" ng-repeat="i in [1,2,3,4,5]"
+                       ng-class="i <= ratingStats.averageRating ? 'text-accent' : 'text-muted'"></i>
+                </div>
+                <span class="rating-value">{{ ratingStats.averageRating | number:1 }}</span>
+                <span class="text-secondary rating-count">({{ ratingStats.totalReviews || 0 }} reviews)</span>
+                <a href="" ng-click="scrollToReviews()" class="text-accent link-sm">Read Reviews</a>
+            </div>
+
+            <!-- Price Box -->
+            <div class="detail-price-box">
+                <div class="price-row">
+                    <span class="price-now" style="font-size: 2rem;">₹{{ selectedProduct.price | number:2 }}</span>
+                    <span class="price-mrp" ng-if="selectedProduct.mrp > selectedProduct.price">
+                        ₹{{ selectedProduct.mrp | number:2 }}
+                    </span>
+                    <span class="price-discount badge-discount" ng-if="selectedProduct.discountPercent > 0">
+                        {{ selectedProduct.discountPercent }}% OFF
+                    </span>
+                </div>
+                <div class="savings-text" ng-if="selectedProduct.mrp > selectedProduct.price">
+                    <i class="fa fa-tag text-accent"></i>
+                    You save ₹{{ (selectedProduct.mrp - selectedProduct.price) | number:2 }}!
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="detail-description">
+                <p class="text-secondary">{{ selectedProduct.description }}</p>
+            </div>
+
+            <!-- Product Meta Info -->
+            <div class="detail-meta-list">
+                <div class="detail-meta-item">
+                    <span class="detail-meta-label"><i class="fa fa-warehouse"></i> Availability</span>
+                    <span class="status-badge" ng-class="selectedProduct.stockQuantity > 0 ? 'approved' : 'failed'">
+                        <i class="fa" ng-class="selectedProduct.stockQuantity > 0 ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                        {{ selectedProduct.stockQuantity > 0 ? 'In Stock (' + selectedProduct.stockQuantity + ' left)' : 'Out of Stock' }}
+                    </span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-meta-label"><i class="fa fa-barcode"></i> SKU</span>
+                    <span class="text-secondary font-mono">{{ selectedProduct.sku }}</span>
+                </div>
+                <div class="detail-meta-item" ng-if="selectedProduct.categoryId">
+                    <span class="detail-meta-label"><i class="fa fa-folder"></i> Category</span>
+                    <span class="text-secondary">Category #{{ selectedProduct.categoryId }}</span>
+                </div>
+            </div>
+
+            <!-- Add to Cart / Wishlist Actions -->
+            <div class="detail-actions" ng-if="selectedProduct.stockQuantity > 0">
+                <div class="qty-selector">
+                    <button class="qty-btn" ng-click="adjustQty(-1)" ng-disabled="detailQty <= 1">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                    <span class="qty-display">{{ detailQty }}</span>
+                    <button class="qty-btn" ng-click="adjustQty(1)"
+                            ng-disabled="detailQty >= selectedProduct.stockQuantity">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
+                <button class="btn btn-primary-gradient" ng-click="addToCart(selectedProduct, detailQty)" style="flex: 1;">
+                    <i class="fa fa-shopping-bag"></i> Add to Bag
+                </button>
+                <button class="btn" ng-click="toggleWishlist(selectedProduct)"
+                        ng-class="isWishlisted ? 'btn-danger-glass' : 'btn-secondary-glass'"
+                        style="min-width: 52px;" title="Add to Wishlist">
+                    <i class="fa" ng-class="isWishlisted ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+                </button>
+            </div>
+
+            <!-- Out of Stock CTA -->
+            <div ng-if="selectedProduct.stockQuantity <= 0" class="alert alert-error" style="margin-top: 1.5rem;">
+                <i class="fa fa-circle-exclamation"></i>
+                This product is currently out of stock. We'll notify you when it's available.
+            </div>
+
+            <!-- Delivery & Trust Info -->
+            <div class="delivery-info">
+                <div class="delivery-item">
+                    <i class="fa fa-truck text-accent"></i>
+                    <div>
+                        <strong>Free Delivery</strong>
+                        <span>On orders above ₹499</span>
+                    </div>
+                </div>
+                <div class="delivery-item">
+                    <i class="fa fa-rotate-left text-accent"></i>
+                    <div>
+                        <strong>Easy Returns</strong>
+                        <span>7-day return policy</span>
+                    </div>
+                </div>
+                <div class="delivery-item">
+                    <i class="fa fa-shield-check text-accent"></i>
+                    <div>
+                        <strong>Secure Checkout</strong>
+                        <span>256-bit SSL encrypted</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews & Ratings Section -->
+    <section class="reviews-section" id="reviews-section">
+        <div class="section-header">
+            <h2>Customer Reviews</h2>
+            <div class="rating-summary-pill" ng-if="ratingStats">
+                <i class="fa fa-star text-accent"></i>
+                <strong>{{ ratingStats.averageRating | number:1 }}</strong>
+                <span class="text-secondary">out of 5</span>
+            </div>
+        </div>
+
+        <div class="reviews-layout" style="margin-top: 2rem;">
+
+            <!-- Left: Stats & Submit -->
+            <div>
+                <!-- Rating Distribution Bars -->
+                <div class="card-glass review-summary-box" ng-if="ratingStats">
+                    <div class="avg-rating-display">
+                        <div class="avg-rating-num">{{ ratingStats.averageRating | number:1 }}</div>
+                        <div class="stars-container">
+                            <i class="fa fa-star text-accent" ng-repeat="i in [1,2,3,4,5]"
+                               ng-if="i <= ratingStats.averageRating"></i>
+                        </div>
+                        <p class="text-secondary">{{ ratingStats.totalReviews }} total reviews</p>
+                    </div>
+                    <div class="rating-bars" ng-if="ratingStats.distribution">
+                        <div class="rating-bar-row" ng-repeat="star in [5,4,3,2,1]">
+                            <span class="bar-label">{{ star }} <i class="fa fa-star" style="color: #f59e0b; font-size: 0.7rem;"></i></span>
+                            <div class="bar-track">
+                                <div class="bar-fill" ng-style="{'width': getBarWidth(star) + '%'}"></div>
+                            </div>
+                            <span class="bar-count text-secondary">{{ ratingStats.distribution[star] || 0 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Write a Review -->
+                <div class="card-glass" style="margin-top: 1.5rem;" ng-if="isLoggedIn()">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1.2rem;">
+                        <i class="fa fa-pen text-accent"></i> Write a Review
+                    </h3>
+                    <form ng-submit="submitReview()">
+                        <div class="form-group">
+                            <label>Your Rating</label>
+                            <div class="star-rating-input">
+                                <i class="fa fa-star star-input" ng-repeat="i in [1,2,3,4,5]"
+                                   ng-class="{filled: i <= (hoverRating || newReview.rating)}"
+                                   ng-mouseover="hoverRating = i"
+                                   ng-mouseleave="hoverRating = 0"
+                                   ng-click="newReview.rating = i"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Your Review</label>
+                            <textarea class="form-control" ng-model="newReview.comment" rows="4"
+                                      placeholder="Share your honest experience with this product..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary-gradient btn-block"
+                                ng-disabled="!newReview.rating || !newReview.comment">
+                            <i class="fa fa-paper-plane"></i> Submit Review
+                        </button>
+                    </form>
+                </div>
+                <div class="card-glass" style="margin-top: 1.5rem; text-align: center;" ng-if="!isLoggedIn()">
+                    <p class="text-secondary"><i class="fa fa-lock"></i> <a href="#!/login" class="text-accent">Sign in</a> to write a review</p>
+                </div>
+            </div>
+
+            <!-- Right: Reviews Feed -->
+            <div>
+                <div class="empty-state" ng-if="reviews.length === 0" style="padding: 3rem 0;">
+                    <div class="empty-state-icon" style="font-size: 3rem;"><i class="fa fa-comments"></i></div>
+                    <p>No reviews yet. Be the first to share your experience!</p>
+                </div>
+
+                <div class="reviews-list" ng-if="reviews.length > 0">
+                    <div class="review-card" ng-repeat="r in reviews">
+                        <div class="review-header">
+                            <div class="reviewer-info">
+                                <div class="avatar" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                                    {{ (r.customerName || 'U').charAt(0).toUpperCase() }}
+                                </div>
+                                <div>
+                                    <strong>{{ r.customerName || 'Anonymous' }}</strong>
+                                    <span class="review-date">{{ r.createdAt | date:'dd MMM yyyy' }}</span>
+                                </div>
+                            </div>
+                            <div class="stars-container">
+                                <i class="fa fa-star"
+                                   ng-repeat="i in [1,2,3,4,5]"
+                                   ng-class="i <= r.rating ? 'text-accent' : 'text-muted'"></i>
+                            </div>
+                        </div>
+                        <p class="review-comment">{{ r.comment }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    </div>
+</div>

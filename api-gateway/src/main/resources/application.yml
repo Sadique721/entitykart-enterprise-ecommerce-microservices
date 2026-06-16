@@ -1,0 +1,71 @@
+server:
+  port: ${SERVER_PORT:9901}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+        - id: product-service-products
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+        - id: product-service-categories
+          uri: lb://product-service
+          predicates:
+            - Path=/api/categories/**
+        - id: cart-service
+          uri: lb://cart-service
+          predicates:
+            - Path=/api/cart/**
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+        - id: wishlist-service
+          uri: lb://wishlist-service
+          predicates:
+            - Path=/api/wishlist/**
+        - id: review-service
+          uri: lb://review-service
+          predicates:
+            - Path=/api/reviews/**,/api/admin/reviews/**
+        - id: return-service
+          uri: lb://return-service
+          predicates:
+            - Path=/api/returns/**,/api/admin/returns/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/admin/notifications/**,/api/admin/export/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:9900/eureka/}
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: ${JWT_SECRET:your-super-secret-jwt-key-change-this-in-production}
