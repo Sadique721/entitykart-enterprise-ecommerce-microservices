@@ -52,4 +52,24 @@ public class UserController {
     public UserDTO getUserById(@PathVariable Long id) {
         return userService.getUserById(id);
     }
+
+    @PutMapping("/{id}")
+    public UserDTO updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+        return userService.updateUser(id, userDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+    }
+
+    @PatchMapping("/{id}/toggle-status")
+    public UserDTO toggleUserStatus(@PathVariable Long id) {
+        return userService.toggleUserStatus(id);
+    }
+
+    @GetMapping("/stats")
+    public java.util.Map<String, Object> getUserStats() {
+        return userService.getUserStats();
+    }
 }

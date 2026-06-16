@@ -2527,3 +2527,29 @@ textarea.form-control {
     .grid-3 { grid-template-columns: 1fr; }
 }
 
+/* Enhanced Admin Panel Styles */
+.product-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid var(--glass-border);
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--glass-border);
+}
+
+.stat-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+

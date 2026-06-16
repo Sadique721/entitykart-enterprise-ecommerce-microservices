@@ -651,6 +651,14 @@
   CHANGELOG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  [2026-06-16] v1.1.0
+  ─────────────────────────────────────────────────────────────
+  ✅ Enhanced Admin Control Panel with Dashboard Overview (metric cards, recent products & orders).
+  ✅ Added User Accounts Management tab with soft delete, active/inactive toggle, and role modification APIs/UI.
+  ✅ Enhanced Product catalog with Available/Unavailable status tracking and Edit/Delete controls.
+  ✅ Integrated Payments History and Reviews Moderation tabs (CRUD for reviews) on frontend.
+  ✅ Updated user-service and product-service with update/delete mapping methods and count metrics.
+
   [2026-06-16] v1.0.0
   ─────────────────────────────────────────────────────────────
   ✅ Integrated Cloudinary SDK (cloudinary-http44:1.36.0) into product-service

@@ -290,5 +290,26 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
             return response.data.url;
         });
     };
+
+    this.updateProduct = function(productId, productData) {
+        return apiService.put('/api/products/' + productId, productData)
+            .then(function(response) {
+                return response.data;
+            });
+    };
+
+    this.deleteProduct = function(productId) {
+        return apiService.delete('/api/products/' + productId)
+            .then(function(response) {
+                return response.data;
+            });
+    };
+
+    this.getProductStats = function() {
+        return apiService.get('/api/products/stats')
+            .then(function(response) {
+                return response.data;
+            });
+    };
 }]);
 

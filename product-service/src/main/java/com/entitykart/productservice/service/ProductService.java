@@ -5,6 +5,8 @@ import com.entitykart.productservice.entity.ProductEntity;
 import com.entitykart.productservice.event.ProductCreatedEvent;
 import com.entitykart.productservice.exception.ProductNotFoundException;
 import com.entitykart.productservice.repository.ProductRepository;
+import com.entitykart.productservice.repository.CategoryRepository;
+import com.entitykart.productservice.repository.SubCategoryRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +24,8 @@ public class ProductService {
     private static final String PRODUCT_EVENTS_TOPIC = "product-events";
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final SubCategoryRepository subCategoryRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Transactional
@@ -38,6 +42,9 @@ public class ProductService {
         product.setCategoryId(dto.getCategoryId());
         product.setSubCategoryId(dto.getSubCategoryId());
         product.setSellerId(dto.getSellerId());
+        if (dto.getStatus() != null) {
+            product.setStatus(dto.getStatus());
+        }
 
         ProductEntity saved = productRepository.save(product);
 
@@ -88,11 +95,51 @@ public class ProductService {
         dto.setSubCategoryId(entity.getSubCategoryId());
         dto.setSellerId(entity.getSellerId());
         dto.setDiscountPercent(entity.getDiscountPercent());
+        dto.setStatus(entity.getStatus());
+        dto.setCreatedAt(entity.getCreatedAt());
         return dto;
     }
 
     @Transactional(readOnly = true)
     public List<ProductDTO> getAllProducts() {
         return productRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ProductDTO updateProduct(Long id, ProductDTO dto) {
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found: " + id));
+        product.setProductName(dto.getProductName());
+        product.setDescription(dto.getDescription());
+        product.setBrand(dto.getBrand());
+        product.setPrice(dto.getPrice());
+        product.setMrp(dto.getMrp());
+        product.setStockQuantity(dto.getStockQuantity());
+        product.setSku(dto.getSku());
+        product.setMainImageURL(dto.getMainImageURL());
+        product.setCategoryId(dto.getCategoryId());
+        product.setSubCategoryId(dto.getSubCategoryId());
+        product.setSellerId(dto.getSellerId());
+        if (dto.getStatus() != null) {
+            product.setStatus(dto.getStatus());
+        }
+        ProductEntity saved = productRepository.save(product);
+        return convertToDTO(saved);
+    }
+
+    @Transactional
+    public void deleteProduct(Long id) {
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found: " + id));
+        productRepository.delete(product);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> getProductStats() {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("totalProducts", productRepository.count());
+        stats.put("totalCategories", categoryRepository.count());
+        stats.put("totalSubCategories", subCategoryRepository.count());
+        return stats;
     }
 }

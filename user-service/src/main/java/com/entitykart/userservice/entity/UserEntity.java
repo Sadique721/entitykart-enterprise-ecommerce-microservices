@@ -6,9 +6,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -37,5 +39,17 @@ public class UserEntity {
     private boolean active;
 
     private String resetToken;
-    private java.time.LocalDateTime resetTokenExpiry;
+    private LocalDateTime resetTokenExpiry;
+
+    private String gender;
+    private String contactNum;
+    private String profilePicURL;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

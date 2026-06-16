@@ -73,4 +73,21 @@ public class CategoryService {
     public List<SubCategoryEntity> getSubCategories(Long categoryId) {
         return subCategoryRepository.findByCategoryId(categoryId);
     }
+
+    @Transactional
+    public void deleteCategory(Long id) {
+        CategoryEntity category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found: " + id));
+        categoryRepository.delete(category);
+    }
+
+    @Transactional
+    public void deleteSubCategory(Long categoryId, Long subId) {
+        SubCategoryEntity subCategory = subCategoryRepository.findById(subId)
+                .orElseThrow(() -> new RuntimeException("Sub-category not found: " + subId));
+        if (!subCategory.getCategoryId().equals(categoryId)) {
+            throw new RuntimeException("Sub-category does not belong to category: " + categoryId);
+        }
+        subCategoryRepository.delete(subCategory);
+    }
 }

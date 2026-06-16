@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
 public class UserDTO {
@@ -18,9 +19,13 @@ public class UserDTO {
     private String email;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @NotBlank(message = "Password is required")
     private String password;
 
     private String role;
     private boolean active;
+    
+    private String gender;
+    private String contactNum;
+    private String profilePicURL;
+    private LocalDateTime createdAt;
 }

@@ -45,9 +45,15 @@ public class UserService {
         UserEntity user = new UserEntity();
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
+        if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("Password is required");
+        }
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRole("USER");
         user.setActive(true);
+        user.setGender(dto.getGender());
+        user.setContactNum(dto.getContactNum());
+        user.setProfilePicURL(dto.getProfilePicURL());
 
         UserEntity saved = userRepository.save(user);
 
@@ -94,6 +100,10 @@ public class UserService {
         dto.setEmail(entity.getEmail());
         dto.setRole(entity.getRole());
         dto.setActive(entity.isActive());
+        dto.setGender(entity.getGender());
+        dto.setContactNum(entity.getContactNum());
+        dto.setProfilePicURL(entity.getProfilePicURL());
+        dto.setCreatedAt(entity.getCreatedAt());
         return dto;
     }
 
@@ -142,5 +152,48 @@ public class UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         return convertToDTO(user);
+    }
+
+    public UserDTO updateUser(Long id, UserDTO dto) {
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        if (dto.getRole() != null) {
+            user.setRole(dto.getRole());
+        }
+        user.setActive(dto.isActive());
+        user.setGender(dto.getGender());
+        user.setContactNum(dto.getContactNum());
+        user.setProfilePicURL(dto.getProfilePicURL());
+
+        UserEntity saved = userRepository.save(user);
+        return convertToDTO(saved);
+    }
+
+    public void deleteUser(Long id) {
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        user.setActive(false);
+        userRepository.save(user);
+    }
+
+    public UserDTO toggleUserStatus(Long id) {
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        user.setActive(!user.isActive());
+        UserEntity saved = userRepository.save(user);
+        return convertToDTO(saved);
+    }
+
+    public java.util.Map<String, Object> getUserStats() {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("totalUsers", userRepository.count());
+        stats.put("totalAdmins", userRepository.countByRole("ADMIN"));
+        stats.put("totalActive", userRepository.countByActive(true));
+        return stats;
     }
 }

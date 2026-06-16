@@ -6,6 +6,7 @@ import com.entitykart.productservice.entity.SubCategoryEntity;
 import com.entitykart.productservice.service.CategoryService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,5 +47,15 @@ public class CategoryController {
             @PathVariable Long categoryId,
             @RequestBody SubCategoryEntity subCategory) {
         return categoryService.createSubCategory(categoryId, subCategory);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteCategory(@PathVariable Long id) {
+        categoryService.deleteCategory(id);
+    }
+
+    @DeleteMapping("/{categoryId}/sub-categories/{subId}")
+    public void deleteSubCategory(@PathVariable Long categoryId, @PathVariable Long subId) {
+        categoryService.deleteSubCategory(categoryId, subId);
     }
 }

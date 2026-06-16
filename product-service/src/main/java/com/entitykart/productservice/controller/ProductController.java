@@ -62,4 +62,19 @@ public class ProductController {
     public List<ProductDTO> getAllProducts() {
         return productService.getAllProducts();
     }
+
+    @PutMapping("/{id}")
+    public ProductDTO updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
+        return productService.updateProduct(id, productDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+    }
+
+    @GetMapping("/stats")
+    public Map<String, Object> getProductStats() {
+        return productService.getProductStats();
+    }
 }

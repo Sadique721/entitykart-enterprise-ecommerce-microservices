@@ -1,6 +1,7 @@
 package com.entitykart.productservice.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 @Data
@@ -19,4 +20,6 @@ public class ProductDTO {
     private Long subCategoryId;
     private Long sellerId;
     private BigDecimal discountPercent;
+    private String status;
+    private LocalDateTime createdAt;
 }

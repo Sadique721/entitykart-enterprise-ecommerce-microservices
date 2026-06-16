@@ -14,6 +14,12 @@
         <!-- Sidebar Navigation -->
         <aside class="admin-sidebar">
             <ul class="admin-menu-list">
+                <li class="admin-menu-item" ng-class="{active: activeTab === 'dashboard'}" ng-click="switchTab('dashboard')">
+                    <i class="fa fa-chart-pie"></i> Dashboard
+                </li>
+                <li class="admin-menu-item" ng-class="{active: activeTab === 'users'}" ng-click="switchTab('users')">
+                    <i class="fa fa-users"></i> User Accounts
+                </li>
                 <li class="admin-menu-item" ng-class="{active: activeTab === 'products'}" ng-click="switchTab('products')">
                     <i class="fa fa-cubes"></i> Products Catalog
                 </li>
@@ -26,6 +32,12 @@
                 <li class="admin-menu-item" ng-class="{active: activeTab === 'returns'}" ng-click="switchTab('returns')">
                     <i class="fa fa-rotate-left"></i> Return & Refunds
                 </li>
+                <li class="admin-menu-item" ng-class="{active: activeTab === 'payments'}" ng-click="switchTab('payments')">
+                    <i class="fa fa-credit-card"></i> Payments History
+                </li>
+                <li class="admin-menu-item" ng-class="{active: activeTab === 'reviews'}" ng-click="switchTab('reviews')">
+                    <i class="fa fa-ranking-stars"></i> Reviews Moderation
+                </li>
                 <li class="admin-menu-item" ng-class="{active: activeTab === 'reports'}" ng-click="switchTab('reports')">
                     <i class="fa fa-chart-line"></i> Reports & Stats
                 </li>
@@ -37,6 +49,160 @@
 
         <!-- Main Tab Content Panel -->
         <div class="card-glass">
+            
+            <!-- Dashboard Panel -->
+            <div ng-if="activeTab === 'dashboard'">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3>Dashboard Overview</h3>
+                    <span class="text-secondary font-mono" style="font-size: 0.85rem;"><i class="fa fa-clock"></i> Operations Console</span>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="grid-4" style="margin-bottom: 2rem;">
+                    <div class="card-glass stat-card" style="padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="background: rgba(59, 130, 246, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 1.5rem;">
+                            <i class="fa fa-users"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary" style="font-size: 0.8rem; display: block;">Total Users</span>
+                            <h3 style="margin: 0; font-size: 1.6rem;">{{ dashboardStats.totalUsers }}</h3>
+                        </div>
+                    </div>
+                    <div class="card-glass stat-card" style="padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="background: rgba(16, 185, 129, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.5rem;">
+                            <i class="fa fa-cubes"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary" style="font-size: 0.8rem; display: block;">Total Products</span>
+                            <h3 style="margin: 0; font-size: 1.6rem;">{{ dashboardStats.totalProducts }}</h3>
+                        </div>
+                    </div>
+                    <div class="card-glass stat-card" style="padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="background: rgba(245, 158, 11, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 1.5rem;">
+                            <i class="fa fa-tags"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary" style="font-size: 0.8rem; display: block;">Categories</span>
+                            <h3 style="margin: 0; font-size: 1.6rem;">{{ dashboardStats.totalCategories }}</h3>
+                        </div>
+                    </div>
+                    <div class="card-glass stat-card" style="padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="background: rgba(239, 68, 68, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.5rem;">
+                            <i class="fa fa-cart-flatbed"></i>
+                        </div>
+                        <div>
+                            <span class="text-secondary" style="font-size: 0.8rem; display: block;">Total Orders</span>
+                            <h3 style="margin: 0; font-size: 1.6rem;">{{ dashboardStats.totalOrders }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="align-items: start;">
+                    <!-- Recent Products -->
+                    <div class="card-glass" style="padding: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem;"><i class="fa fa-cubes text-accent"></i> Recent Products</h4>
+                        <div class="table-responsive">
+                            <table class="data-table" style="font-size: 0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Brand</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="p in recentProducts">
+                                        <td><strong>{{ p.productName }}</strong></td>
+                                        <td>{{ p.brand }}</td>
+                                        <td>₹{{ p.price | number:2 }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Orders -->
+                    <div class="card-glass" style="padding: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem;"><i class="fa fa-cart-flatbed text-accent"></i> Recent Orders</h4>
+                        <div class="table-responsive">
+                            <table class="data-table" style="font-size: 0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="o in recentOrders">
+                                        <td><strong>#{{ o.orderId }}</strong></td>
+                                        <td>₹{{ o.totalAmount | number:2 }}</td>
+                                        <td>
+                                            <span class="status-badge" ng-class="o.orderStatus.toLowerCase()">
+                                                {{ o.orderStatus }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Panel -->
+            <div ng-if="activeTab === 'users'">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3>User Accounts Management</h3>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Avatar</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Gender</th>
+                                <th>Contact</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="u in adminUsers">
+                                <td><strong>#{{ u.id }}</strong></td>
+                                <td>
+                                    <img ng-src="{{ u.profilePicURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80' }}" class="avatar-sm" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                </td>
+                                <td><strong>{{ u.name }}</strong></td>
+                                <td class="text-secondary">{{ u.email }}</td>
+                                <td class="text-secondary">{{ u.gender || 'Not specified' }}</td>
+                                <td class="text-secondary">{{ u.contactNum || 'N/A' }}</td>
+                                <td>
+                                    <span class="status-badge" ng-class="u.role === 'ADMIN' ? 'failed' : 'approved'">
+                                        {{ u.role }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge" ng-class="u.active ? 'approved' : 'pending'">
+                                        {{ u.active ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-secondary-glass btn-sm" ng-click="editUser(u)" style="padding: 4px 8px;" title="Edit User"><i class="fa fa-edit"></i></button>
+                                        <button class="btn btn-secondary-glass btn-sm" ng-click="toggleUserStatus(u)" style="padding: 4px 8px;" title="Toggle Status"><i class="fa fa-power-off"></i></button>
+                                        <button class="btn btn-danger-gradient btn-sm" ng-click="deleteUser(u)" style="padding: 4px 8px;" title="Deactivate"><i class="fa fa-ban"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             
             <!-- Products Catalog Panel -->
             <div ng-if="activeTab === 'products'">
@@ -51,15 +217,21 @@
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>Image</th>
                                 <th>SKU</th>
                                 <th>Product Name</th>
                                 <th>Brand</th>
                                 <th>Price</th>
                                 <th>Stock</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr ng-repeat="p in adminProducts">
+                                <td>
+                                    <img ng-src="{{ p.mainImageURL || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80' }}" class="product-thumb" alt="Product Image" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
+                                </td>
                                 <td class="font-mono text-secondary">{{ p.sku }}</td>
                                 <td><strong>{{ p.productName }}</strong></td>
                                 <td>{{ p.brand }}</td>
@@ -68,6 +240,17 @@
                                     <span class="status-badge" ng-class="p.stockQuantity > 5 ? 'approved' : (p.stockQuantity > 0 ? 'pending' : 'failed')">
                                         {{ p.stockQuantity }} left
                                     </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge" ng-class="p.status === 'Available' ? 'approved' : 'failed'">
+                                        {{ p.status || 'Available' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-secondary-glass btn-sm" ng-click="editProduct(p)" style="padding: 4px 8px;" title="Edit Product"><i class="fa fa-edit"></i></button>
+                                        <button class="btn btn-danger-gradient btn-sm" ng-click="deleteProduct(p)" style="padding: 4px 8px;" title="Delete Product"><i class="fa fa-trash"></i></button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -153,8 +336,10 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Customer ID</th>
                                 <th>Order Date</th>
                                 <th>Total Amount</th>
+                                <th>Payment</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -162,23 +347,121 @@
                         <tbody>
                             <tr ng-repeat="o in adminOrders">
                                 <td><strong>#{{ o.orderId }}</strong></td>
+                                <td class="text-secondary">#{{ o.customerId }}</td>
                                 <td class="text-secondary">{{ o.orderDate | date:'mediumDate' }}</td>
                                 <td>₹{{ o.totalAmount | number:2 }}</td>
+                                <td>
+                                    <span class="status-badge" ng-class="o.paymentStatus === 'PAID' ? 'approved' : 'pending'">
+                                        {{ o.paymentStatus || 'PENDING' }}
+                                    </span>
+                                </td>
                                 <td>
                                     <span class="status-badge" ng-class="o.orderStatus.toLowerCase()">
                                         {{ o.orderStatus }}
                                     </span>
                                 </td>
                                 <td>
-                                    <div style="display: flex; gap: 0.5rem;" ng-if="o.orderStatus !== 'DELIVERED' && o.orderStatus !== 'CLOSED'">
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-secondary-glass btn-sm" ng-click="viewOrderDetails(o)">
+                                            <i class="fa fa-eye"></i> Details
+                                        </button>
                                         <button class="btn btn-secondary-glass btn-sm" ng-if="o.orderStatus === 'PLACED'" ng-click="updateStatus(o, 'SHIPPED')">
-                                            Ship Order
+                                            Ship
                                         </button>
                                         <button class="btn btn-success-gradient btn-sm" ng-if="o.orderStatus === 'SHIPPED'" ng-click="updateStatus(o, 'DELIVERED')">
-                                            Mark Delivered
+                                            Deliver
                                         </button>
                                     </div>
-                                    <span class="text-muted" ng-if="o.orderStatus === 'DELIVERED' || o.orderStatus === 'CLOSED'">Complete</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payments History Panel -->
+            <div ng-if="activeTab === 'payments'">
+                <h3>Financial Payments History</h3>
+                
+                <div class="empty-state" ng-if="adminPayments.length === 0" style="padding: 2rem 0;">
+                    <i class="fa fa-credit-card"></i>
+                    <p>No payments recorded in the system.</p>
+                </div>
+
+                <div class="table-responsive" ng-if="adminPayments.length > 0">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Payment ID</th>
+                                <th>Order ID</th>
+                                <th>Amount</th>
+                                <th>Mode</th>
+                                <th>Transaction Ref</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="py in adminPayments">
+                                <td><strong>#{{ py.paymentId }}</strong></td>
+                                <td class="text-secondary">#{{ py.orderId }}</td>
+                                <td><strong>₹{{ py.amount | number:2 }}</strong></td>
+                                <td>
+                                    <span class="status-badge" ng-class="py.paymentMode === 'CARD' ? 'approved' : 'pending'">
+                                        {{ py.paymentMode }}
+                                    </span>
+                                </td>
+                                <td class="font-mono text-secondary">{{ py.transactionRef }}</td>
+                                <td>
+                                    <span class="status-badge" ng-class="py.paymentStatus === 'SUCCESS' ? 'approved' : 'failed'">
+                                        {{ py.paymentStatus }}
+                                    </span>
+                                </td>
+                                <td class="text-secondary">{{ py.paymentDate | date:'medium' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Reviews Moderation Panel -->
+            <div ng-if="activeTab === 'reviews'">
+                <h3>Product Reviews &amp; Ratings Moderation</h3>
+                
+                <div class="empty-state" ng-if="adminReviews.length === 0" style="padding: 2rem 0;">
+                    <i class="fa fa-star"></i>
+                    <p>No reviews registered in the system.</p>
+                </div>
+
+                <div class="table-responsive" ng-if="adminReviews.length > 0">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Review ID</th>
+                                <th>Product ID</th>
+                                <th>Customer ID</th>
+                                <th>Rating</th>
+                                <th>Comment</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="rv in adminReviews">
+                                <td><strong>#{{ rv.reviewId }}</strong></td>
+                                <td class="text-secondary">#{{ rv.productId }}</td>
+                                <td class="text-secondary">#{{ rv.customerId }}</td>
+                                <td>
+                                    <span style="color: #f59e0b; display: flex; gap: 2px;">
+                                        <i class="fa-solid fa-star" ng-repeat="star in [1,2,3,4,5]" ng-style="{'opacity': star <= rv.rating ? '1' : '0.2'}"></i>
+                                    </span>
+                                </td>
+                                <td>{{ rv.comment }}</td>
+                                <td class="text-secondary">{{ rv.createdAt | date:'medium' }}</td>
+                                <td>
+                                    <button class="btn btn-danger-gradient btn-sm" ng-click="deleteReview(rv.reviewId)" style="padding: 4px 8px;">
+                                        <i class="fa fa-trash"></i> Delete
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -679,6 +962,221 @@
                     <button type="submit" class="btn btn-primary-gradient">Create Sub-category</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div class="modal-backdrop" ng-show="showEditProductModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Edit Product</h3>
+                <button class="remove-btn" ng-click="closeEditProductModal()">&times;</button>
+            </div>
+            <form ng-submit="updateProductSubmit()">
+                <div class="modal-body" style="max-height: 450px; overflow-y: auto;">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" class="form-control" ng-model="editingProduct.productName" required>
+                    </div>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>Brand</label>
+                            <input type="text" class="form-control" ng-model="editingProduct.brand" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select class="form-control" ng-model="editingProduct.categoryId" ng-options="cat.id as cat.name for cat in adminCategories" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sub-Category</label>
+                            <select class="form-control" ng-model="editingProduct.subCategoryId" ng-options="sub.subCategoryId as sub.name for sub in editAvailableSubCategories">
+                                <option value="">-- None --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Selling Price (₹)</label>
+                            <input type="number" step="0.01" class="form-control" ng-model="editingProduct.price" required>
+                        </div>
+                        <div class="form-group">
+                            <label>MRP (₹)</label>
+                            <input type="number" step="0.01" class="form-control" ng-model="editingProduct.mrp" required>
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>Stock Quantity</label>
+                            <input type="number" class="form-control" ng-model="editingProduct.stockQuantity" required>
+                        </div>
+                        <div class="form-group">
+                            <label>SKU</label>
+                            <input type="text" class="form-control" ng-model="editingProduct.sku" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="form-control" ng-model="editingProduct.status">
+                                <option value="Available">Available</option>
+                                <option value="Unavailable">Unavailable</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" ng-model="editingProduct.description" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Product Image URL (Optional)</label>
+                        <input type="url" class="form-control" ng-model="editingProduct.mainImageURL" placeholder="http://example.com/image.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label>Or Upload Product Image to Cloudinary</label>
+                        <input type="file" class="form-control" onchange="angular.element(this).scope().uploadEditProductImageFile(this)" accept="image/*">
+                    </div>
+                    <div class="form-group" ng-if="editingProduct.mainImageURL">
+                        <label>Image Preview</label>
+                        <div style="margin-top: 0.5rem; text-align: center;">
+                            <img ng-src="{{editingProduct.mainImageURL}}" alt="Product Image" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-glass" ng-click="closeEditProductModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary-gradient">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal-backdrop" ng-show="showEditUserModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Edit User Profile</h3>
+                <button class="remove-btn" ng-click="closeEditUserModal()">&times;</button>
+            </div>
+            <form ng-submit="updateUserSubmit()">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" class="form-control" ng-model="editingUser.name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" class="form-control" ng-model="editingUser.email" required>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select class="form-control" ng-model="editingUser.gender">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Number</label>
+                            <input type="text" class="form-control" ng-model="editingUser.contactNum">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select class="form-control" ng-model="editingUser.role" required>
+                                <option value="USER">USER</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Account Status</label>
+                            <select class="form-control" ng-model="editingUser.active" ng-options="o.v as o.n for o in [{v:true, n:'Active'}, {v:false, n:'Inactive'}]" required></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Profile Picture URL</label>
+                        <input type="url" class="form-control" ng-model="editingUser.profilePicURL" placeholder="http://example.com/pic.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label>New Password (Optional)</label>
+                        <input type="password" class="form-control" ng-model="editingUser.password" placeholder="Leave blank to keep current password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-glass" ng-click="closeEditUserModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary-gradient">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div class="modal-backdrop" ng-show="showOrderDetailModal">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Order #{{ viewingOrder.orderId }} Details</h3>
+                <button class="remove-btn" ng-click="closeOrderDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 450px; overflow-y: auto;">
+                <div class="grid-2" style="margin-bottom: 1rem;">
+                    <div>
+                        <span class="text-secondary" style="font-size: 0.8rem; display: block;">Customer ID</span>
+                        <strong>#{{ viewingOrder.customerId }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-secondary" style="font-size: 0.8rem; display: block;">Order Date</span>
+                        <strong>{{ viewingOrder.orderDate | date:'medium' }}</strong>
+                    </div>
+                </div>
+                <div class="grid-2" style="margin-bottom: 1.5rem;">
+                    <div>
+                        <span class="text-secondary" style="font-size: 0.8rem; display: block;">Payment Status</span>
+                        <span class="status-badge" ng-class="viewingOrder.paymentStatus === 'PAID' ? 'approved' : 'pending'">{{ viewingOrder.paymentStatus || 'PENDING' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-secondary" style="font-size: 0.8rem; display: block;">Order Status</span>
+                        <span class="status-badge" ng-class="viewingOrder.orderStatus.toLowerCase()">{{ viewingOrder.orderStatus }}</span>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Shipping Address</h4>
+                <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.4; margin-bottom: 1.5rem;">
+                    {{ viewingOrder.shippingAddress.addressLine1 }}<br>
+                    <span ng-if="viewingOrder.shippingAddress.addressLine2">{{ viewingOrder.shippingAddress.addressLine2 }}<br></span>
+                    {{ viewingOrder.shippingAddress.city }}, {{ viewingOrder.shippingAddress.state }} - {{ viewingOrder.shippingAddress.zipCode }}<br>
+                    <strong>Country:</strong> {{ viewingOrder.shippingAddress.country }}
+                </p>
+
+                <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Order Items</h4>
+                <div class="table-responsive" style="margin-bottom: 1.5rem;">
+                    <table class="data-table" style="font-size: 0.85rem; background: rgba(0,0,0,0.1);">
+                        <thead>
+                            <tr>
+                                <th>Product ID</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="item in viewingOrder.orderItems">
+                                <td><strong>#{{ item.productId }}</strong></td>
+                                <td>{{ item.quantity }}</td>
+                                <td>₹{{ item.unitPrice | number:2 }}</td>
+                                <td>₹{{ (item.unitPrice * item.quantity) | number:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="text-align: right; font-size: 1.1rem;">
+                    <span class="text-secondary">Grand Total: </span>
+                    <strong class="text-accent" style="font-size: 1.3rem;">₹{{ viewingOrder.totalAmount | number:2 }}</strong>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary-glass" ng-click="closeOrderDetailModal()">Close</button>
+            </div>
         </div>
     </div>
 </div>

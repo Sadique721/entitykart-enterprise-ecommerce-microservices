@@ -32,10 +32,14 @@ public class ProductEntity {
     private Long subCategoryId;
     private Long sellerId;
     private LocalDateTime createdAt;
+    private String status = "Available";
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (status == null) {
+            status = "Available";
+        }
     }
 
     public BigDecimal getDiscountPercent() {

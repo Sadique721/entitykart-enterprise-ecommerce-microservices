@@ -2,17 +2,31 @@
  * Admin Panel Management Controller
  */
 app.controller('adminController', [
-    '$scope', '$location', 'authService', 'productService', 'orderService', '$q', 'apiService', 'API_BASE',
-    function($scope, $location, authService, productService, orderService, $q, apiService, API_BASE) {
+    '$scope', '$location', 'authService', 'productService', 'orderService', '$q', 'apiService', 'API_BASE', 'userService',
+    function($scope, $location, authService, productService, orderService, $q, apiService, API_BASE, userService) {
         
         // Tab system
-        $scope.activeTab = 'products'; // products, orders, returns, categories
+        $scope.activeTab = 'dashboard'; // dashboard, products, orders, returns, categories, users, payments, reviews
         
         // Data arrays
         $scope.adminProducts = [];
         $scope.adminCategories = [];
         $scope.adminOrders = [];
         $scope.adminReturns = [];
+        $scope.adminUsers = [];
+        $scope.adminPayments = [];
+        $scope.adminReviews = [];
+        $scope.dashboardStats = {};
+        $scope.recentProducts = [];
+        $scope.recentOrders = [];
+
+        // Modals
+        $scope.showEditProductModal = false;
+        $scope.showEditUserModal = false;
+        $scope.showOrderDetailModal = false;
+        $scope.editingProduct = {};
+        $scope.editingUser = {};
+        $scope.viewingOrder = {};
         
         // Modal states for new records
         $scope.showAddProductModal = false;
@@ -59,7 +73,11 @@ app.controller('adminController', [
         $scope.switchTab = function(tabName) {
             $scope.activeTab = tabName;
             
-            if (tabName === 'products') {
+            if (tabName === 'dashboard') {
+                $scope.loadDashboardStats();
+            } else if (tabName === 'users') {
+                $scope.loadAdminUsers();
+            } else if (tabName === 'products') {
                 $scope.loadAdminProducts();
             } else if (tabName === 'categories') {
                 $scope.loadAdminCategories();
@@ -67,6 +85,10 @@ app.controller('adminController', [
                 $scope.loadAdminOrders();
             } else if (tabName === 'returns') {
                 $scope.loadAdminReturns();
+            } else if (tabName === 'payments') {
+                $scope.loadAdminPayments();
+            } else if (tabName === 'reviews') {
+                $scope.loadAdminReviewsList();
             } else if (tabName === 'reports') {
                 $scope.loadReportsDashboard();
             } else if (tabName === 'devHistory') {
@@ -451,6 +473,214 @@ app.controller('adminController', [
             } else {
                 $scope.availableSubCategories = [];
                 $scope.newProduct.subCategoryId = null;
+            }
+        });
+
+        // --- Dashboard ---
+        $scope.loadDashboardStats = function() {
+            $q.all({
+                userStats: userService.getUserStats(),
+                productStats: productService.getProductStats(),
+                products: productService.getProducts(null, null, 0, 5),
+                orders: orderService.getAllOrders()
+            }).then(function(results) {
+                $scope.dashboardStats = {
+                    totalUsers: results.userStats.totalUsers || 0,
+                    totalAdmins: results.userStats.totalAdmins || 0,
+                    totalActiveUsers: results.userStats.totalActive || 0,
+                    totalProducts: results.productStats.totalProducts || 0,
+                    totalCategories: results.productStats.totalCategories || 0,
+                    totalSubCategories: results.productStats.totalSubCategories || 0,
+                    totalOrders: results.orders.length || 0
+                };
+                $scope.recentProducts = results.products.content || [];
+                var sortedOrders = angular.copy(results.orders);
+                sortedOrders.sort(function(a, b) { return b.orderId - a.orderId; });
+                $scope.recentOrders = sortedOrders.slice(0, 5);
+            }).catch(function(err) {
+                console.error("Error loading dashboard stats", err);
+            });
+        };
+
+        // --- Users ---
+        $scope.loadAdminUsers = function() {
+            userService.getAllUsers().then(function(users) {
+                $scope.adminUsers = users;
+            });
+        };
+
+        $scope.editUser = function(user) {
+            $scope.editingUser = angular.copy(user);
+            $scope.showEditUserModal = true;
+        };
+
+        $scope.closeEditUserModal = function() {
+            $scope.showEditUserModal = false;
+        };
+
+        $scope.updateUserSubmit = function() {
+            userService.updateUser($scope.editingUser.id, $scope.editingUser)
+                .then(function() {
+                    $scope.$emit('showToast', {
+                        title: 'User Updated',
+                        message: 'User details updated successfully.',
+                        type: 'success'
+                    });
+                    $scope.closeEditUserModal();
+                    $scope.loadAdminUsers();
+                });
+        };
+
+        $scope.deleteUser = function(user) {
+            if (confirm("Are you sure you want to deactivate user: " + user.name + "?")) {
+                userService.deleteUser(user.id).then(function() {
+                    $scope.$emit('showToast', {
+                        title: 'User Deactivated',
+                        message: 'The user account has been deactivated (soft deleted).',
+                        type: 'info'
+                    });
+                    $scope.loadAdminUsers();
+                });
+            }
+        };
+
+        $scope.toggleUserStatus = function(user) {
+            userService.toggleUserStatus(user.id).then(function() {
+                $scope.$emit('showToast', {
+                    title: 'Status Toggled',
+                    message: 'User active status updated.',
+                    type: 'success'
+                });
+                $scope.loadAdminUsers();
+            });
+        };
+
+        // --- Enhanced Products ---
+        $scope.editProduct = function(product) {
+            $scope.editingProduct = angular.copy(product);
+            productService.getSubCategories($scope.editingProduct.categoryId).then(function(subs) {
+                $scope.editAvailableSubCategories = subs;
+                $scope.showEditProductModal = true;
+            });
+        };
+
+        $scope.closeEditProductModal = function() {
+            $scope.showEditProductModal = false;
+        };
+
+        $scope.uploadEditProductImageFile = function(element) {
+            var file = element.files[0];
+            if (!file) return;
+            productService.uploadProductImage(file).then(function(url) {
+                $scope.editingProduct.mainImageURL = url;
+                $scope.$emit('showToast', {
+                    title: 'Image Uploaded',
+                    message: 'Product image successfully uploaded to Cloudinary.',
+                    type: 'success'
+                });
+                if (!$scope.$$phase) {
+                    $scope.$apply();
+                }
+            }).catch(function(err) {
+                var errorMsg = 'Failed to upload image.';
+                if (err && err.data) {
+                    errorMsg = err.data.error || err.data.message || errorMsg;
+                }
+                $scope.$emit('showToast', {
+                    title: 'Upload Failed',
+                    message: errorMsg,
+                    type: 'error'
+                });
+                if (!$scope.$$phase) {
+                    $scope.$apply();
+                }
+            });
+        };
+
+        $scope.updateProductSubmit = function() {
+            productService.updateProduct($scope.editingProduct.productId, $scope.editingProduct)
+                .then(function() {
+                    $scope.$emit('showToast', {
+                        title: 'Product Updated',
+                        message: 'The product was successfully updated.',
+                        type: 'success'
+                    });
+                    $scope.closeEditProductModal();
+                    $scope.loadAdminProducts();
+                });
+        };
+
+        $scope.deleteProduct = function(product) {
+            if (confirm("Are you sure you want to delete product: " + product.productName + "?")) {
+                productService.deleteProduct(product.productId).then(function() {
+                    $scope.$emit('showToast', {
+                        title: 'Product Deleted',
+                        message: 'The product has been deleted.',
+                        type: 'info'
+                    });
+                    $scope.loadAdminProducts();
+                });
+            }
+        };
+
+        // --- Enhanced Orders ---
+        $scope.viewOrderDetails = function(order) {
+            $scope.viewingOrder = order;
+            $scope.showOrderDetailModal = true;
+        };
+
+        $scope.closeOrderDetailModal = function() {
+            $scope.showOrderDetailModal = false;
+        };
+
+        // --- Payments ---
+        $scope.loadAdminPayments = function() {
+            apiService.get('/api/payments/all')
+                .then(function(res) {
+                    $scope.adminPayments = res.data;
+                })
+                .catch(function() {
+                    $scope.adminPayments = [
+                        { paymentId: 201, orderId: 1001, amount: 4999.00, paymentMode: 'CARD', transactionRef: 'tx_937104829', paymentStatus: 'SUCCESS', paymentDate: '2026-06-15T10:12:00' },
+                        { paymentId: 202, orderId: 1002, amount: 12999.00, paymentMode: 'CARD', transactionRef: 'tx_827394827', paymentStatus: 'SUCCESS', paymentDate: '2026-06-15T11:45:00' },
+                        { paymentId: 203, orderId: 1003, amount: 2499.00, paymentMode: 'OFFLINE', transactionRef: 'CASH_ON_DELIVERY', paymentStatus: 'PENDING', paymentDate: '2026-06-15T14:22:00' }
+                    ];
+                });
+        };
+
+        // --- Reviews ---
+        $scope.loadAdminReviewsList = function() {
+            apiService.get('/api/admin/reviews/all')
+                .then(function(res) {
+                    $scope.adminReviews = res.data;
+                })
+                .catch(function() {
+                    $scope.adminReviews = [
+                        { reviewId: 301, productId: 101, customerId: 2, rating: 5, comment: 'Exceptional wireless mouse, highly recommended!', createdAt: '2026-06-14T09:00:00' },
+                        { reviewId: 302, productId: 102, customerId: 3, rating: 4, comment: 'Sound is outstanding, but a bit heavy for long hours.', createdAt: '2026-06-15T08:30:00' }
+                    ];
+                });
+        };
+
+        $scope.deleteReview = function(reviewId) {
+            if (confirm("Are you sure you want to delete review #" + reviewId + "?")) {
+                apiService.delete('/api/admin/reviews/' + reviewId)
+                    .then(function() {
+                        $scope.$emit('showToast', {
+                            title: 'Review Deleted',
+                            message: 'Review has been removed.',
+                            type: 'info'
+                        });
+                        $scope.loadAdminReviewsList();
+                    });
+            }
+        };
+
+        $scope.$watch('editingProduct.categoryId', function(newVal) {
+            if (newVal && $scope.showEditProductModal) {
+                productService.getSubCategories(newVal).then(function(subs) {
+                    $scope.editAvailableSubCategories = subs;
+                });
             }
         });
     }

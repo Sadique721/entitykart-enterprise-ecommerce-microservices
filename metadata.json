@@ -15,7 +15,7 @@
     "linkedin": "https://www.linkedin.com/in/md-sadique-amin-b6a948198/"
   },
   "build": {
-    "lastBuildDate": "2026-06-16T15:50:00Z",
+    "lastBuildDate": "2026-06-16T21:50:00Z",
     "javaVersion": "17",
     "springBootVersion": "3.3.4",
     "springCloudVersion": "2023.0.3",
@@ -61,7 +61,7 @@
     },
     {
       "name": "user-service",
-      "description": "User registration, authentication, JWT token generation, profile management",
+      "description": "User registration, authentication, JWT token generation, profile management, active/inactive toggle, soft delete",
       "localPort": 9902,
       "dockerHostPort": 9081,
       "dockerContainerPort": 8081,
@@ -69,7 +69,7 @@
     },
     {
       "name": "product-service",
-      "description": "Product catalog, categories, sub-categories, inventory, GraphQL, Cloudinary image upload",
+      "description": "Product catalog, categories, sub-categories, inventory, GraphQL, Cloudinary image upload, update & delete operations",
       "localPort": 9903,
       "dockerHostPort": 9082,
       "dockerContainerPort": 8082,
@@ -192,11 +192,15 @@
     ]
   },
   "adminFeatures": [
-    "Product CRUD (Create, Read, Update, Delete)",
+    "Dashboard Overview (stat cards, recent products & orders list)",
+    "User Accounts CRUD (edit profile details, toggle active/inactive status, soft-delete)",
+    "Product CRUD (Create, Read, Update, Delete with Available/Unavailable status)",
     "Category & Sub-category management",
-    "Order status management (PLACED → SHIPPED → DELIVERED)",
+    "Order status management (PLACED → SHIPPED → DELIVERED) and details inspector",
     "Return request approval / rejection workflow",
     "Automated refund processing via payment-service",
+    "Payments History tracking (transaction references, amount, mode, status)",
+    "Reviews Moderation (view all product reviews, delete review)",
     "Review statistics dashboard (avg rating, distribution chart)",
     "Report exports (Excel .xlsx & Word .doc) for Orders, Products, Users, Payments, Returns, Reviews, Wishlist",
     "Email report dispatch to administrator mailboxes",
