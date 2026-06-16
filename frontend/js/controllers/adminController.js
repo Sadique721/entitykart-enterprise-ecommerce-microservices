@@ -48,13 +48,11 @@ app.controller('adminController', [
         };
 
         $scope.newCategory = {
-            name: '',
-            description: ''
+            name: ''
         };
 
         $scope.newSubCategory = {
-            name: '',
-            description: ''
+            name: ''
         };
         $scope.activeCategoryForSub = null;
         $scope.availableSubCategories = [];
@@ -178,7 +176,6 @@ app.controller('adminController', [
 
         $scope.openCategoryModal = function() {
             $scope.newCategory.name = '';
-            $scope.newCategory.description = '';
             $scope.showAddCategoryModal = true;
         };
 
@@ -215,7 +212,6 @@ app.controller('adminController', [
         $scope.openSubCategoryModal = function(category) {
             $scope.activeCategoryForSub = category;
             $scope.newSubCategory.name = '';
-            $scope.newSubCategory.description = '';
             $scope.showAddSubCategoryModal = true;
         };
 

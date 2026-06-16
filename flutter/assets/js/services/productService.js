@@ -182,8 +182,7 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
                         return {
                             id: cat.categoryId,
                             name: cat.categoryName,
-                            active: cat.active,
-                            description: cat.description || ''
+                            active: cat.active
                         };
                     });
                 }
@@ -205,8 +204,7 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
                 return {
                     id: cat.categoryId,
                     name: cat.categoryName,
-                    active: cat.active,
-                    description: cat.description || ''
+                    active: cat.active
                 };
             })
             .catch(function() {
@@ -226,8 +224,7 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
                             subCategoryId: sub.subCategoryId,
                             categoryId: sub.categoryId,
                             name: sub.childCategory || sub.name,
-                            active: sub.active,
-                            description: sub.description || ''
+                            active: sub.active
                         };
                     });
                 }
@@ -268,8 +265,7 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
                     subCategoryId: sub.subCategoryId,
                     categoryId: sub.categoryId,
                     name: sub.childCategory,
-                    active: sub.active,
-                    description: sub.description || ''
+                    active: sub.active
                 };
             })
             .catch(function() {
