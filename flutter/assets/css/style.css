@@ -2652,3 +2652,171 @@ textarea.form-control {
     color: var(--text-muted);
 }
 
+/* ==========================================================================
+   Mobile WebView Responsive Polish (Antigravity Optimization)
+   ========================================================================== */
+
+/* Compact Navbar for Mobile WebViews */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.6rem 1rem !important;
+        gap: 0.5rem !important;
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+    .nav-logo {
+        text-align: center;
+        margin-bottom: 0.2rem;
+    }
+    .nav-search {
+        width: 100% !important;
+        margin: 0 0 0.5rem 0 !important;
+    }
+    .nav-links {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        padding: 0.3rem 0 !important;
+        gap: 0.6rem !important;
+        -webkit-overflow-scrolling: touch;
+        border-bottom: 1px solid var(--glass-border);
+        margin-bottom: 0.4rem;
+    }
+    /* Hide scrollbar for nav links */
+    .nav-links::-webkit-scrollbar {
+        display: none;
+    }
+    .nav-item {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.85rem !important;
+        flex-shrink: 0 !important;
+        gap: 0.3rem !important;
+    }
+    .auth-section {
+        margin-top: 0.2rem;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+    .auth-buttons {
+        display: flex;
+        gap: 0.5rem;
+        width: 100%;
+        justify-content: center;
+    }
+    .auth-buttons .btn {
+        flex: 1;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* Fixed Centered Dropdown for Backend Selector on Mobile */
+    .backend-dropdown-menu {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90% !important;
+        max-width: 380px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+        border-radius: 16px !important;
+        background: rgba(18, 22, 34, 0.98) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        z-index: 99999 !important;
+        margin-top: 0 !important;
+    }
+    
+    /* Scrollable Modal Card to prevent clipping by Virtual Keyboard */
+    .modal-card {
+        display: flex !important;
+        flex-direction: column !important;
+        max-height: 85vh !important;
+    }
+    .modal-body {
+        overflow-y: auto !important;
+        flex: 1 !important;
+    }
+
+    /* Top-positioned Toast Container on Mobile to prevent overlaying actions */
+    .toast-container {
+        top: 1rem !important;
+        bottom: auto !important;
+        left: 1rem !important;
+        right: 1rem !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+    .toast-card {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0.8rem 1rem !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    }
+    .toast-card h4 {
+        font-size: 0.9rem !important;
+    }
+    .toast-card p {
+        font-size: 0.8rem !important;
+    }
+
+    /* Admin Mobile Responsiveness */
+    .admin-layout {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    .admin-sidebar {
+        width: 100% !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.5rem !important;
+    }
+    .admin-sidebar::-webkit-scrollbar {
+        display: none;
+    }
+    .admin-menu-list {
+        display: flex !important;
+        gap: 0.6rem !important;
+    }
+    .admin-menu-item {
+        margin-bottom: 0 !important;
+        display: inline-flex !important;
+        padding: 0.5rem 0.8rem !important;
+        font-size: 0.85rem !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Grid adjustments for mobile cards */
+    .grid-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+}
+
+/* Hard reset for the Backend Selector button color and default styles in Android Webview */
+.btn-backend-selector {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 50px !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+}
+
+.btn-backend-selector:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
