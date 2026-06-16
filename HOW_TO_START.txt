@@ -659,6 +659,7 @@
   ✅ Integrated Payments History and Reviews Moderation tabs (CRUD for reviews) on frontend.
   ✅ Updated user-service and product-service with update/delete mapping methods and count metrics.
   ✅ Exposed Backend Environment Selector / Dynamic IP Selector on mobile webview and fixed localStorage IP retrieval logic to support seamless connection over local shared network without rebuilds.
+  ✅ Removed category and sub-category description UI fields, tables, and controller/service mappings because description fields are not defined in the backend DB tables/entities.
 
   [2026-06-16] v1.0.0
   ─────────────────────────────────────────────────────────────
