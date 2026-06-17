@@ -3259,6 +3259,14 @@ textarea.form-control {
 }
 
 /* Intermediate screen responsiveness overrides (Web & App) */
+@media (max-width: 1350px) {
+    .navbar { padding: 0.8rem 1rem; }
+    .nav-search { margin: 0 1rem; flex: 1 1 250px; }
+    .nav-links { gap: 0.8rem; }
+    .nav-item { font-size: 0.88rem; padding: 0.4rem 0.6rem; }
+    .btn-backend-selector { padding: 0.4rem 0.6rem; font-size: 0.85rem; }
+}
+
 @media (max-width: 1550px) {
     .nav-search {
         flex: 0 1 350px !important;
