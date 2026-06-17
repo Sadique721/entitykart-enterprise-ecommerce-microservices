@@ -97,7 +97,7 @@ app.controller('adminController', [
         // --- Products ---
 
         $scope.loadAdminProducts = function() {
-            productService.getProducts(null, null, 0, 50).then(function(data) {
+            productService.getProducts(null, null, 0, 1000).then(function(data) {
                 $scope.adminProducts = data.content;
             });
         };
@@ -902,5 +902,38 @@ app.controller('adminController', [
                 });
             }
         });
+
+        // --- Generic Client-side Pagination ---
+        $scope.pagination = {
+            users: { page: 0, size: 10 },
+            products: { page: 0, size: 10 },
+            categories: { page: 0, size: 10 },
+            orders: { page: 0, size: 10 },
+            payments: { page: 0, size: 10 },
+            reviews: { page: 0, size: 10 },
+            returns: { page: 0, size: 10 }
+        };
+
+        $scope.getPaginatedItems = function(items, tab) {
+            if (!items) return [];
+            var state = $scope.pagination[tab];
+            if (!state) return items;
+            var start = state.page * state.size;
+            return items.slice(start, start + state.size);
+        };
+
+        $scope.getTotalPages = function(items, tab) {
+            if (!items) return 0;
+            var state = $scope.pagination[tab];
+            if (!state) return 1;
+            return Math.ceil(items.length / state.size);
+        };
+
+        $scope.setPageSize = function(tab, size) {
+            var state = $scope.pagination[tab];
+            if (!state) return;
+            state.size = parseInt(size, 10);
+            state.page = 0; // Reset to page 0
+        };
     }
 ]);

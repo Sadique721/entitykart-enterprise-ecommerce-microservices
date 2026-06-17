@@ -99,6 +99,11 @@ app.controller('mainController', ['$scope', '$location', 'authService', 'cartSer
         return user ? user.name : '';
     };
 
+    $scope.getUserProfilePic = function() {
+        var user = authService.getCurrentUser();
+        return user ? user.profilePicURL : '';
+    };
+
     $scope.getUserInitials = function() {
         var name = $scope.getUserName();
         if (!name) return 'U';

@@ -321,7 +321,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .user-name {
-    max-width: 100px;
+    max-width: 180px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -3259,7 +3259,7 @@ textarea.form-control {
 }
 
 /* Intermediate screen responsiveness overrides (Web & App) */
-@media (max-width: 1300px) {
+@media (max-width: 1550px) {
     .nav-search {
         flex: 0 1 350px !important;
         margin: 0 1rem !important;
@@ -3273,7 +3273,7 @@ textarea.form-control {
     }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1250px) {
     .nav-item span {
         display: none !important;
     }

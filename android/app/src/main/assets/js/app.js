@@ -94,6 +94,10 @@ app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpPro
             templateUrl: 'views/admin.html',
             controller: 'adminController'
         })
+        .when('/profile', {
+            templateUrl: 'views/profile.html',
+            controller: 'profileController'
+        })
         .otherwise({
             redirectTo: '/'
         });
@@ -113,7 +117,7 @@ app.run(['$rootScope', '$location', 'authService', function($rootScope, $locatio
     var publicPages = ['/login', '/register', '/forgot-password', '/reset-password', '/products', '/product', '/'];
 
     // Pages that require a logged-in user
-    var restrictedPages = ['/checkout', '/orders', '/returns', '/wishlist', '/admin'];
+    var restrictedPages = ['/checkout', '/orders', '/returns', '/wishlist', '/admin', '/profile'];
 
     $rootScope.$on('$routeChangeStart', function(event, next, current) {
         var path = $location.path();

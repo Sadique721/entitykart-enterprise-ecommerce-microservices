@@ -127,11 +127,13 @@
                     </div>
                     <div ng-if="isLoggedIn()" class="user-dropdown-wrapper">
                         <div class="user-profile-trigger" ng-click="toggleUserMenu()">
-                            <div class="avatar orange-theme-avatar">{{ getUserInitials() }}</div>
+                            <div class="avatar orange-theme-avatar" ng-if="!getUserProfilePic()">{{ getUserInitials() }}</div>
+                            <img class="avatar-img" ng-src="{{ getUserProfilePic() }}" ng-if="getUserProfilePic()" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
                             <span class="user-name">{{ getUserName() }}</span>
                             <i class="fa fa-chevron-down dropdown-arrow"></i>
                         </div>
                         <div class="user-dropdown-menu" ng-show="userMenuOpen">
+                            <a href="#!/profile" ng-click="closeUserMenu()"><i class="fa-solid fa-user-gear"></i> Edit Profile</a>
                             <a href="#!/orders" ng-click="closeUserMenu()"><i class="fa-solid fa-receipt"></i> My Orders</a>
                             <a href="#!/wishlist" ng-click="closeUserMenu()"><i class="fa-solid fa-heart"></i> My Wishlist</a>
                             <a href="#!/returns" ng-click="closeUserMenu()"><i class="fa-solid fa-rotate-left"></i> My Returns</a>
@@ -257,6 +259,7 @@
     <script src="js/controllers/wishlistController.js"></script>
     <script src="js/controllers/returnController.js"></script>
     <script src="js/controllers/adminController.js"></script>
+    <script src="js/controllers/profileController.js"></script>
 
 </body>
 </html>

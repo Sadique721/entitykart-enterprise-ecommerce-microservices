@@ -249,7 +249,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="u in adminUsers">
+                            <tr ng-repeat="u in getPaginatedItems(adminUsers, 'users')">
                                 <td><strong>#{{ u.id }}</strong></td>
                                 <td>
                                     <img ng-src="{{ u.profilePicURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80' }}" class="avatar-sm" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
@@ -279,6 +279,27 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Controls -->
+                <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Items per page:</span>
+                        <select class="form-control" ng-model="pagination.users.size" ng-change="setPageSize('users', pagination.users.size)" style="width: auto; padding: 4px 8px; height: auto; font-size: 0.85rem;">
+                            <option ng-value="5">5</option>
+                            <option ng-value="10">10</option>
+                            <option ng-value="50">50</option>
+                            <option ng-value="100">100</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.users.page === 0" ng-click="pagination.users.page = pagination.users.page - 1">
+                            <i class="fa fa-chevron-left"></i> Prev
+                        </button>
+                        <span style="font-size: 0.9rem; font-weight: 500;">Page {{ pagination.users.page + 1 }} of {{ (getTotalPages(adminUsers, 'users') || 1) }}</span>
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.users.page >= (getTotalPages(adminUsers, 'users') - 1)" ng-click="pagination.users.page = pagination.users.page + 1">
+                            Next <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <!-- Products Catalog Panel -->
@@ -305,7 +326,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="p in adminProducts">
+                            <tr ng-repeat="p in getPaginatedItems(adminProducts, 'products')">
                                 <td>
                                     <img ng-src="{{ p.mainImageURL || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80' }}" class="product-thumb" alt="Product Image" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
                                 </td>
@@ -333,6 +354,27 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Controls -->
+                <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Items per page:</span>
+                        <select class="form-control" ng-model="pagination.products.size" ng-change="setPageSize('products', pagination.products.size)" style="width: auto; padding: 4px 8px; height: auto; font-size: 0.85rem;">
+                            <option ng-value="5">5</option>
+                            <option ng-value="10">10</option>
+                            <option ng-value="50">50</option>
+                            <option ng-value="100">100</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.products.page === 0" ng-click="pagination.products.page = pagination.products.page - 1">
+                            <i class="fa fa-chevron-left"></i> Prev
+                        </button>
+                        <span style="font-size: 0.9rem; font-weight: 500;">Page {{ pagination.products.page + 1 }} of {{ (getTotalPages(adminProducts, 'products') || 1) }}</span>
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.products.page >= (getTotalPages(adminProducts, 'products') - 1)" ng-click="pagination.products.page = pagination.products.page + 1">
+                            Next <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Categories Panel -->
@@ -354,7 +396,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat-start="c in adminCategories">
+                            <tr ng-repeat-start="c in getPaginatedItems(adminCategories, 'categories')">
                                 <td><strong>#{{ c.id }}</strong></td>
                                 <td class="text-accent font-semibold">{{ c.name }}</td>
                                 <td>
@@ -393,6 +435,27 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Controls -->
+                <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Items per page:</span>
+                        <select class="form-control" ng-model="pagination.categories.size" ng-change="setPageSize('categories', pagination.categories.size)" style="width: auto; padding: 4px 8px; height: auto; font-size: 0.85rem;">
+                            <option ng-value="5">5</option>
+                            <option ng-value="10">10</option>
+                            <option ng-value="50">50</option>
+                            <option ng-value="100">100</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.categories.page === 0" ng-click="pagination.categories.page = pagination.categories.page - 1">
+                            <i class="fa fa-chevron-left"></i> Prev
+                        </button>
+                        <span style="font-size: 0.9rem; font-weight: 500;">Page {{ pagination.categories.page + 1 }} of {{ (getTotalPages(adminCategories, 'categories') || 1) }}</span>
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.categories.page >= (getTotalPages(adminCategories, 'categories') - 1)" ng-click="pagination.categories.page = pagination.categories.page + 1">
+                            Next <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Orders Operations Panel -->
@@ -418,7 +481,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="o in adminOrders">
+                            <tr ng-repeat="o in getPaginatedItems(adminOrders, 'orders')">
                                 <td><strong>#{{ o.orderId }}</strong></td>
                                 <td class="text-secondary">#{{ o.customerId }}</td>
                                 <td class="text-secondary">{{ o.orderDate | date:'mediumDate' }}</td>
@@ -450,6 +513,27 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Controls -->
+                <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Items per page:</span>
+                        <select class="form-control" ng-model="pagination.orders.size" ng-change="setPageSize('orders', pagination.orders.size)" style="width: auto; padding: 4px 8px; height: auto; font-size: 0.85rem;">
+                            <option ng-value="5">5</option>
+                            <option ng-value="10">10</option>
+                            <option ng-value="50">50</option>
+                            <option ng-value="100">100</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.orders.page === 0" ng-click="pagination.orders.page = pagination.orders.page - 1">
+                            <i class="fa fa-chevron-left"></i> Prev
+                        </button>
+                        <span style="font-size: 0.9rem; font-weight: 500;">Page {{ pagination.orders.page + 1 }} of {{ (getTotalPages(adminOrders, 'orders') || 1) }}</span>
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.orders.page >= (getTotalPages(adminOrders, 'orders') - 1)" ng-click="pagination.orders.page = pagination.orders.page + 1">
+                            Next <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Payments History Panel -->
@@ -475,7 +559,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="py in adminPayments">
+                            <tr ng-repeat="py in getPaginatedItems(adminPayments, 'payments')">
                                 <td><strong>#{{ py.paymentId }}</strong></td>
                                 <td class="text-secondary">#{{ py.orderId }}</td>
                                 <td><strong>₹{{ py.amount | number:2 }}</strong></td>
@@ -494,6 +578,27 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <!-- Pagination Controls -->
+                <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Items per page:</span>
+                        <select class="form-control" ng-model="pagination.payments.size" ng-change="setPageSize('payments', pagination.payments.size)" style="width: auto; padding: 4px 8px; height: auto; font-size: 0.85rem;">
+                            <option ng-value="5">5</option>
+                            <option ng-value="10">10</option>
+                            <option ng-value="50">50</option>
+                            <option ng-value="100">100</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.payments.page === 0" ng-click="pagination.payments.page = pagination.payments.page - 1">
+                            <i class="fa fa-chevron-left"></i> Prev
+                        </button>
+                        <span style="font-size: 0.9rem; font-weight: 500;">Page {{ pagination.payments.page + 1 }} of {{ (getTotalPages(adminPayments, 'payments') || 1) }}</span>
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.payments.page >= (getTotalPages(adminPayments, 'payments') - 1)" ng-click="pagination.payments.page = pagination.payments.page + 1">
+                            Next <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -520,7 +625,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="rv in adminReviews">
+                            <tr ng-repeat="rv in getPaginatedItems(adminReviews, 'reviews')">
                                 <td><strong>#{{ rv.reviewId }}</strong></td>
                                 <td class="text-secondary">#{{ rv.productId }}</td>
                                 <td class="text-secondary">#{{ rv.customerId }}</td>
@@ -539,6 +644,27 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <!-- Pagination Controls -->
+                <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Items per page:</span>
+                        <select class="form-control" ng-model="pagination.reviews.size" ng-change="setPageSize('reviews', pagination.reviews.size)" style="width: auto; padding: 4px 8px; height: auto; font-size: 0.85rem;">
+                            <option ng-value="5">5</option>
+                            <option ng-value="10">10</option>
+                            <option ng-value="50">50</option>
+                            <option ng-value="100">100</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.reviews.page === 0" ng-click="pagination.reviews.page = pagination.reviews.page - 1">
+                            <i class="fa fa-chevron-left"></i> Prev
+                        </button>
+                        <span style="font-size: 0.9rem; font-weight: 500;">Page {{ pagination.reviews.page + 1 }} of {{ (getTotalPages(adminReviews, 'reviews') || 1) }}</span>
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.reviews.page >= (getTotalPages(adminReviews, 'reviews') - 1)" ng-click="pagination.reviews.page = pagination.reviews.page + 1">
+                            Next <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -570,7 +696,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr ng-repeat="r in adminReturns">
+                                <tr ng-repeat="r in getPaginatedItems(adminReturns, 'returns')">
                                     <td><strong>#{{ r.returnId }}</strong></td>
                                     <td><span style="font-weight: 600;">{{ r.productName }}</span></td>
                                     <td class="text-secondary">#{{ r.customerId }}</td>
@@ -594,6 +720,27 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+                <!-- Pagination Controls -->
+                <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;" ng-if="adminReturns.length > 0">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Items per page:</span>
+                        <select class="form-control" ng-model="pagination.returns.size" ng-change="setPageSize('returns', pagination.returns.size)" style="width: auto; padding: 4px 8px; height: auto; font-size: 0.85rem;">
+                            <option ng-value="5">5</option>
+                            <option ng-value="10">10</option>
+                            <option ng-value="50">50</option>
+                            <option ng-value="100">100</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.returns.page === 0" ng-click="pagination.returns.page = pagination.returns.page - 1">
+                            <i class="fa fa-chevron-left"></i> Prev
+                        </button>
+                        <span style="font-size: 0.9rem; font-weight: 500;">Page {{ pagination.returns.page + 1 }} of {{ (getTotalPages(adminReturns, 'returns') || 1) }}</span>
+                        <button class="btn btn-secondary-glass btn-sm" ng-disabled="pagination.returns.page >= (getTotalPages(adminReturns, 'returns') - 1)" ng-click="pagination.returns.page = pagination.returns.page + 1">
+                            Next <i class="fa fa-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>

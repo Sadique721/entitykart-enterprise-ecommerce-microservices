@@ -116,6 +116,48 @@ app.service('authService', ['apiService', '$rootScope', function(apiService, $ro
         });
     };
 
+    this.updateCurrentUser = function(user) {
+        currentUser = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            gender: user.gender,
+            contactNum: user.contactNum,
+            profilePicURL: user.profilePicURL
+        };
+        localStorage.setItem('ekUser', JSON.stringify(currentUser));
+        $rootScope.$broadcast('auth:login', currentUser);
+    };
+
+    this.fetchProfile = function() {
+        if (!currentUser || !currentUser.id) return Promise.resolve(null);
+        return apiService.get('/api/users/' + currentUser.id)
+            .then(function(response) {
+                var user = response.data;
+                currentUser = {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    gender: user.gender,
+                    contactNum: user.contactNum,
+                    profilePicURL: user.profilePicURL
+                };
+                localStorage.setItem('ekUser', JSON.stringify(currentUser));
+                $rootScope.$broadcast('auth:login', currentUser);
+                return currentUser;
+            });
+    };
+
+    this.updateProfileApi = function(payload) {
+        return apiService.put('/api/users/' + payload.id, payload)
+            .then(function(response) {
+                return response.data;
+            });
+    };
+
+
     this.logout = function() {
         token = null;
         currentUser = null;

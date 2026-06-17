@@ -411,6 +411,12 @@ jobs:
 
 ## 📋 Changelog
 
+### [2026-06-17] v1.4.2
+- **Admin Panel Pagination**: Integrated client-side pagination (5, 10, 50, or 100 rows options) across all 7 management tables (Users, Products, Categories, Orders, Payments, Reviews, Returns).
+- **Header UI Layout Fix**: Extended the username container width limit from 100px to 180px and added a flexible screen width media query query list to resolve text clipping on narrow viewports.
+- **Profile Editing Page**: Built a comprehensive `/profile` page supporting gender, contact numbers, password modifications, and Cloudinary-based profile picture uploads with real-time UI synchronization.
+- **Cross-Platform Synchronization**: Ported all controller, style, routing, and template updates to the web frontend, Android main assets, and Flutter assets.
+
 ### [2026-06-17] v1.4.1
 - **Category Icon Resolution**: Corrected incorrect icon mapping where Fashion had a couch and Home & Kitchen had a shirt.
 - **Dynamic Icon Resolver**: Developed dynamic name-based icon resolving via the new `getCategoryIcon` helper function in `productController.js` to render distinct FontAwesome 6 icons for all 10 product categories.

@@ -656,6 +656,10 @@
   CHANGELOG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  [2026-06-17] v1.4.2
+  ─────────────────────────────────────────────────────────────
+  ✅ Admin Pagination, Header UI & Edit Profile Section: Integrated client-side pagination (5, 10, 50, 100 records per page) across all 7 management tables (Users, Products, Categories, Orders, Payments, Reviews, Returns) in the Admin Panel. Fixed username text clipping in the header navigation by raising display limits to 180px and tuning padding transitions for intermediate screen sizes. Added a fully featured Profile Editor page (`/profile`) supporting user and admin avatar uploads to Cloudinary, gender selection, contact numbers, and password change updates with instant application-wide state synchronization.
+
   [2026-06-17] v1.4.1
   ─────────────────────────────────────────────────────────────
   ✅ Category Icon Resolution: Corrected swapped icon mappings where Fashion had a couch and Home & Kitchen had a shirt. Added dynamic name-based FontAwesome 6 icon mapping (`getCategoryIcon` helper function) in `productController.js` to render distinct icons for all 10 product categories across Web, Android, and Flutter wrappers.
