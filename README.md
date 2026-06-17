@@ -409,6 +409,16 @@ jobs:
 
 ---
 
+## 📋 Changelog
+
+### [2026-06-17] v1.4.0
+- **Category Duplicate Insertion Fix**: Resolved root cause of blank and duplicate category records created in `product-service` MySQL tables.
+- **Frontend Submit Debounce**: Integrated AngularJS submit state flags (`isSubmittingCategory` / `isSubmittingSubCategory`) and input guards across Web, Android, and Flutter wrappers to block multiple clicks and double submits.
+- **Backend Fail-Fast Validation**: Added programmatic null/blank name validation in `CategoryService.java` to fail fast and reject invalid payloads.
+- **Database Cleanup**: Database successfully cleaned of all existing blank or empty category rows.
+
+---
+
 ## 🚀 Future Enhancements
 
 - Kubernetes deployment with Helm charts

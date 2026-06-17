@@ -1001,8 +1001,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary-glass" ng-click="closeCategoryModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary-gradient">Create Category</button>
+                    <button type="button" class="btn btn-secondary-glass" ng-click="closeCategoryModal()" ng-disabled="isSubmittingCategory">Cancel</button>
+                    <button type="submit" class="btn btn-primary-gradient" ng-disabled="isSubmittingCategory">{{ isSubmittingCategory ? 'Creating...' : 'Create Category' }}</button>
                 </div>
             </form>
         </div>
@@ -1023,8 +1023,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary-glass" ng-click="closeSubCategoryModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary-gradient">Create Sub-category</button>
+                    <button type="button" class="btn btn-secondary-glass" ng-click="closeSubCategoryModal()" ng-disabled="isSubmittingSubCategory">Cancel</button>
+                    <button type="submit" class="btn btn-primary-gradient" ng-disabled="isSubmittingSubCategory">{{ isSubmittingSubCategory ? 'Creating...' : 'Create Sub-category' }}</button>
                 </div>
             </form>
         </div>

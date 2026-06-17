@@ -656,6 +656,10 @@
   CHANGELOG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  [2026-06-17] v1.4.0
+  ─────────────────────────────────────────────────────────────
+  ✅ Category Duplicate Insertion Fix: Resolved blank/duplicate categories insertion in `product_service.categories` table. Added AngularJS submit debounce flags (`isSubmittingCategory` / `isSubmittingSubCategory`) and blank input validation in controllers across Web, Android, and Flutter wrappers. Added backend service-level validation in `CategoryService.java` to reject blank/null category entries. Database successfully cleared of all blank records.
+
   [2026-06-17] v1.3.0
   ─────────────────────────────────────────────────────────────
   ✅ Logical Analysis Documentation: Created ARCHITECTURE_AND_FLOWS.md mapping data and logic flows for adding products, categories, subcategories, user authentication, checkout/orders via Kafka, and return/refund orchestration.

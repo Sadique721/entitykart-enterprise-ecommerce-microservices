@@ -183,7 +183,18 @@ app.controller('adminController', [
             $scope.showAddCategoryModal = false;
         };
 
+        $scope.isSubmittingCategory = false;
         $scope.addCategorySubmit = function() {
+            if ($scope.isSubmittingCategory) return;
+            if (!$scope.newCategory.name || $scope.newCategory.name.trim() === '') {
+                $scope.$emit('showToast', {
+                    title: 'Validation Error',
+                    message: 'Category name is required.',
+                    type: 'error'
+                });
+                return;
+            }
+            $scope.isSubmittingCategory = true;
             productService.createCategory($scope.newCategory)
                 .then(function() {
                     $scope.$emit('showToast', {
@@ -193,6 +204,9 @@ app.controller('adminController', [
                     });
                     $scope.closeCategoryModal();
                     $scope.loadAdminCategories();
+                })
+                .finally(function() {
+                    $scope.isSubmittingCategory = false;
                 });
         };
 
@@ -219,7 +233,18 @@ app.controller('adminController', [
             $scope.showAddSubCategoryModal = false;
         };
 
+        $scope.isSubmittingSubCategory = false;
         $scope.addSubCategorySubmit = function() {
+            if ($scope.isSubmittingSubCategory) return;
+            if (!$scope.newSubCategory.name || $scope.newSubCategory.name.trim() === '') {
+                $scope.$emit('showToast', {
+                    title: 'Validation Error',
+                    message: 'Sub-category name is required.',
+                    type: 'error'
+                });
+                return;
+            }
+            $scope.isSubmittingSubCategory = true;
             productService.createSubCategory($scope.activeCategoryForSub.id, $scope.newSubCategory)
                 .then(function() {
                     $scope.$emit('showToast', {
@@ -229,6 +254,9 @@ app.controller('adminController', [
                     });
                     $scope.closeSubCategoryModal();
                     $scope.loadSubCategories($scope.activeCategoryForSub);
+                })
+                .finally(function() {
+                    $scope.isSubmittingSubCategory = false;
                 });
         };
 

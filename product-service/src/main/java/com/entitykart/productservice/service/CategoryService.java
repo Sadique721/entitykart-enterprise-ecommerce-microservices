@@ -30,6 +30,9 @@ public class CategoryService {
 
     @Transactional
     public CategoryEntity createCategory(CategoryEntity category) {
+        if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Category name is required");
+        }
         return categoryRepository.save(category);
     }
 
