@@ -1,62 +1,134 @@
 <div ng-init="initHome()">
-    <!-- Hero Promo Banner -->
-    <section class="hero-banner">
-        <div class="hero-text">
-            <h1>Elevate Your Tech & Lifestyle</h1>
-            <p>Explore Entitykart's curated showcase of high-performance peripherals, handcrafted wood organizers, and luxurious lifestyle timepieces.</p>
-            <div class="hero-actions">
-                <a href="#!/products" class="btn btn-primary-gradient">Shop Collection</a>
-                <a href="#!/products?categoryId=1" class="btn btn-secondary-glass">Browse Tech</a>
+    <!-- Banner Carousel Slider -->
+    <section class="home-slider">
+        <div class="slide-item" ng-repeat="slide in slides" ng-class="{active: activeSlide === $index}" style="background-image: url('{{slide.image}}');">
+            <div class="slide-overlay"></div>
+            <div class="slide-content">
+                <h1>{{slide.title}}</h1>
+                <p>{{slide.subtitle}}</p>
+                <a href="{{slide.url}}" class="btn btn-primary-gradient">Shop Now</a>
             </div>
         </div>
-        <div class="hero-img-container">
-            <i class="fa fa-gem hero-placeholder-icon"></i>
+        <div class="slider-arrow slider-arrow-left" ng-click="prevSlide()"><i class="fa fa-chevron-left"></i></div>
+        <div class="slider-arrow slider-arrow-right" ng-click="nextSlide()"><i class="fa fa-chevron-right"></i></div>
+        <div class="slider-dots">
+            <span class="slider-dot" ng-repeat="slide in slides" ng-class="{active: activeSlide === $index}" ng-click="setSlide($index)"></span>
         </div>
     </section>
 
-    <!-- Categories Section -->
+    <!-- 4 Stats Cards Row -->
+    <section class="stats-row">
+        <div class="stat-card-premium">
+            <div class="stat-card-icon"><i class="fa fa-box-open"></i></div>
+            <div class="stat-card-info">
+                <h3>10 Products</h3>
+                <p>Curated Catalog</p>
+            </div>
+        </div>
+        <div class="stat-card-premium">
+            <div class="stat-card-icon"><i class="fa fa-face-smile"></i></div>
+            <div class="stat-card-info">
+                <h3>3+ Customers</h3>
+                <p>Happy Shoppers</p>
+            </div>
+        </div>
+        <div class="stat-card-premium">
+            <div class="stat-card-icon"><i class="fa fa-map-pin"></i></div>
+            <div class="stat-card-info">
+                <h3>2+ Cities</h3>
+                <p>Served Nationwide</p>
+            </div>
+        </div>
+        <div class="stat-card-premium">
+            <div class="stat-card-icon"><i class="fa fa-store"></i></div>
+            <div class="stat-card-info">
+                <h3>1+ Sellers</h3>
+                <p>Verified Merchants</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Circular Categories Section -->
     <section class="categories-section">
         <div class="section-header">
             <h2>Shop by Category</h2>
             <a href="#!/products" class="text-accent font-semibold">View All <i class="fa fa-arrow-right"></i></a>
         </div>
-        <div class="grid-3">
-            <div class="category-card" ng-repeat="cat in categories" ng-click="filterByCategory(cat)">
-                <i class="fa category-icon" ng-class="{'fa-laptop-code': cat.id === 1, 'fa-couch': cat.id === 2, 'fa-shirt': cat.id === 3}"></i>
-                <h3>{{ cat.name }}</h3>
-                <p class="text-secondary">{{ cat.description }}</p>
+        <div class="categories-circle-grid">
+            <div class="category-circle-item" ng-repeat="cat in categories" ng-click="filterByCategory(cat)">
+                <div class="category-circle-icon">
+                    <i class="fa" ng-class="{'fa-laptop-code': cat.id === 1, 'fa-couch': cat.id === 2, 'fa-shirt': cat.id === 3}"></i>
+                </div>
+                <h4>{{ cat.name }}</h4>
             </div>
         </div>
     </section>
 
-    <!-- Featured Products Section -->
-    <section class="featured-products">
+    <!-- Top Brands Grid Section -->
+    <section class="brands-section">
         <div class="section-header">
-            <h2>Featured Products</h2>
+            <h2>Featured Brands</h2>
+        </div>
+        <div class="brands-grid">
+            <div class="brand-box" ng-click="searchQuery = 'Apple'; searchProducts()">Apple</div>
+            <div class="brand-box" ng-click="searchQuery = 'Samsung'; searchProducts()">Samsung</div>
+            <div class="brand-box" ng-click="searchQuery = 'Nike'; searchProducts()">Nike</div>
+            <div class="brand-box" ng-click="searchQuery = 'Sony'; searchProducts()">Sony</div>
+            <div class="brand-box" ng-click="searchQuery = 'Adidas'; searchProducts()">Adidas</div>
+            <div class="brand-box" ng-click="searchQuery = 'LG'; searchProducts()">LG</div>
+            <div class="brand-box" ng-click="searchQuery = 'Puma'; searchProducts()">Puma</div>
+            <div class="brand-box" ng-click="searchQuery = 'Dell'; searchProducts()">Dell</div>
+        </div>
+    </section>
+
+    <!-- Featured Products Section -->
+    <section class="featured-products" style="margin-top: 3.5rem;">
+        <div class="section-header">
+            <h2>Featured Showcase</h2>
             <a href="#!/products" class="text-accent font-semibold">Explore Catalog <i class="fa fa-arrow-right"></i></a>
         </div>
         
         <div class="grid-4">
             <div class="card-glass card-glass-hover product-card" ng-repeat="p in products">
-                <div class="product-img-wrapper" ng-click="viewProduct(p.productId)">
+                <div class="product-img-wrapper">
                     <a href="#!/product/{{ p.productId }}">
                         <img ng-src="{{ p.mainImageURL }}" alt="{{ p.productName }}" class="product-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                         <i class="fa fa-box-open" style="display:none;"></i>
                     </a>
-                    <span class="product-tag" ng-if="p.discountPercent > 0">{{ p.discountPercent }}% OFF</span>
+                    <!-- Bestseller (orange) / Hurry! (pink) badge based on discount percent -->
+                    <span class="product-tag bestseller" ng-if="p.discountPercent >= 15">Bestseller</span>
+                    <span class="product-tag hurry" ng-if="p.discountPercent > 0 && p.discountPercent < 15">Hurry! {{ p.discountPercent }}% OFF</span>
+                    
+                    <div class="wishlist-icon-btn" ng-click="toggleWishlist(p)" ng-class="{active: isProductWishlisted(p.productId)}">
+                        <i class="fa-solid fa-heart"></i>
+                    </div>
                 </div>
                 <div class="product-info">
                     <span class="product-brand">{{ p.brand }}</span>
                     <h3 class="product-title">
                         <a href="#!/product/{{ p.productId }}">{{ p.productName }}</a>
                     </h3>
+                    
+                    <!-- Stock status line below product title -->
+                    <div class="stock-status" ng-class="{'in-stock': p.stockQuantity > 5, 'low-stock': p.stockQuantity > 0 && p.stockQuantity <= 5, 'out-of-stock': p.stockQuantity === 0}">
+                        <i class="fa" ng-class="{'fa-circle-check': p.stockQuantity > 5, 'fa-circle-exclamation': p.stockQuantity > 0 && p.stockQuantity <= 5, 'fa-circle-xmark': p.stockQuantity === 0}"></i>
+                        <span ng-if="p.stockQuantity > 5">In Stock</span>
+                        <span ng-if="p.stockQuantity > 0 && p.stockQuantity <= 5">Only {{ p.stockQuantity }} Left!</span>
+                        <span ng-if="p.stockQuantity === 0">Out of Stock</span>
+                    </div>
+
                     <div class="product-price-row">
                         <span class="price-now">₹{{ p.price | number:2 }}</span>
                         <span class="price-mrp" ng-if="p.mrp > p.price">₹{{ p.mrp | number:2 }}</span>
                     </div>
+                    
+                    <!-- Actions buttons row (Orange Add / Blue Buy side by side) -->
                     <div class="product-btn-row">
-                        <button class="btn btn-primary-gradient btn-sm btn-block" ng-click="addToCart(p)">
-                            <i class="fa fa-shopping-cart"></i> Add to Cart
+                        <button class="btn btn-orange btn-sm" ng-click="addToCart(p)" ng-disabled="p.stockQuantity === 0">
+                            <i class="fa fa-shopping-cart"></i> Add
+                        </button>
+                        <button class="btn btn-blue btn-sm" ng-click="buyNow(p)" ng-disabled="p.stockQuantity === 0">
+                            <i class="fa fa-bolt"></i> Buy
                         </button>
                     </div>
                 </div>

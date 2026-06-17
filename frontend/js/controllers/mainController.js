@@ -136,11 +136,21 @@ app.controller('mainController', ['$scope', '$location', 'authService', 'cartSer
         return $scope.cartCount;
     };
 
+    $scope.searchCategory = '';
     $scope.searchProducts = function() {
+        var params = {};
         if ($scope.searchQuery) {
-            $location.path('/products').search({ query: $scope.searchQuery });
-            $scope.searchQuery = '';
+            params.query = $scope.searchQuery;
         }
+        if ($scope.searchCategory) {
+            params.categoryId = $scope.searchCategory;
+        }
+        $location.path('/products').search(params);
+        $scope.searchQuery = '';
+    };
+
+    $scope.filterCategoryFromSearch = function() {
+        $scope.searchProducts();
     };
 
     $scope.isMobileWebView = function() {

@@ -13,25 +13,55 @@
     <!-- FontAwesome for Premium Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Chart.js for Admin Analytics Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body ng-controller="mainController">
 
+    <!-- Top Mini Header Bar -->
+    <div class="top-header">
+        <div>
+            <span><i class="fa-solid fa-mobile-screen-button"></i> Download App</span>
+            <span style="margin-left: 15px;"><i class="fa-solid fa-percent"></i> Offers</span>
+        </div>
+        <div class="top-header-links">
+            <a href="#!/login" ng-if="!isLoggedIn()"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</a>
+            <a href="#!/register" ng-if="!isLoggedIn()"><i class="fa-solid fa-user-plus"></i> Sign Up</a>
+            <span ng-if="isLoggedIn()"><i class="fa-solid fa-user-check"></i> Hello, {{ getUserName() }}</span>
+            <a href=""><i class="fa-solid fa-headset"></i> 24/7 Support</a>
+        </div>
+    </div>
+
     <!-- Header & Navigation Bar -->
-    <header class="navbar-container">
+    <header class="navbar-container orange-theme-navbar">
         <nav class="navbar">
             <div class="nav-logo">
                 <a href="#/!">
-                    <span class="logo-accent">Entity</span>kart
+                    EntityKart<span class="logo-plus-badge">Plus</span>
                 </a>
             </div>
             
             <div class="nav-search">
                 <form ng-submit="searchProducts()">
                     <div class="search-input-wrapper">
-                        <i class="fa fa-search search-icon"></i>
-                        <input type="text" ng-model="searchQuery" placeholder="Search premium products, brands...">
+                        <select class="search-category-select" ng-model="searchCategory" ng-change="filterCategoryFromSearch()">
+                            <option value="">All Categories</option>
+                            <option value="1">Electronics</option>
+                            <option value="2">Fashion</option>
+                            <option value="3">Home & Kitchen</option>
+                            <option value="4">Beauty & Personal Care</option>
+                            <option value="5">Grocery</option>
+                            <option value="6">Sports & Fitness</option>
+                            <option value="7">Books & Education</option>
+                            <option value="8">Toys & Games</option>
+                            <option value="9">Automotive</option>
+                            <option value="10">Health & Wellness</option>
+                        </select>
+                        <input type="text" ng-model="searchQuery" placeholder="Search for products, brands and more...">
+                        <button type="submit" class="search-submit-btn orange-theme-search-btn"><i class="fa fa-search"></i></button>
                     </div>
                 </form>
             </div>
@@ -92,12 +122,12 @@
                 <!-- Authentication Status -->
                 <div class="auth-section">
                     <div ng-if="!isLoggedIn()" class="auth-buttons">
-                        <a href="#!/login" class="btn btn-secondary-glass">Login</a>
-                        <a href="#!/register" class="btn btn-primary-gradient">Sign Up</a>
+                        <a href="#!/login" class="btn btn-secondary-glass" style="color: white; border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.15);">Login</a>
+                        <a href="#!/register" class="btn btn-secondary-glass" style="color: var(--color-accent); background: white; border-color: white;">Sign Up</a>
                     </div>
                     <div ng-if="isLoggedIn()" class="user-dropdown-wrapper">
                         <div class="user-profile-trigger" ng-click="toggleUserMenu()">
-                            <div class="avatar">{{ getUserInitials() }}</div>
+                            <div class="avatar orange-theme-avatar">{{ getUserInitials() }}</div>
                             <span class="user-name">{{ getUserName() }}</span>
                             <i class="fa fa-chevron-down dropdown-arrow"></i>
                         </div>
@@ -113,6 +143,21 @@
             </div>
         </nav>
     </header>
+
+    <!-- Horizontal Categories Navigation Sub-Header Bar -->
+    <div class="sub-navbar-container">
+        <div class="sub-navbar">
+            <a href="#!/products?categoryId=1" class="sub-navbar-item">Electronics</a>
+            <a href="#!/products?categoryId=2" class="sub-navbar-item">Fashion</a>
+            <a href="#!/products?categoryId=3" class="sub-navbar-item">Home & Kitchen</a>
+            <a href="#!/products?categoryId=4" class="sub-navbar-item">Beauty & Personal Care</a>
+            <a href="#!/products?categoryId=5" class="sub-navbar-item">Grocery</a>
+            <a href="#!/products?categoryId=6" class="sub-navbar-item">Sports & Fitness</a>
+            <a href="#!/products?categoryId=7" class="sub-navbar-item">Books & Education</a>
+            <a href="#!/products?categoryId=8" class="sub-navbar-item">Toys & Games</a>
+            <a href="#!/products" class="sub-navbar-item">&gt; More</a>
+        </div>
+    </div>
 
     <!-- Global Loading Overlay -->
     <div class="loading-overlay" ng-show="isLoading()">

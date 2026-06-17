@@ -54,7 +54,10 @@
                             <img ng-src="{{ p.mainImageURL }}" alt="{{ p.productName }}" class="product-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                             <i class="fa fa-box-open" style="display:none;"></i>
                         </a>
-                        <span class="product-tag" ng-if="p.discountPercent > 0">{{ p.discountPercent }}% OFF</span>
+                        <!-- Bestseller (orange) / Hurry! (pink) badge based on discount percent -->
+                        <span class="product-tag bestseller" ng-if="p.discountPercent >= 15">Bestseller</span>
+                        <span class="product-tag hurry" ng-if="p.discountPercent > 0 && p.discountPercent < 15">Hurry! {{ p.discountPercent }}% OFF</span>
+                        
                         <div class="wishlist-icon-btn" ng-click="toggleWishlist(p)" ng-class="{active: isProductWishlisted(p.productId)}">
                             <i class="fa-solid fa-heart"></i>
                         </div>
@@ -64,13 +67,27 @@
                         <h3 class="product-title">
                             <a href="#!/product/{{ p.productId }}">{{ p.productName }}</a>
                         </h3>
+                        
+                        <!-- Stock status line below product title -->
+                        <div class="stock-status" ng-class="{'in-stock': p.stockQuantity > 5, 'low-stock': p.stockQuantity > 0 && p.stockQuantity <= 5, 'out-of-stock': p.stockQuantity === 0}">
+                            <i class="fa" ng-class="{'fa-circle-check': p.stockQuantity > 5, 'fa-circle-exclamation': p.stockQuantity > 0 && p.stockQuantity <= 5, 'fa-circle-xmark': p.stockQuantity === 0}"></i>
+                            <span ng-if="p.stockQuantity > 5">In Stock</span>
+                            <span ng-if="p.stockQuantity > 0 && p.stockQuantity <= 5">Only {{ p.stockQuantity }} Left!</span>
+                            <span ng-if="p.stockQuantity === 0">Out of Stock</span>
+                        </div>
+
                         <div class="product-price-row">
                             <span class="price-now">₹{{ p.price | number:2 }}</span>
                             <span class="price-mrp" ng-if="p.mrp > p.price">₹{{ p.mrp | number:2 }}</span>
                         </div>
+                        
+                        <!-- Actions buttons row (Orange Add / Blue Buy side by side) -->
                         <div class="product-btn-row">
-                            <button class="btn btn-primary-gradient btn-sm btn-block" ng-click="addToCart(p)">
-                                <i class="fa fa-shopping-cart"></i> Add to Cart
+                            <button class="btn btn-orange btn-sm" ng-click="addToCart(p)" ng-disabled="p.stockQuantity === 0">
+                                <i class="fa fa-shopping-cart"></i> Add
+                            </button>
+                            <button class="btn btn-blue btn-sm" ng-click="buyNow(p)" ng-disabled="p.stockQuantity === 0">
+                                <i class="fa fa-bolt"></i> Buy
                             </button>
                         </div>
                     </div>

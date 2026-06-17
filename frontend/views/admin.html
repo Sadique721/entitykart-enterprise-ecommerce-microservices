@@ -95,6 +95,81 @@
                             <h3 style="margin: 0; font-size: 1.6rem;">{{ dashboardStats.totalOrders }}</h3>
                         </div>
                     </div>
+                <!-- Microservices Telemetry & Performance Section -->
+                <div class="card-glass" style="margin-bottom: 2rem; padding: 1.5rem;">
+                    <h4 style="margin-bottom: 1.5rem;"><i class="fa fa-server text-accent"></i> Microservices Telemetry & Performance</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem;">
+                        <!-- User Service -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-users text-accent"></i> User Service</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-user-service"></canvas>
+                            </div>
+                        </div>
+                        <!-- Product Service -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-cubes text-accent"></i> Product Service</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-product-service"></canvas>
+                            </div>
+                        </div>
+                        <!-- Cart Service -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-shopping-cart text-accent"></i> Cart Service</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-cart-service"></canvas>
+                            </div>
+                        </div>
+                        <!-- Order Service -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-receipt text-accent"></i> Order Service</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-order-service"></canvas>
+                            </div>
+                        </div>
+                        <!-- Payment Service -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-credit-card text-accent"></i> Payment Service</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-payment-service"></canvas>
+                            </div>
+                        </div>
+                        <!-- Wishlist Service -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-heart text-accent"></i> Wishlist Service</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-wishlist-service"></canvas>
+                            </div>
+                        </div>
+                        <!-- Review Service -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-star text-accent"></i> Review Service</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-review-service"></canvas>
+                            </div>
+                        </div>
+                        <!-- Return Service -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-rotate-left text-accent"></i> Return Service</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-return-service"></canvas>
+                            </div>
+                        </div>
+                        <!-- Notification Service -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-bell text-accent"></i> Notification Service</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-notification-service"></canvas>
+                            </div>
+                        </div>
+                        <!-- API Gateway -->
+                        <div class="card-glass" style="padding: 1rem; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: var(--shadow-sm);">
+                            <h5 style="margin-bottom: 0.8rem; font-size: 0.9rem; color: #1e293b;"><i class="fa fa-network-wired text-accent"></i> API Gateway</h5>
+                            <div style="position: relative; height: 160px; width: 100%;">
+                                <canvas id="chart-api-gateway"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid-2" style="align-items: start;">

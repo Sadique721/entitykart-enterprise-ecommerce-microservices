@@ -32,7 +32,42 @@ app.controller('productController', [
 
         // --- Core Catalog Loading ---
 
+        $scope.activeSlide = 0;
+        $scope.slides = [
+            { image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&h=400&fit=crop', title: 'Summer Electronics Bash', subtitle: 'Save up to 40% on top audiophile gear and smart gadgets', url: '#!/products?categoryId=1' },
+            { image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200&h=400&fit=crop', title: 'Minimalist Office Styling', subtitle: 'Premium wooden desktop organizers & workspace lighting', url: '#!/products?categoryId=2' },
+            { image: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=1200&h=400&fit=crop', title: 'Luxury Lifestyle Watches', subtitle: 'Timeless craftsmanship & elegant watches for any look', url: '#!/products?categoryId=3' }
+        ];
+        $scope.nextSlide = function() {
+            $scope.activeSlide = ($scope.activeSlide + 1) % $scope.slides.length;
+        };
+        $scope.prevSlide = function() {
+            $scope.activeSlide = ($scope.activeSlide - 1 + $scope.slides.length) % $scope.slides.length;
+        };
+        $scope.setSlide = function(index) {
+            $scope.activeSlide = index;
+        };
+
+        $scope.wishlistProductIds = [];
+        
+        $scope.loadUserWishlist = function() {
+            if (authService.isLoggedIn()) {
+                wishlistService.getWishlist().then(function(items) {
+                    $scope.wishlistProductIds = items.map(function(item) {
+                        return item.productId;
+                    });
+                });
+            } else {
+                $scope.wishlistProductIds = [];
+            }
+        };
+
+        $scope.isProductWishlisted = function(productId) {
+            return $scope.wishlistProductIds.indexOf(productId) > -1;
+        };
+
         $scope.initHome = function() {
+            $scope.loadUserWishlist();
             // Load featured items
             productService.getProducts(null, null, 0, 4).then(function(data) {
                 $scope.products = data.content;
@@ -41,9 +76,21 @@ app.controller('productController', [
             productService.getCategories().then(function(data) {
                 $scope.categories = data;
             });
+            
+            // Auto play slider
+            var sliderInterval = setInterval(function() {
+                $scope.$apply(function() {
+                    $scope.nextSlide();
+                });
+            }, 5000);
+
+            $scope.$on('$destroy', function() {
+                clearInterval(sliderInterval);
+            });
         };
 
         $scope.initCatalog = function() {
+            $scope.loadUserWishlist();
             productService.getCategories().then(function(cats) {
                 $scope.categories = cats;
                 // Preload subcategories for each category
@@ -96,8 +143,12 @@ app.controller('productController', [
             $scope.catFilterId = category ? category.id : null;
             $scope.subFilterId = null; // Reset subcategory filter when changing categories
             $scope.currentPage = 0;
-            $location.search('categoryId', $scope.catFilterId);
-            $scope.loadProducts();
+            if ($location.path() !== '/products') {
+                $location.path('/products').search('categoryId', $scope.catFilterId);
+            } else {
+                $location.search('categoryId', $scope.catFilterId);
+                $scope.loadProducts();
+            }
         };
 
         $scope.filterBySubCategory = function(sub, event) {
@@ -186,6 +237,18 @@ app.controller('productController', [
                 });
         };
 
+        $scope.buyNow = function(product) {
+            cartService.addToCart(product.productId, product.productName, 1, product.price)
+                .then(function() {
+                    $scope.$emit('showToast', {
+                        title: 'Success',
+                        message: 'Redirecting to checkout...',
+                        type: 'success'
+                    });
+                    $location.path('/cart');
+                });
+        };
+
         $scope.toggleWishlist = function(product) {
             if (!authService.isLoggedIn()) {
                 $scope.$emit('showToast', {
@@ -197,10 +260,13 @@ app.controller('productController', [
                 return;
             }
 
-            if ($scope.isWishlisted) {
+            if ($scope.isProductWishlisted(product.productId)) {
                 wishlistService.removeFromWishlist(product.productId)
                     .then(function() {
-                        $scope.isWishlisted = false;
+                        var index = $scope.wishlistProductIds.indexOf(product.productId);
+                        if (index > -1) {
+                            $scope.wishlistProductIds.splice(index, 1);
+                        }
                         $scope.$emit('showToast', {
                             title: 'Removed from Wishlist',
                             message: product.productName + ' removed.',
@@ -210,7 +276,7 @@ app.controller('productController', [
             } else {
                 wishlistService.addToWishlist(product.productId)
                     .then(function() {
-                        $scope.isWishlisted = true;
+                        $scope.wishlistProductIds.push(product.productId);
                         $scope.$emit('showToast', {
                             title: 'Added to Wishlist',
                             message: product.productName + ' added.',

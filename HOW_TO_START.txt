@@ -651,6 +651,14 @@
   CHANGELOG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  [2026-06-17] v1.2.0
+  ─────────────────────────────────────────────────────────────
+  ✅ Storefront Premium Light Theme: Refactored frontend styling from dark glassmorphism to a premium white/light theme with bold brand orange highlights.
+  ✅ Storefront Homepage Enhancements: Designed banner carousel slider, 4 stats cards, circular category grid (descriptions removed), and a brand logo selection grid.
+  ✅ Catalog Polishing: Upgraded catalog products to feature Bestseller/Hurry tags, stock level indicators, and side-by-side Orange Add / Blue Buy buttons.
+  ✅ Admin Telemetry Dashboard: Integrated Chart.js from CDN to visualize real-time or mock telemetry charts (pie, doughnut, bar) for all 10 microservices.
+  ✅ Dual APK Repackaging: Automated patching, alignment, and signing of both Native Android (app-debug.apk) and Flutter (flutter-app-debug.apk) wrappers.
+
   [2026-06-16] v1.1.0
   ─────────────────────────────────────────────────────────────
   ✅ Enhanced Admin Control Panel with Dashboard Overview (metric cards, recent products & orders).

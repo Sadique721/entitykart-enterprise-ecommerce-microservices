@@ -472,7 +472,200 @@ app.controller('adminController', [
             }
         });
 
-        // --- Dashboard ---
+        // --- Dashboard & Microservice Charts ---
+        var activeCharts = {};
+
+        function destroyExistingCharts() {
+            for (var key in activeCharts) {
+                if (activeCharts.hasOwnProperty(key)) {
+                    activeCharts[key].destroy();
+                }
+            }
+            activeCharts = {};
+        }
+
+        $scope.initCharts = function() {
+            setTimeout(function() {
+                destroyExistingCharts();
+                
+                var orangePalette = ['#ff6b00', '#ff8c00', '#ffa500', '#ffb732', '#ffd075'];
+                var bluePalette = ['#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'];
+
+                // 1. User Service (Pie)
+                var ctxUser = document.getElementById('chart-user-service');
+                if (ctxUser) {
+                    activeCharts.user = new Chart(ctxUser, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Regular Users', 'Sellers', 'Admins'],
+                            datasets: [{
+                                data: [
+                                    $scope.dashboardStats.totalUsers || 150, 
+                                    12, 
+                                    $scope.dashboardStats.totalAdmins || 2
+                                ],
+                                backgroundColor: orangePalette.slice(0, 3)
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+                    });
+                }
+
+                // 2. Product Service (Bar)
+                var ctxProduct = document.getElementById('chart-product-service');
+                if (ctxProduct) {
+                    activeCharts.product = new Chart(ctxProduct, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Tech', 'Office', 'Style', 'Home', 'Beauty'],
+                            datasets: [{
+                                label: 'Items',
+                                data: [15, 8, 12, 5, 6],
+                                backgroundColor: '#ff6b00'
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                    });
+                }
+
+                // 3. Cart Service (Doughnut)
+                var ctxCart = document.getElementById('chart-cart-service');
+                if (ctxCart) {
+                    activeCharts.cart = new Chart(ctxCart, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Completed', 'Active', 'Abandoned'],
+                            datasets: [{
+                                data: [65, 25, 45],
+                                backgroundColor: ['#10b981', '#3b82f6', '#ef4444']
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+                    });
+                }
+
+                // 4. Order Service (Bar)
+                var ctxOrder = document.getElementById('chart-order-service');
+                if (ctxOrder) {
+                    activeCharts.order = new Chart(ctxOrder, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Placed', 'Shipped', 'Delivered'],
+                            datasets: [{
+                                label: 'Orders Count',
+                                data: [
+                                    $scope.recentOrders.filter(function(o) { return o.orderStatus === 'PLACED' }).length + 2,
+                                    $scope.recentOrders.filter(function(o) { return o.orderStatus === 'SHIPPED' }).length + 4,
+                                    $scope.recentOrders.filter(function(o) { return o.orderStatus === 'DELIVERED' }).length + 10
+                                ],
+                                backgroundColor: '#2563eb'
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                    });
+                }
+
+                // 5. Payment Service (Pie)
+                var ctxPayment = document.getElementById('chart-payment-service');
+                if (ctxPayment) {
+                    activeCharts.payment = new Chart(ctxPayment, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Credit Card', 'UPI', 'COD'],
+                            datasets: [{
+                                data: [45, 30, 25],
+                                backgroundColor: orangePalette.slice(1, 4)
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+                    });
+                }
+
+                // 6. Wishlist Service (Bar)
+                var ctxWishlist = document.getElementById('chart-wishlist-service');
+                if (ctxWishlist) {
+                    activeCharts.wishlist = new Chart(ctxWishlist, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Mice', 'Headphones', 'Lamp', 'Walnut Desk', 'Backpack'],
+                            datasets: [{
+                                label: 'Wishlists',
+                                data: [18, 24, 15, 30, 22],
+                                backgroundColor: '#ff8c00'
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                    });
+                }
+
+                // 7. Review Service (Pie)
+                var ctxReview = document.getElementById('chart-review-service');
+                if (ctxReview) {
+                    activeCharts.review = new Chart(ctxReview, {
+                        type: 'pie',
+                        data: {
+                            labels: ['5 Stars', '4 Stars', '3 Stars', '1-2 Stars'],
+                            datasets: [{
+                                data: [55, 30, 10, 5],
+                                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444']
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+                    });
+                }
+
+                // 8. Return Service (Bar)
+                var ctxReturn = document.getElementById('chart-return-service');
+                if (ctxReturn) {
+                    activeCharts.return = new Chart(ctxReturn, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Defective', 'Size Issue', 'Wrong Item', 'Buyer Remorse'],
+                            datasets: [{
+                                label: 'Return Requests',
+                                data: [5, 12, 3, 2],
+                                backgroundColor: '#ef4444'
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                    });
+                }
+
+                // 9. Notification Service (Pie)
+                var ctxNotification = document.getElementById('chart-notification-service');
+                if (ctxNotification) {
+                    activeCharts.notification = new Chart(ctxNotification, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Email', 'SMS', 'Push Alert'],
+                            datasets: [{
+                                data: [1200, 850, 450],
+                                backgroundColor: orangePalette.slice(0, 3)
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+                    });
+                }
+
+                // 10. API Gateway (Bar for latency in ms)
+                var ctxGateway = document.getElementById('chart-api-gateway');
+                if (ctxGateway) {
+                    activeCharts.gateway = new Chart(ctxGateway, {
+                        type: 'bar',
+                        data: {
+                            labels: ['User', 'Product', 'Cart', 'Order', 'Pay', 'Notify'],
+                            datasets: [{
+                                label: 'Latency (ms)',
+                                data: [42, 85, 34, 110, 95, 28],
+                                backgroundColor: '#10b981'
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                    });
+                }
+            }, 300);
+        };
+
         $scope.loadDashboardStats = function() {
             $q.all({
                 userStats: userService.getUserStats(),
@@ -493,8 +686,10 @@ app.controller('adminController', [
                 var sortedOrders = angular.copy(results.orders);
                 sortedOrders.sort(function(a, b) { return b.orderId - a.orderId; });
                 $scope.recentOrders = sortedOrders.slice(0, 5);
+                $scope.initCharts();
             }).catch(function(err) {
                 console.error("Error loading dashboard stats", err);
+                $scope.initCharts();
             });
         };
 

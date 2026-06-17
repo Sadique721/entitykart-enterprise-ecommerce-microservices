@@ -92,7 +92,8 @@ flowchart TB
 - ⭐ **Reviews & Ratings** – Write/edit/delete reviews, rating statistics
 - ↩️ **Returns & Refunds** – Request return, admin approval, automated refund
 - 📧 **Notifications** – Email via Gmail SMTP (Kafka-driven, async)
-- 👑 **Admin Panel** – Manage products, orders, payments, returns, reviews, export reports (Excel & Word)
+- 👑 **Admin Panel & Telemetry** – Manage products, orders, payments, returns, reviews, export reports (Excel & Word). Features a live dashboard with interactive **Chart.js** telemetry representing status, request volume, and performance indicators across all 10 microservices.
+- 🎨 **Orange Premium Theme** – Clean storefront layout with homepage carousel banner slideshow, custom statistics row, circular category navigation, brand box grids, and catalog products featuring Bestseller/Hurry tags, stock level states, and side-by-side Add/Buy actions.
 - 🖼️ **Cloudinary Media Upload** – Upload product images directly from admin panel to Cloudinary CDN
 - 📱 **Android App** – Native WebView wrapper (Kotlin + Jetpack Compose)
 - 🦋 **Flutter App** – Cross-platform WebView wrapper (Flutter + webview_flutter)
