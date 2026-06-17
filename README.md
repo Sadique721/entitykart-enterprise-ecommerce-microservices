@@ -27,6 +27,16 @@
 
 ---
 
+## 📖 System Architecture & Design Logic Flow
+The Entitykart workspace consists of two main architectural variants:
+1. **Monolithic Architecture** ([Entitykart-main](file:///d:/Temp/MKEG/Entitykart-main)): A traditional, single-deployment Spring Boot + Maven system serving JSP templates compiled dynamically by Tomcat Jasper, utilizing stateful `HttpSession` session variables, direct SQL repository updates, and Apache POI for reports.
+2. **Microservices Architecture** ([Entitykart](file:///d:/Temp/MKEG/Entitykart)): A modern cloud-ready design splitting domains into 9 independent microservices managed via Netflix Eureka and Spring Cloud Gateway, featuring stateless JWT tokens, event-driven processes via Apache Kafka, and a responsive AngularJS client wrapped in Android & Flutter WebView clients.
+
+> [!TIP]
+> For a detailed, step-by-step trace of API endpoints, Kafka topic events, database schemas, and class interactions for **Categories**, **Subcategories**, **Products**, **Orders**, and **Returns**, see the comprehensive **[Architecture & Data Flows Guide](file:///d:/Temp/MKEG/Entitykart/ARCHITECTURE_AND_FLOWS.md)**.
+
+---
+
 ## 📌 Overview
 
 **EntityKart** is a modern, cloud‑ready **e‑commerce platform** built with a **microservices architecture**. Refactored into **9 independently deployable services**, an **API Gateway**, **Service Discovery (Eureka)**, and **event‑driven communication via Apache Kafka**. The frontend is a responsive **AngularJS single‑page application**, and there is a native **Android app** (Kotlin + Jetpack Compose + WebView). The entire stack is containerized with **Docker** and automated through **GitHub Actions CI/CD**.

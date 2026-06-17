@@ -630,8 +630,13 @@
   All uploaded images are stored in: entitykart/products/ folder
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  PROJECT METADATA
+  PROJECT ARCHITECTURE & METADATA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  A complete system architectural flows guide (Catalog, Checkout, Return details, 
+  and comparison between monolithic Java/JSP and microservice Kafka/AngularJS) 
+  is available at:
+  d:\Temp\MKEG\Entitykart\ARCHITECTURE_AND_FLOWS.md
 
   A complete machine-readable metadata file is available at:
   d:\Temp\MKEG\Entitykart\metadata.json
@@ -650,6 +655,11 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   CHANGELOG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [2026-06-17] v1.3.0
+  ─────────────────────────────────────────────────────────────
+  ✅ Logical Analysis Documentation: Created ARCHITECTURE_AND_FLOWS.md mapping data and logic flows for adding products, categories, subcategories, user authentication, checkout/orders via Kafka, and return/refund orchestration.
+  ✅ Monolithic vs Microservices Comparison: Detailed the tools, technology stack, and UI/UX architecture differences between the JSP/Session-based monolith (com.grownited) and the AngularJS/JWT/Kafka microservices (com.entitykart).
 
   [2026-06-17] v1.2.0
   ─────────────────────────────────────────────────────────────

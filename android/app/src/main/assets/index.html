@@ -68,10 +68,10 @@
             
             <div class="nav-links">
                 <a href="#!/products" class="nav-item" ng-class="{active: isActive('/products')}">
-                    <i class="fa-solid fa-store"></i> Shop
+                    <i class="fa-solid fa-store"></i> <span>Shop</span>
                 </a>
                 <a href="#!/wishlist" class="nav-item" ng-class="{active: isActive('/wishlist')}" ng-if="isLoggedIn()">
-                    <i class="fa-regular fa-heart"></i> Wishlist
+                    <i class="fa-regular fa-heart"></i> <span>Wishlist</span>
                 </a>
                 <a href="#!/cart" class="nav-item cart-btn-badge" ng-class="{active: isActive('/cart')}">
                     <i class="fa-solid fa-shopping-bag"></i>
@@ -79,10 +79,10 @@
                     <span class="badge" ng-if="getCartCount() > 0">{{ getCartCount() }}</span>
                 </a>
                 <a href="#!/orders" class="nav-item" ng-class="{active: isActive('/orders')}" ng-if="isLoggedIn()">
-                    <i class="fa-solid fa-box-open"></i> Orders
+                    <i class="fa-solid fa-box-open"></i> <span>Orders</span>
                 </a>
                 <a href="#!/admin" class="nav-item admin-badge" ng-class="{active: isActive('/admin')}" ng-if="isAdmin()">
-                    <i class="fa-solid fa-user-shield"></i> Admin
+                    <i class="fa-solid fa-user-shield"></i> <span>Admin</span>
                 </a>
                 
                 <!-- Backend Environment Selector -->

@@ -52,8 +52,15 @@ app.service('authService', ['apiService', '$rootScope', function(apiService, $ro
                 return currentUser;
             })
             .catch(function(error) {
-                // FALLBACK MOCK AUTHENTICATION: Keep prototype fully functional without login endpoints
-                console.warn('Real login API not available. Using local mock authentication.');
+                // If the error status is not -1, it means the server responded with an error (e.g. 400 Bad Request, 401 Unauthorized)
+                // In this case, we should not fallback to mock authentication; we should display the actual server error!
+                if (error.status !== -1) {
+                    var msg = (error.data && error.data.message) ? error.data.message : 'Invalid email or password.';
+                    throw { data: { message: msg } };
+                }
+
+                // If server is unreachable (status === -1)
+                console.warn('API Gateway is unreachable. Checking local mock database...');
                 
                 // Check local mock database
                 var mockDb = JSON.parse(localStorage.getItem('ekMockUsers') || '[]');
@@ -92,7 +99,8 @@ app.service('authService', ['apiService', '$rootScope', function(apiService, $ro
                     
                     return currentUser;
                 } else {
-                    throw { data: { message: 'Invalid email or password.' } };
+                    // It was not a mock user, so the login failed because the backend is down!
+                    throw { data: { message: 'Connection Error: Cannot connect to the API Gateway. Please verify that your microservices are running and select the correct API Environment in the top-right menu (Docker API on port 9080 vs Local API on port 9901).' } };
                 }
             });
     };
