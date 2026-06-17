@@ -24,7 +24,7 @@
                     </li>
                     <li class="admin-menu-item-wrapper" ng-repeat="cat in categories" style="display: flex; flex-direction: column;">
                         <div class="admin-menu-item" ng-class="{active: catFilterId == cat.id}" ng-click="filterByCategory(cat)">
-                            <i class="fa" ng-class="{'fa-laptop-code': cat.id === 1, 'fa-couch': cat.id === 2, 'fa-shirt': cat.id === 3}"></i> {{ cat.name }}
+                            <i class="fa" ng-class="getCategoryIcon(cat)"></i> {{ cat.name }}
                         </div>
                         <!-- Sub-categories submenu (only shown if category is active) -->
                         <ul class="sub-category-list" ng-if="catFilterId == cat.id" style="list-style: none; padding-left: 1.5rem; margin: 0.4rem 0 0.8rem 0; display: flex; flex-direction: column; gap: 0.4rem;">

@@ -66,6 +66,33 @@ app.controller('productController', [
             return $scope.wishlistProductIds.indexOf(productId) > -1;
         };
 
+        $scope.getCategoryIcon = function(cat) {
+            if (!cat) return 'fa-box';
+            var name = (cat.name || '').toLowerCase().trim();
+            if (name.indexOf('electronic') > -1) {
+                return 'fa-laptop-code';
+            } else if (name.indexOf('fashion') > -1 || name.indexOf('clothing') > -1) {
+                return 'fa-shirt';
+            } else if (name.indexOf('home') > -1 || name.indexOf('kitchen') > -1) {
+                return 'fa-couch';
+            } else if (name.indexOf('beauty') > -1 || name.indexOf('personal care') > -1 || name.indexOf('cosmetic') > -1) {
+                return 'fa-spa';
+            } else if (name.indexOf('grocery') > -1 || name.indexOf('groceries') > -1 || name.indexOf('food') > -1) {
+                return 'fa-basket-shopping';
+            } else if (name.indexOf('sports') > -1 || name.indexOf('fitness') > -1 || name.indexOf('gym') > -1) {
+                return 'fa-dumbbell';
+            } else if (name.indexOf('book') > -1 || name.indexOf('education') > -1) {
+                return 'fa-book';
+            } else if (name.indexOf('toy') > -1 || name.indexOf('game') > -1) {
+                return 'fa-gamepad';
+            } else if (name.indexOf('automotive') > -1 || name.indexOf('car') > -1 || name.indexOf('bike') > -1) {
+                return 'fa-car';
+            } else if (name.indexOf('health') > -1 || name.indexOf('wellness') > -1 || name.indexOf('medical') > -1) {
+                return 'fa-heart-pulse';
+            }
+            return 'fa-tags';
+        };
+
         $scope.initHome = function() {
             $scope.loadUserWishlist();
             // Load featured items

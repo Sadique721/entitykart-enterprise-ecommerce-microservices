@@ -411,6 +411,11 @@ jobs:
 
 ## 📋 Changelog
 
+### [2026-06-17] v1.4.1
+- **Category Icon Resolution**: Corrected incorrect icon mapping where Fashion had a couch and Home & Kitchen had a shirt.
+- **Dynamic Icon Resolver**: Developed dynamic name-based icon resolving via the new `getCategoryIcon` helper function in `productController.js` to render distinct FontAwesome 6 icons for all 10 product categories.
+- **Cross-Platform Synchronization**: Propagated controller and view fixes to the web frontend, Android asset views, and Flutter asset views.
+
 ### [2026-06-17] v1.4.0
 - **Category Duplicate Insertion Fix**: Resolved root cause of blank and duplicate category records created in `product-service` MySQL tables.
 - **Frontend Submit Debounce**: Integrated AngularJS submit state flags (`isSubmittingCategory` / `isSubmittingSubCategory`) and input guards across Web, Android, and Flutter wrappers to block multiple clicks and double submits.

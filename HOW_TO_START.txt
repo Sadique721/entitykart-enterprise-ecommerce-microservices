@@ -656,6 +656,10 @@
   CHANGELOG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  [2026-06-17] v1.4.1
+  ─────────────────────────────────────────────────────────────
+  ✅ Category Icon Resolution: Corrected swapped icon mappings where Fashion had a couch and Home & Kitchen had a shirt. Added dynamic name-based FontAwesome 6 icon mapping (`getCategoryIcon` helper function) in `productController.js` to render distinct icons for all 10 product categories across Web, Android, and Flutter wrappers.
+
   [2026-06-17] v1.4.0
   ─────────────────────────────────────────────────────────────
   ✅ Category Duplicate Insertion Fix: Resolved blank/duplicate categories insertion in `product_service.categories` table. Added AngularJS submit debounce flags (`isSubmittingCategory` / `isSubmittingSubCategory`) and blank input validation in controllers across Web, Android, and Flutter wrappers. Added backend service-level validation in `CategoryService.java` to reject blank/null category entries. Database successfully cleared of all blank records.

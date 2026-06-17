@@ -57,7 +57,7 @@
         <div class="categories-circle-grid">
             <div class="category-circle-item" ng-repeat="cat in categories" ng-click="filterByCategory(cat)">
                 <div class="category-circle-icon">
-                    <i class="fa" ng-class="{'fa-laptop-code': cat.id === 1, 'fa-couch': cat.id === 2, 'fa-shirt': cat.id === 3}"></i>
+                    <i class="fa" ng-class="getCategoryIcon(cat)"></i>
                 </div>
                 <h4>{{ cat.name }}</h4>
             </div>
