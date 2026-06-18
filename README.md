@@ -95,18 +95,25 @@ flowchart TB
 
 - 🔐 **User Management** – Registration, JWT authentication, profile, address book
 - 📦 **Product Catalog** – Categories, sub‑categories, inventory, search/filtering, GraphQL
-- 🛒 **Shopping Cart** – Add/remove items, quantity update, checkout event
-- 💳 **Checkout & Payment** – Authorize.Net integration, COD, UPI, net banking
-- 📋 **Order Management** – Place, track, cancel, view order history
-- ❤️ **Wishlist** – Save favourite products
-- ⭐ **Reviews & Ratings** – Write/edit/delete reviews, rating statistics
+- 🛒 **Shopping Cart** – Add/remove items, quantity update, save-for-later, checkout event
+- 🎟️ **Coupon & Promo Codes** – Built-in coupon system with percent/flat discount validation
+- 💳 **Checkout & Payment** – Authorize.Net integration, COD, UPI, net banking (per-method validation)
+- 📋 **Order Management** – Place, track, cancel, download invoice, view order history
+- ❤️ **Wishlist** – Save favourite products with stock status badges
+- ⭐ **Reviews & Ratings** – Write/edit/delete reviews, rating statistics, star bar chart
 - ↩️ **Returns & Refunds** – Request return, admin approval, automated refund
-- 📧 **Notifications** – Email via Gmail SMTP (Kafka-driven, async)
-- 👑 **Admin Panel & Telemetry** – Manage products, orders, payments, returns, reviews, export reports (Excel & Word). Features a live dashboard with interactive **Chart.js** telemetry representing status, request volume, and performance indicators across all 10 microservices.
-- 🎨 **Orange Premium Theme** – Clean storefront layout with homepage carousel banner slideshow, custom statistics row, circular category navigation, brand box grids, and catalog products featuring Bestseller/Hurry tags, stock level states, and side-by-side Add/Buy actions.
-- 🖼️ **Cloudinary Media Upload** – Upload product images directly from admin panel to Cloudinary CDN
+- 📧 **Notifications** – Email via Gmail SMTP (Kafka-driven, async) + in-app notify-me for out-of-stock
+- 👑 **Admin Panel & Telemetry** – Manage products, orders, payments, returns, reviews, export reports (Excel & Word). Features a live dashboard with interactive **Chart.js** telemetry.
+- ⚡ **Flash Sale / Deals of the Day** – Animated pulsing badge + live countdown timer on home page
+- 🕐 **Recently Viewed Products** – Horizontally scrollable recently viewed section (localStorage-persisted)
+- 🔍 **Advanced Filtering** – Price range filter with quick chips, sort by price/discount/newest
+- 🖼️ **Image Gallery** – Multi-image thumbnail strip on product detail with zoom-on-hover
+- 📤 **Share Product** – Web Share API + clipboard fallback
+- 📱 **Mobile Responsive** – Hamburger menu, slide-in nav panel, responsive layouts for all screen sizes
+- 🎨 **Orange Premium Theme** – Clean storefront with carousel, stats row, category nav, brand box grids
+- 🖼️ **Cloudinary Media Upload** – Upload product images directly from admin panel
 - 📱 **Android App** – Native WebView wrapper (Kotlin + Jetpack Compose)
-- 🦋 **Flutter App** – Cross-platform WebView wrapper (Flutter + webview_flutter)
+- 🦋 **Flutter App** – Cross-platform WebView with settings screen, bottom nav bar, back-button handling
 
 ---
 
@@ -411,7 +418,47 @@ jobs:
 
 ## 📋 Changelog
 
-### [2026-06-17] v1.4.2
+### [2026-06-18] v1.5.0 — Full System Audit, Bug Fixes & Major Feature Expansion
+**🐛 Critical Bug Fixes:**
+- **Checkout COD/UPI Validation Fixed**: Payment form no longer validates card fields for non-card payment methods (COD and UPI checkout was blocked).
+- **Buy Now Redirect Fixed**: `buyNow()` now correctly redirects to `/checkout` instead of `/cart`.
+- **Missing `patch` HTTP Method Added**: `apiService.js` was missing the `PATCH` method used by return decision endpoints — return approve/reject is now fully functional.
+- **Duplicate Toast on 401 Fixed**: Auth errors no longer fire two simultaneous toast notifications.
+- **Flutter Bridge Injection Fixed**: `_injectAndroidBridge()` now fires on `onPageFinished` (DOM ready) instead of `onPageStarted` (too early).
+- **Flutter Hardcoded IP Fixed**: Backend IP is now loaded from `SharedPreferences` instead of being hardcoded to `192.168.1.6`.
+- **Product Detail HTML Structure Fixed**: Missing closing `</div>` for `ng-if="selectedProduct"` wrapper corrected.
+- **Search Propagation Fixed**: Search query no longer cleared before products page initializes.
+
+**✨ New Features (benchmarked vs Amazon, Flipkart, Alibaba):**
+- **⚡ Flash Sale Section**: Home page "Deals of the Day" with animated pulsing badge and real-time countdown timer.
+- **🕐 Recently Viewed Products**: Horizontally scrollable recently viewed section on home page (persisted to localStorage).
+- **🔍 Price Range Filter**: Min/Max price inputs with quick-select chips (Under ₹500, ₹500–2K, ₹2K–10K, ₹10K+).
+- **↕️ Sort Options**: Sort catalog by Relevance, Price ↑, Price ↓, Best Discount, Newest.
+- **🎟️ Coupon Code System**: Cart page coupon input with 3 built-in codes (WELCOME10, SAVE100, FLASH20) and dynamic discount calculation.
+- **💾 Save for Later**: Cart items can be moved to wishlist with one click.
+- **🖼️ Product Image Gallery**: Product detail page now shows thumbnail strip for multi-image browsing with zoom-on-hover.
+- **📤 Share Product**: Web Share API button on product detail (fallback to clipboard copy).
+- **🔔 Notify Me (Out of Stock)**: Email capture form shown when product stock is 0.
+- **❌ Cancel Order**: Cancel button on PLACED/PENDING orders with confirmation dialog.
+- **📄 Download Invoice**: Full HTML invoice generation with item breakdown, GST calculation, and one-click download.
+- **📦 Stock Status Badge**: Color-coded In Stock / Low Stock / Out of Stock badges on all product cards and wishlist.
+- **📱 Mobile Hamburger Menu**: Fully responsive slide-in navigation panel for mobile/tablet viewports.
+- **🔝 Top Announcement Bar**: Mini top bar with Download App / Offers links.
+- **📑 Sub-Navbar Categories**: Horizontal category quick-nav below main header.
+- **🔍 SEO Meta Tags**: Added `<meta description>`, Open Graph, and Twitter Card tags to `index.html`.
+- **📊 Realistic Stats**: Home page stats updated from placeholder values to realistic numbers (50,000+ Products, 2M+ Customers).
+
+**📱 Flutter App:**
+- **Settings Screen**: New IP/Port configuration screen with SharedPreferences persistence.
+- **Bottom Navigation Bar**: Shop + Settings tabs with brand-colored indicator.
+- **Back Button Handling**: `WillPopScope` properly handles Android back button within WebView.
+- **Pull-to-Refresh**: `RefreshIndicator` added to WebView for swipe-to-refresh.
+- **Theme Color Fixed**: Seed color corrected to EntityKart brand orange `#FF6B35`.
+- **Loading Screen**: Premium branded loading overlay with animated EntityKart logo.
+
+**🔄 Asset Sync:**
+- All updated frontend files automatically synchronized to `android/app/src/main/assets/` and `flutter/assets/`.
+
 - **Admin Panel Pagination**: Integrated client-side pagination (5, 10, 50, or 100 rows options) across all 7 management tables (Users, Products, Categories, Orders, Payments, Reviews, Returns).
 - **Header UI Layout Fix**: Extended the username container width limit from 100px to 180px and added a flexible screen width media query query list to resolve text clipping on narrow viewports.
 - **Profile Editing Page**: Built a comprehensive `/profile` page supporting gender, contact numbers, password modifications, and Cloudinary-based profile picture uploads with real-time UI synchronization.
@@ -434,13 +481,18 @@ jobs:
 
 - Kubernetes deployment with Helm charts
 - Redis caching for product catalogue
-- Elasticsearch + Kibana for search & analytics
+- Elasticsearch + Kibana for full-text product search & analytics
 - GraphQL federation across services
-- AI‑based product recommendation engine
-- WebSocket live order tracking
+- AI-based product recommendation engine
+- WebSocket live order tracking (real-time)
 - iOS native app (SwiftUI)
 - Multi-vendor marketplace support
 - Payment gateway diversification (Stripe, Razorpay)
+- Progressive Web App (PWA) with offline support
+- Social login (Google, Facebook OAuth2)
+- A/B testing framework for UI experiments
+- Push notifications (Firebase FCM)
+- Loyalty points / rewards system
 
 ---
 

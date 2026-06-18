@@ -15,8 +15,10 @@
 
         <!-- Left Side: Image Gallery -->
         <div class="product-gallery">
+            <!-- Main image display -->
             <div class="product-gallery-main">
-                <img ng-src="{{ selectedProduct.mainImageURL }}" alt="{{ selectedProduct.productName }}"
+                <img ng-src="{{ galleryImages[activeImageIndex] || selectedProduct.mainImageURL }}"
+                     alt="{{ selectedProduct.productName }}"
                      class="product-img gallery-main-img"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <div class="product-img-placeholder gallery-placeholder" style="display:none;">
@@ -26,6 +28,20 @@
                 <!-- Discount Badge -->
                 <div class="gallery-badge" ng-if="selectedProduct.discountPercent > 0">
                     {{ selectedProduct.discountPercent }}% OFF
+                </div>
+                <!-- Share Button -->
+                <button class="gallery-share-btn" ng-click="shareProduct(selectedProduct)" title="Share this product">
+                    <i class="fa fa-share-nodes"></i>
+                </button>
+            </div>
+
+            <!-- Thumbnail Strip (Image Gallery) -->
+            <div class="gallery-thumbnails" ng-if="galleryImages.length > 1">
+                <div class="gallery-thumb"
+                     ng-repeat="img in galleryImages"
+                     ng-class="{active: $index === activeImageIndex}"
+                     ng-click="setActiveImage($index)">
+                    <img ng-src="{{ img }}" alt="View {{ $index + 1 }}" onerror="this.style.display='none'">
                 </div>
             </div>
         </div>
@@ -89,7 +105,7 @@
                 </div>
             </div>
 
-            <!-- Add to Cart / Wishlist Actions -->
+            <!-- Add to Cart / Buy Now Actions -->
             <div class="detail-actions" ng-if="selectedProduct.stockQuantity > 0">
                 <div class="qty-selector">
                     <button class="qty-btn" ng-click="adjustQty(-1)" ng-disabled="detailQty <= 1">
@@ -104,6 +120,9 @@
                 <button class="btn btn-primary-gradient" ng-click="addToCart(selectedProduct, detailQty)" style="flex: 1;">
                     <i class="fa fa-shopping-bag"></i> Add to Bag
                 </button>
+                <button class="btn btn-orange" ng-click="buyNow(selectedProduct)" style="flex: 1;">
+                    <i class="fa fa-bolt"></i> Buy Now
+                </button>
                 <button class="btn" ng-click="toggleWishlist(selectedProduct)"
                         ng-class="isWishlisted ? 'btn-danger-glass' : 'btn-secondary-glass'"
                         style="min-width: 52px;" title="Add to Wishlist">
@@ -111,10 +130,26 @@
                 </button>
             </div>
 
-            <!-- Out of Stock CTA -->
-            <div ng-if="selectedProduct.stockQuantity <= 0" class="alert alert-error" style="margin-top: 1.5rem;">
-                <i class="fa fa-circle-exclamation"></i>
-                This product is currently out of stock. We'll notify you when it's available.
+            <!-- Out of Stock — Notify Me -->
+            <div ng-if="selectedProduct.stockQuantity <= 0" style="margin-top: 1.5rem;">
+                <div class="alert alert-error" style="margin-bottom: 1rem;">
+                    <i class="fa fa-circle-exclamation"></i>
+                    This product is currently out of stock.
+                </div>
+                <div class="notify-me-box card-glass" ng-if="!notifyMeSubmitted">
+                    <p style="margin-bottom: 0.8rem; font-weight: 500;"><i class="fa fa-bell text-accent"></i> Notify me when back in stock</p>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="email" class="form-control" ng-model="notifyMeEmail"
+                               placeholder="Enter your email address"
+                               style="flex: 1; padding: 8px 12px; font-size: 0.9rem;">
+                        <button class="btn btn-primary-gradient btn-sm" ng-click="submitNotifyMe(selectedProduct)">
+                            <i class="fa fa-bell"></i> Notify Me
+                        </button>
+                    </div>
+                </div>
+                <div class="alert alert-success" ng-if="notifyMeSubmitted">
+                    <i class="fa fa-check-circle"></i> You'll be notified at <strong>{{ notifyMeEmail }}</strong> when this is back in stock!
+                </div>
             </div>
 
             <!-- Delivery & Trust Info -->
@@ -243,5 +278,6 @@
             </div>
         </div>
     </section>
-    </div>
-</div>
+    </div><!-- /.ng-if selectedProduct -->
+
+</div><!-- /.page-container -->

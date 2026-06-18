@@ -35,10 +35,34 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
         },
         responseError: function(rejection) {
             hideLoading();
-            
+
+            // --- BUG FIX: Do NOT show generic API error for 401/403/network issues already handled below ---
             var errorTitle = 'API Error';
             var errorMsg = 'An unexpected error occurred.';
-            
+
+            if (rejection.status === 401) {
+                // Auth expired — clear session and redirect without duplicate error toast
+                localStorage.removeItem('ekToken');
+                localStorage.removeItem('ekUser');
+                $rootScope.$broadcast('auth:logout');
+                $rootScope.$broadcast('showToast', {
+                    title: 'Session Expired',
+                    message: 'Your session has expired. Please sign in again.',
+                    type: 'error'
+                });
+                return $q.reject(rejection);
+            }
+
+            if (rejection.status === 403) {
+                $rootScope.$broadcast('showToast', {
+                    title: 'Access Denied',
+                    message: 'You do not have permission to perform this action.',
+                    type: 'error'
+                });
+                return $q.reject(rejection);
+            }
+
+            // --- For all other errors, show a generic toast ---
             if (rejection.data) {
                 if (typeof rejection.data === 'string') {
                     errorMsg = rejection.data;
@@ -46,18 +70,8 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
                     errorMsg = rejection.data.message;
                 }
             } else if (rejection.status === -1) {
-                errorMsg = 'Cannot connect to Gateway server at ' + API_BASE + '. Make sure microservices are running, or switch your API environment in the top-right menu.';
-            }
-
-            if (rejection.status === 401) {
-                errorTitle = 'Unauthorized';
-                errorMsg = 'Please login again.';
-                localStorage.removeItem('ekToken');
-                localStorage.removeItem('ekUser');
-                $rootScope.$broadcast('auth:logout');
-            } else if (rejection.status === 403) {
-                errorTitle = 'Forbidden';
-                errorMsg = 'You do not have permission to perform this action.';
+                // Network/Gateway offline — do NOT spam toast, just reject
+                return $q.reject(rejection);
             }
 
             $rootScope.$broadcast('showToast', {
@@ -72,7 +86,7 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
 }]);
 
 app.service('apiService', ['$http', 'API_BASE', function($http, API_BASE) {
-    
+
     this.get = function(url, params) {
         return $http({
             method: 'GET',
@@ -93,6 +107,16 @@ app.service('apiService', ['$http', 'API_BASE', function($http, API_BASE) {
     this.put = function(url, data, params) {
         return $http({
             method: 'PUT',
+            url: API_BASE + url,
+            data: data,
+            params: params
+        });
+    };
+
+    // --- BUG FIX: Added missing PATCH method (used by orderService for return decisions) ---
+    this.patch = function(url, data, params) {
+        return $http({
+            method: 'PATCH',
             url: API_BASE + url,
             data: data,
             params: params

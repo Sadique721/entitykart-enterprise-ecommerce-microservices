@@ -656,6 +656,37 @@
   CHANGELOG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  [2026-06-18] v1.5.0 — Full System Audit, Bug Fixes & Major Feature Expansion
+  ─────────────────────────────────────────────────────────────
+  ✅ Critical Bug Fixes:
+     - COD/UPI validation bug fixed in checkout (no longer checks card details for non-card methods).
+     - "Buy Now" button redirects directly to /checkout instead of /cart.
+     - Added missing PATCH method to apiService.js, fixing order/return approval workflow.
+     - Fixed duplicate login/auth error toasts (401 error now shows only one toast).
+     - Fixed Flutter bridge injection timing (runs onPageFinished instead of onPageStarted).
+     - Replaced hardcoded IP in Flutter with SharedPreferences-persisted settings screen.
+     - Corrected HTML tags in product-detail.html (fixed missing closing div).
+     - Resolved search query propagation clear-out bug.
+  ✅ New E-Commerce Features (benchmarked vs Flipkart/Amazon/Alibaba):
+     - Pulsing "Deals of the Day" / Flash Sale section with real-time countdown timer.
+     - Persistent "Recently Viewed" horizontal scroll section.
+     - Price range filtering and sort options (low-high, high-low, relevance, discount, newest).
+     - Promo codes / coupons in Cart (WELCOME10, SAVE100, FLASH20) with discount calculations.
+     - "Save for Later" moving cart items to wishlist.
+     - Image gallery thumbnail strip on product details with hover-zoom.
+     - "Share Product" button utilizing Web Share API with clipboard copy fallback.
+     - "Notify Me" email subscription capture for out-of-stock items.
+     - Cancel order option with confirmation modal.
+     - Invoice download generation with GST calculation.
+     - Stock status indicators on cards and wishlist page.
+     - Mobile responsive hamburger menu and sub-navbar category quick navigation.
+     - Dynamic realistic stats counters on home page.
+  ✅ Android & Flutter App enhancements:
+     - Configurable API settings screen with persistence.
+     - Bottom navigation bar (Shop/Settings).
+     - Swipe-to-refresh pull indicator.
+     - Seed theme color fixed to EntityKart brand orange (#FF6B35).
+
   [2026-06-17] v1.4.2
   ─────────────────────────────────────────────────────────────
   ✅ Admin Pagination, Header UI & Edit Profile Section: Integrated client-side pagination (5, 10, 50, 100 records per page) across all 7 management tables (Users, Products, Categories, Orders, Payments, Reviews, Returns) in the Admin Panel. Fixed username text clipping in the header navigation by raising display limits to 180px and tuning padding transitions for intermediate screen sizes. Added a fully featured Profile Editor page (`/profile`) supporting user and admin avatar uploads to Cloudinary, gender selection, contact numbers, and password change updates with instant application-wide state synchronization.

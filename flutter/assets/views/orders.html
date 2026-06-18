@@ -73,6 +73,17 @@
                             {{ order.paymentStatus }}
                         </span>
                     </div>
+                    <!-- Action buttons -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;" ng-click="$event.stopPropagation()">
+                        <button class="btn btn-secondary-glass btn-sm" ng-click="downloadInvoice(order, $event)" title="Download Invoice" style="font-size: 0.78rem; padding: 5px 10px;">
+                            <i class="fa fa-download"></i> Invoice
+                        </button>
+                        <button class="btn btn-secondary-glass btn-sm" ng-click="cancelOrder(order, $event)"
+                                ng-if="canCancelOrder(order)"
+                                style="font-size: 0.78rem; padding: 5px 10px; color: #ef4444; border-color: rgba(239,68,68,0.4);">
+                            <i class="fa fa-xmark-circle"></i> Cancel
+                        </button>
+                    </div>
                     <i class="fa" ng-class="selectedOrder && selectedOrder.orderId === order.orderId ? 'fa-chevron-up' : 'fa-chevron-down'"
                        style="color: var(--text-muted); font-size: 1.1rem;"></i>
                 </div>

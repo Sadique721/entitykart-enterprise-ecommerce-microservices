@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entitykart - Modern E-Commerce Platform</title>
+    <title>EntityKart — Premium E-Commerce Platform | Shop Electronics, Fashion & More</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="EntityKart is a modern e-commerce platform offering premium electronics, fashion, home decor and more. Fast delivery, easy returns, and secure payments.">
+    <meta name="keywords" content="e-commerce, online shopping, electronics, fashion, home decor, EntityKart">
+    <meta name="robots" content="index, follow">
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="EntityKart — Premium E-Commerce Platform">
+    <meta property="og:description" content="Shop premium products across electronics, fashion, home and more. Free delivery, easy returns, secure payments.">
+    <meta property="og:site_name" content="EntityKart">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EntityKart — Premium E-Commerce Platform">
+    <meta name="twitter:description" content="Shop premium products with free delivery and easy returns.">
     
     <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,13 +32,13 @@
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body ng-controller="mainController">
+<body ng-controller="mainController" ng-class="{'mobile-menu-active': mobileMenuOpen}">
 
     <!-- Top Mini Header Bar -->
     <div class="top-header">
         <div>
             <span><i class="fa-solid fa-mobile-screen-button"></i> Download App</span>
-            <span style="margin-left: 15px;"><i class="fa-solid fa-percent"></i> Offers</span>
+            <span style="margin-left: 15px;"><i class="fa-solid fa-percent"></i> Offers &amp; Deals</span>
         </div>
         <div class="top-header-links">
             <a href="#!/login" ng-if="!isLoggedIn()"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</a>
@@ -43,6 +56,13 @@
                     EntityKart<span class="logo-plus-badge">Plus</span>
                 </a>
             </div>
+
+            <!-- Mobile Hamburger Button -->
+            <button class="hamburger-btn" id="hamburger-btn" ng-click="toggleMobileMenu()" aria-label="Toggle menu">
+                <span class="hamburger-line" ng-class="{'open': mobileMenuOpen}"></span>
+                <span class="hamburger-line" ng-class="{'open': mobileMenuOpen}"></span>
+                <span class="hamburger-line" ng-class="{'open': mobileMenuOpen}"></span>
+            </button>
             
             <div class="nav-search">
                 <form ng-submit="searchProducts()">
@@ -51,98 +71,103 @@
                             <option value="">All Categories</option>
                             <option value="1">Electronics</option>
                             <option value="2">Fashion</option>
-                            <option value="3">Home & Kitchen</option>
-                            <option value="4">Beauty & Personal Care</option>
+                            <option value="3">Home &amp; Kitchen</option>
+                            <option value="4">Beauty &amp; Personal Care</option>
                             <option value="5">Grocery</option>
-                            <option value="6">Sports & Fitness</option>
-                            <option value="7">Books & Education</option>
-                            <option value="8">Toys & Games</option>
+                            <option value="6">Sports &amp; Fitness</option>
+                            <option value="7">Books &amp; Education</option>
+                            <option value="8">Toys &amp; Games</option>
                             <option value="9">Automotive</option>
-                            <option value="10">Health & Wellness</option>
+                            <option value="10">Health &amp; Wellness</option>
                         </select>
-                        <input type="text" ng-model="searchQuery" placeholder="Search for products, brands and more...">
+                        <input type="text" ng-model="searchQuery" placeholder="Search for products, brands and more..." id="main-search-input">
                         <button type="submit" class="search-submit-btn orange-theme-search-btn"><i class="fa fa-search"></i></button>
                     </div>
                 </form>
             </div>
             
-            <div class="nav-links">
-                <a href="#!/products" class="nav-item" ng-class="{active: isActive('/products')}">
-                    <i class="fa-solid fa-store"></i> <span>Shop</span>
-                </a>
-                <a href="#!/wishlist" class="nav-item" ng-class="{active: isActive('/wishlist')}" ng-if="isLoggedIn()">
-                    <i class="fa-regular fa-heart"></i> <span>Wishlist</span>
-                </a>
-                <a href="#!/cart" class="nav-item cart-btn-badge" ng-class="{active: isActive('/cart')}">
-                    <i class="fa-solid fa-shopping-bag"></i>
-                    <span>Cart</span>
-                    <span class="badge" ng-if="getCartCount() > 0">{{ getCartCount() }}</span>
-                </a>
-                <a href="#!/orders" class="nav-item" ng-class="{active: isActive('/orders')}" ng-if="isLoggedIn()">
-                    <i class="fa-solid fa-box-open"></i> <span>Orders</span>
-                </a>
-                <a href="#!/admin" class="nav-item admin-badge" ng-class="{active: isActive('/admin')}" ng-if="isAdmin()">
-                    <i class="fa-solid fa-user-shield"></i> <span>Admin</span>
-                </a>
-                
-                <!-- Backend Environment Selector -->
-                <div class="backend-selector-wrapper">
-                    <button class="btn btn-backend-selector" ng-click="toggleBackendMenu()" ng-class="{'docker-mode': getActivePort() === '9080', 'local-mode': getActivePort() === '9901'}">
-                        <i class="fa-solid" ng-class="{'fa-cubes': getActivePort() === '9080', 'fa-laptop-code': getActivePort() === '9901'}"></i>
-                        <span>{{ getActivePort() === '9080' ? 'Docker API' : 'Local API' }}</span>
-                        <i class="fa fa-chevron-down selector-arrow"></i>
-                    </button>
-                    <div class="backend-dropdown-menu" ng-show="backendMenuOpen">
-                        <a href="" ng-click="selectBackend('9080')" ng-class="{selected: getActivePort() === '9080'}">
-                            <i class="fa-solid fa-cubes"></i>
-                            <div class="menu-desc">
-                                <strong>Docker Compose API</strong>
-                                <small>Port 9080 (Gateway)</small>
+            <!-- Desktop nav links -->
+            <div class="nav-links" ng-class="{'mobile-nav-open': mobileMenuOpen}">
+                <!-- Mobile close overlay -->
+                <div class="mobile-nav-overlay" ng-click="closeMobileMenu()"></div>
+                <div class="mobile-nav-panel">
+                    <a href="#!/products" class="nav-item" ng-class="{active: isActive('/products')}" ng-click="closeMobileMenu()">
+                        <i class="fa-solid fa-store"></i> <span>Shop</span>
+                    </a>
+                    <a href="#!/wishlist" class="nav-item" ng-class="{active: isActive('/wishlist')}" ng-if="isLoggedIn()" ng-click="closeMobileMenu()">
+                        <i class="fa-regular fa-heart"></i> <span>Wishlist</span>
+                    </a>
+                    <a href="#!/cart" class="nav-item cart-btn-badge" ng-class="{active: isActive('/cart')}" ng-click="closeMobileMenu()">
+                        <i class="fa-solid fa-shopping-bag"></i>
+                        <span>Cart</span>
+                        <span class="badge" ng-if="getCartCount() > 0">{{ getCartCount() }}</span>
+                    </a>
+                    <a href="#!/orders" class="nav-item" ng-class="{active: isActive('/orders')}" ng-if="isLoggedIn()" ng-click="closeMobileMenu()">
+                        <i class="fa-solid fa-box-open"></i> <span>Orders</span>
+                    </a>
+                    <a href="#!/admin" class="nav-item admin-badge" ng-class="{active: isActive('/admin')}" ng-if="isAdmin()" ng-click="closeMobileMenu()">
+                        <i class="fa-solid fa-user-shield"></i> <span>Admin</span>
+                    </a>
+                    
+                    <!-- Backend Environment Selector -->
+                    <div class="backend-selector-wrapper">
+                        <button class="btn btn-backend-selector" ng-click="toggleBackendMenu()" ng-class="{'docker-mode': getActivePort() === '9080', 'local-mode': getActivePort() === '9901'}">
+                            <i class="fa-solid" ng-class="{'fa-cubes': getActivePort() === '9080', 'fa-laptop-code': getActivePort() === '9901'}"></i>
+                            <span>{{ getActivePort() === '9080' ? 'Docker API' : 'Local API' }}</span>
+                            <i class="fa fa-chevron-down selector-arrow"></i>
+                        </button>
+                        <div class="backend-dropdown-menu" ng-show="backendMenuOpen">
+                            <a href="" ng-click="selectBackend('9080')" ng-class="{selected: getActivePort() === '9080'}">
+                                <i class="fa-solid fa-cubes"></i>
+                                <div class="menu-desc">
+                                    <strong>Docker Compose API</strong>
+                                    <small>Port 9080 (Gateway)</small>
+                                </div>
+                            </a>
+                            <a href="" ng-click="selectBackend('9901')" ng-class="{selected: getActivePort() === '9901'}">
+                                <i class="fa-solid fa-laptop-code"></i>
+                                <div class="menu-desc">
+                                    <strong>Local Dev API</strong>
+                                    <small>Port 9901 (Standalone)</small>
+                                </div>
+                            </a>
+                            <!-- Custom Host configuration for Mobile / WebView testing -->
+                            <div class="custom-ip-entry" style="padding: 12px; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.2);">
+                                <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 6px;"><i class="fa fa-network-wired"></i> Server IP / Host</label>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="text" class="form-control" ng-model="customIp" placeholder="e.g. 192.168.1.6" style="padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); width: 100%; color: var(--text-primary);">
+                                    <button type="button" class="btn btn-primary-gradient btn-sm" ng-click="saveCustomIp(customIp)" style="padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; min-width: 36px;" title="Save IP"><i class="fa fa-save"></i></button>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.7rem; display: block; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Target: {{ getActiveHost() }}</small>
                             </div>
-                        </a>
-                        <a href="" ng-click="selectBackend('9901')" ng-class="{selected: getActivePort() === '9901'}">
-                            <i class="fa-solid fa-laptop-code"></i>
-                            <div class="menu-desc">
-                                <strong>Local Dev API</strong>
-                                <small>Port 9901 (Standalone)</small>
-                            </div>
-                        </a>
-                        <!-- Custom Host configuration for Mobile / WebView testing -->
-                        <div class="custom-ip-entry" style="padding: 12px; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.2);">
-                            <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 6px;"><i class="fa fa-network-wired"></i> Server IP / Host</label>
-                            <div style="display: flex; gap: 6px;">
-                                <input type="text" class="form-control" ng-model="customIp" placeholder="e.g. 192.168.1.6" style="padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); width: 100%; color: var(--text-primary);">
-                                <button type="button" class="btn btn-primary-gradient btn-sm" ng-click="saveCustomIp(customIp)" style="padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; min-width: 36px;" title="Save IP"><i class="fa fa-save"></i></button>
-                            </div>
-                            <small class="text-muted" style="font-size: 0.7rem; display: block; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Target: {{ getActiveHost() }}</small>
                         </div>
                     </div>
-                </div>
 
-                <!-- Authentication Status -->
-                <div class="auth-section">
-                    <div ng-if="!isLoggedIn()" class="auth-buttons">
-                        <a href="#!/login" class="btn btn-secondary-glass" style="color: white; border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.15);">Login</a>
-                        <a href="#!/register" class="btn btn-secondary-glass" style="color: var(--color-accent); background: white; border-color: white;">Sign Up</a>
-                    </div>
-                    <div ng-if="isLoggedIn()" class="user-dropdown-wrapper">
-                        <div class="user-profile-trigger" ng-click="toggleUserMenu()">
-                            <div class="avatar orange-theme-avatar" ng-if="!getUserProfilePic()">{{ getUserInitials() }}</div>
-                            <img class="avatar-img" ng-src="{{ getUserProfilePic() }}" ng-if="getUserProfilePic()" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
-                            <span class="user-name">{{ getUserName() }}</span>
-                            <i class="fa fa-chevron-down dropdown-arrow"></i>
+                    <!-- Authentication Status -->
+                    <div class="auth-section">
+                        <div ng-if="!isLoggedIn()" class="auth-buttons">
+                            <a href="#!/login" class="btn btn-secondary-glass" style="color: white; border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.15);" ng-click="closeMobileMenu()">Login</a>
+                            <a href="#!/register" class="btn btn-secondary-glass" style="color: var(--color-accent); background: white; border-color: white;" ng-click="closeMobileMenu()">Sign Up</a>
                         </div>
-                        <div class="user-dropdown-menu" ng-show="userMenuOpen">
-                            <a href="#!/profile" ng-click="closeUserMenu()"><i class="fa-solid fa-user-gear"></i> Edit Profile</a>
-                            <a href="#!/orders" ng-click="closeUserMenu()"><i class="fa-solid fa-receipt"></i> My Orders</a>
-                            <a href="#!/wishlist" ng-click="closeUserMenu()"><i class="fa-solid fa-heart"></i> My Wishlist</a>
-                            <a href="#!/returns" ng-click="closeUserMenu()"><i class="fa-solid fa-rotate-left"></i> My Returns</a>
-                            <hr class="dropdown-divider">
-                            <a href="" ng-click="logout()"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+                        <div ng-if="isLoggedIn()" class="user-dropdown-wrapper">
+                            <div class="user-profile-trigger" ng-click="toggleUserMenu()">
+                                <div class="avatar orange-theme-avatar" ng-if="!getUserProfilePic()">{{ getUserInitials() }}</div>
+                                <img class="avatar-img" ng-src="{{ getUserProfilePic() }}" ng-if="getUserProfilePic()" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                <span class="user-name">{{ getUserName() }}</span>
+                                <i class="fa fa-chevron-down dropdown-arrow"></i>
+                            </div>
+                            <div class="user-dropdown-menu" ng-show="userMenuOpen">
+                                <a href="#!/profile" ng-click="closeUserMenu(); closeMobileMenu()"><i class="fa-solid fa-user-gear"></i> Edit Profile</a>
+                                <a href="#!/orders" ng-click="closeUserMenu(); closeMobileMenu()"><i class="fa-solid fa-receipt"></i> My Orders</a>
+                                <a href="#!/wishlist" ng-click="closeUserMenu(); closeMobileMenu()"><i class="fa-solid fa-heart"></i> My Wishlist</a>
+                                <a href="#!/returns" ng-click="closeUserMenu(); closeMobileMenu()"><i class="fa-solid fa-rotate-left"></i> My Returns</a>
+                                <hr class="dropdown-divider">
+                                <a href="" ng-click="logout(); closeMobileMenu()"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </div><!-- /.mobile-nav-panel -->
+            </div><!-- /.nav-links -->
         </nav>
     </header>
 
@@ -151,12 +176,12 @@
         <div class="sub-navbar">
             <a href="#!/products?categoryId=1" class="sub-navbar-item">Electronics</a>
             <a href="#!/products?categoryId=2" class="sub-navbar-item">Fashion</a>
-            <a href="#!/products?categoryId=3" class="sub-navbar-item">Home & Kitchen</a>
-            <a href="#!/products?categoryId=4" class="sub-navbar-item">Beauty & Personal Care</a>
+            <a href="#!/products?categoryId=3" class="sub-navbar-item">Home &amp; Kitchen</a>
+            <a href="#!/products?categoryId=4" class="sub-navbar-item">Beauty &amp; Personal Care</a>
             <a href="#!/products?categoryId=5" class="sub-navbar-item">Grocery</a>
-            <a href="#!/products?categoryId=6" class="sub-navbar-item">Sports & Fitness</a>
-            <a href="#!/products?categoryId=7" class="sub-navbar-item">Books & Education</a>
-            <a href="#!/products?categoryId=8" class="sub-navbar-item">Toys & Games</a>
+            <a href="#!/products?categoryId=6" class="sub-navbar-item">Sports &amp; Fitness</a>
+            <a href="#!/products?categoryId=7" class="sub-navbar-item">Books &amp; Education</a>
+            <a href="#!/products?categoryId=8" class="sub-navbar-item">Toys &amp; Games</a>
             <a href="#!/products" class="sub-navbar-item">&gt; More</a>
         </div>
     </div>
@@ -195,26 +220,26 @@
                 <h3>Entity<span class="text-accent">kart</span></h3>
                 <p>Experience the future of e-commerce. Seamless microservices, robust payment workflows, and real-time event-driven notifications.</p>
                 <div class="social-links">
-                    <a href="#"><i class="fa-brands fa-facebook"></i></a>
-                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
-                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
                 </div>
             </div>
             <div class="footer-links">
                 <h4>Shop</h4>
                 <ul>
                     <li><a href="#!/products">All Products</a></li>
-                    <li><a href="#!/products?category=Electronics">Electronics</a></li>
-                    <li><a href="#!/products?category=Apparel">Apparel</a></li>
-                    <li><a href="#!/products?category=Home">Home Decor</a></li>
+                    <li><a href="#!/products?categoryId=1">Electronics</a></li>
+                    <li><a href="#!/products?categoryId=2">Fashion</a></li>
+                    <li><a href="#!/products?categoryId=3">Home &amp; Kitchen</a></li>
                 </ul>
             </div>
             <div class="footer-links">
                 <h4>Customer Help</h4>
                 <ul>
                     <li><a href="#!/orders">Track Orders</a></li>
-                    <li><a href="#!/returns">Return & Refund Policy</a></li>
+                    <li><a href="#!/returns">Return &amp; Refund Policy</a></li>
                     <li><a href="#!/cart">Shipping Information</a></li>
                     <li><a href="#">FAQ</a></li>
                 </ul>
@@ -223,7 +248,7 @@
                 <h4>Contact</h4>
                 <ul>
                     <li><i class="fa fa-envelope"></i> support@entitykart.com</li>
-                    <li><i class="fa fa-phone"></i> +1 (555) 019-2834</li>
+                    <li><i class="fa fa-phone"></i> +91 98765 43210</li>
                     <li><i class="fa fa-location-dot"></i> Tech Park, Building 4, Bengaluru</li>
                 </ul>
             </div>

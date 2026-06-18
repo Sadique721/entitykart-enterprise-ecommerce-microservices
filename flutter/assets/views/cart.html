@@ -65,10 +65,45 @@
                                 <i class="fa fa-plus"></i>
                             </button>
                         </div>
-                        <button class="remove-btn" ng-click="removeItem(item)" title="Remove from bag">
-                            <i class="fa-solid fa-trash-can"></i>
+                        <div style="display: flex; gap: 6px; margin-top: 6px;">
+                            <button class="btn btn-secondary-glass btn-sm" ng-click="saveForLater(item)" title="Save for later" style="font-size: 0.75rem; padding: 4px 8px;">
+                                <i class="fa fa-bookmark"></i> Save
+                            </button>
+                            <button class="remove-btn" ng-click="removeItem(item)" title="Remove from bag">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coupon Code Section -->
+            <div class="card-glass coupon-section" style="margin-top: 1.5rem;">
+                <h4 style="font-size: 1rem; margin-bottom: 1rem;"><i class="fa fa-ticket text-accent"></i> Have a Coupon?</h4>
+                <div ng-if="!couponApplied">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" class="form-control" ng-model="couponCode"
+                               placeholder="Enter coupon code (e.g. WELCOME10)"
+                               style="flex: 1; text-transform: uppercase; letter-spacing: 1px;"
+                               ng-keyup="$event.keyCode === 13 && applyCoupon()">
+                        <button class="btn btn-primary-gradient btn-sm" ng-click="applyCoupon()" style="white-space: nowrap;">
+                            <i class="fa fa-check"></i> Apply
                         </button>
                     </div>
+                    <div style="margin-top: 0.8rem; display: flex; flex-wrap: wrap; gap: 6px;">
+                        <span class="coupon-chip" ng-repeat="c in availableCoupons" ng-click="couponCode = c.code; applyCoupon()" title="{{ c.description }}">
+                            {{ c.code }}
+                        </span>
+                    </div>
+                </div>
+                <div ng-if="couponApplied" class="coupon-applied-row">
+                    <div>
+                        <span class="coupon-tag"><i class="fa fa-tag"></i> {{ couponApplied.code }}</span>
+                        <span class="text-accent" style="font-weight: 600; margin-left: 8px;">−₹{{ couponDiscount | number:2 }} saved!</span>
+                    </div>
+                    <button class="btn btn-secondary-glass btn-sm" ng-click="removeCoupon()" style="font-size: 0.75rem;">
+                        <i class="fa fa-xmark"></i> Remove
+                    </button>
                 </div>
             </div>
 
@@ -89,6 +124,10 @@
                     <span class="text-secondary">Subtotal ({{ cartItems.length }} items)</span>
                     <span>₹{{ cartTotal | number:2 }}</span>
                 </div>
+                <div class="summary-row" ng-if="couponApplied">
+                    <span class="text-accent"><i class="fa fa-tag"></i> Coupon ({{ couponApplied.code }})</span>
+                    <span class="text-accent font-semibold">−₹{{ couponDiscount | number:2 }}</span>
+                </div>
                 <div class="summary-row">
                     <span class="text-secondary">Shipping</span>
                     <span class="text-accent font-semibold">FREE</span>
@@ -100,7 +139,7 @@
                 <hr class="summary-divider">
                 <div class="summary-row total">
                     <span>Total Payable</span>
-                    <span class="price-now">₹{{ (cartTotal * 1.18) | number:2 }}</span>
+                    <span class="price-now">₹{{ getFinalTotal() | number:2 }}</span>
                 </div>
 
                 <!-- Trust Badges -->

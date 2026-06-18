@@ -1,5 +1,6 @@
 /**
  * Main application controller managing global UI state, navigation, loading, and toast alerts.
+ * v1.5.0 — Added hamburger menu, fixed search propagation
  */
 app.controller('mainController', ['$scope', '$location', 'authService', 'cartService', function($scope, $location, authService, cartService) {
     
@@ -9,6 +10,7 @@ app.controller('mainController', ['$scope', '$location', 'authService', 'cartSer
     $scope.toasts = [];
     $scope.searchQuery = '';
     $scope.cartCount = 0;
+    $scope.mobileMenuOpen = false;
 
     // Initialize cart count
     function updateCartCount() {
@@ -150,12 +152,24 @@ app.controller('mainController', ['$scope', '$location', 'authService', 'cartSer
         if ($scope.searchCategory) {
             params.categoryId = $scope.searchCategory;
         }
+        // BUG FIX: Store query in routeParams before clearing it so products page can read it
         $location.path('/products').search(params);
-        $scope.searchQuery = '';
+        // Only clear after navigation so the products controller can read $routeParams.query
+        // $scope.searchQuery = '';  // Intentionally removed — causes race condition with route init
     };
 
     $scope.filterCategoryFromSearch = function() {
-        $scope.searchProducts();
+        if ($scope.searchCategory) {
+            $scope.searchProducts();
+        }
+    };
+
+    // Mobile hamburger menu
+    $scope.toggleMobileMenu = function() {
+        $scope.mobileMenuOpen = !$scope.mobileMenuOpen;
+    };
+    $scope.closeMobileMenu = function() {
+        $scope.mobileMenuOpen = false;
     };
 
     $scope.isMobileWebView = function() {

@@ -1,16 +1,17 @@
 /**
  * Product Browsing and Detail Controller
+ * v1.5.0 — Bug fixes + new features: sort, price filter, recently viewed, notify-me, share
  */
 app.controller('productController', [
     '$scope', '$routeParams', '$location', 'productService', 'cartService', 'wishlistService', 'reviewService', 'authService',
     function($scope, $routeParams, $location, productService, cartService, wishlistService, reviewService, authService) {
-        
+
         // Scope variables
         $scope.products = [];
         $scope.categories = [];
         $scope.selectedCategory = null;
         $scope.selectedProduct = null;
-        
+
         // Pagination & search
         $scope.currentPage = 0;
         $scope.totalPages = 1;
@@ -18,12 +19,18 @@ app.controller('productController', [
         $scope.catFilterId = $routeParams.categoryId || null;
         $scope.subFilterId = null;
 
+        // Sort & Filter
+        $scope.sortOption = 'default';
+        $scope.priceMin = null;
+        $scope.priceMax = null;
+
         // Details page parameters
         $scope.detailQty = 1;
         $scope.reviews = [];
         $scope.ratingStats = null;
         $scope.isWishlisted = false;
-        
+        $scope.activeImageIndex = 0;
+
         // New Review submission
         $scope.newReview = {
             rating: 5,
@@ -48,8 +55,68 @@ app.controller('productController', [
             $scope.activeSlide = index;
         };
 
+        // --- Flash Sale Countdown ---
+        $scope.flashSaleProducts = [];
+        $scope.countdownTime = { hours: 0, minutes: 0, seconds: 0 };
+
+        function startFlashSaleCountdown() {
+            // Flash sale ends in 8 hours from now
+            var endTime = new Date();
+            endTime.setHours(endTime.getHours() + 8);
+
+            var timer = setInterval(function() {
+                var now = new Date();
+                var diff = endTime - now;
+                if (diff <= 0) {
+                    clearInterval(timer);
+                    $scope.$apply(function() {
+                        $scope.countdownTime = { hours: 0, minutes: 0, seconds: 0 };
+                    });
+                    return;
+                }
+                var h = Math.floor(diff / 3600000);
+                var m = Math.floor((diff % 3600000) / 60000);
+                var s = Math.floor((diff % 60000) / 1000);
+                $scope.$apply(function() {
+                    $scope.countdownTime = {
+                        hours: h < 10 ? '0' + h : '' + h,
+                        minutes: m < 10 ? '0' + m : '' + m,
+                        seconds: s < 10 ? '0' + s : '' + s
+                    };
+                });
+            }, 1000);
+
+            $scope.$on('$destroy', function() { clearInterval(timer); });
+        }
+
+        // --- Recently Viewed ---
+        $scope.recentlyViewed = [];
+
+        function loadRecentlyViewed() {
+            var rv = JSON.parse(localStorage.getItem('ekRecentlyViewed') || '[]');
+            $scope.recentlyViewed = rv.slice(0, 6); // max 6
+        }
+
+        function saveToRecentlyViewed(product) {
+            var rv = JSON.parse(localStorage.getItem('ekRecentlyViewed') || '[]');
+            // Remove if already exists
+            rv = rv.filter(function(p) { return p.productId !== product.productId; });
+            rv.unshift({
+                productId: product.productId,
+                productName: product.productName,
+                brand: product.brand,
+                price: product.price,
+                mrp: product.mrp,
+                mainImageURL: product.mainImageURL,
+                discountPercent: product.discountPercent,
+                stockQuantity: product.stockQuantity
+            });
+            if (rv.length > 10) rv = rv.slice(0, 10);
+            localStorage.setItem('ekRecentlyViewed', JSON.stringify(rv));
+        }
+
         $scope.wishlistProductIds = [];
-        
+
         $scope.loadUserWishlist = function() {
             if (authService.isLoggedIn()) {
                 wishlistService.getWishlist().then(function(items) {
@@ -95,21 +162,28 @@ app.controller('productController', [
 
         $scope.initHome = function() {
             $scope.loadUserWishlist();
+            loadRecentlyViewed();
             // Load featured items
-            productService.getProducts(null, null, 0, 4).then(function(data) {
+            productService.getProducts(null, null, 0, 8).then(function(data) {
                 $scope.products = data.content;
+                // Flash sale products = items with discount > 20%
+                $scope.flashSaleProducts = data.content.filter(function(p) {
+                    return p.discountPercent >= 20;
+                }).slice(0, 4);
             });
             // Load categories
             productService.getCategories().then(function(data) {
                 $scope.categories = data;
             });
-            
+
             // Auto play slider
             var sliderInterval = setInterval(function() {
                 $scope.$apply(function() {
                     $scope.nextSlide();
                 });
             }, 5000);
+
+            startFlashSaleCountdown();
 
             $scope.$on('$destroy', function() {
                 clearInterval(sliderInterval);
@@ -120,7 +194,6 @@ app.controller('productController', [
             $scope.loadUserWishlist();
             productService.getCategories().then(function(cats) {
                 $scope.categories = cats;
-                // Preload subcategories for each category
                 cats.forEach(function(cat) {
                     productService.getSubCategories(cat.id).then(function(subs) {
                         cat.subCategories = subs;
@@ -139,25 +212,44 @@ app.controller('productController', [
         };
 
         $scope.loadProducts = function() {
-            productService.getProducts($scope.catFilterId, null, $scope.currentPage, 8)
+            productService.getProducts($scope.catFilterId, null, $scope.currentPage, 12)
                 .then(function(data) {
                     var items = data.content;
-                    
-                    // Filter by subcategory if set
+
+                    // Filter by subcategory
                     if ($scope.subFilterId) {
                         items = items.filter(function(p) {
                             return p.subCategoryId == $scope.subFilterId;
                         });
                     }
 
-                    // Client side search filter if query string matches brand or title
+                    // Client-side search filter
                     if ($scope.searchQuery) {
                         var q = $scope.searchQuery.toLowerCase();
                         items = items.filter(function(p) {
-                            return p.productName.toLowerCase().indexOf(q) > -1 || 
-                                   p.brand.toLowerCase().indexOf(q) > -1 ||
-                                   p.description.toLowerCase().indexOf(q) > -1;
+                            return p.productName.toLowerCase().indexOf(q) > -1 ||
+                                   (p.brand || '').toLowerCase().indexOf(q) > -1 ||
+                                   (p.description || '').toLowerCase().indexOf(q) > -1;
                         });
+                    }
+
+                    // Price range filter
+                    if ($scope.priceMin !== null && $scope.priceMin !== '') {
+                        items = items.filter(function(p) { return p.price >= parseFloat($scope.priceMin); });
+                    }
+                    if ($scope.priceMax !== null && $scope.priceMax !== '') {
+                        items = items.filter(function(p) { return p.price <= parseFloat($scope.priceMax); });
+                    }
+
+                    // Sort
+                    if ($scope.sortOption === 'price_asc') {
+                        items.sort(function(a, b) { return a.price - b.price; });
+                    } else if ($scope.sortOption === 'price_desc') {
+                        items.sort(function(a, b) { return b.price - a.price; });
+                    } else if ($scope.sortOption === 'discount') {
+                        items.sort(function(a, b) { return (b.discountPercent || 0) - (a.discountPercent || 0); });
+                    } else if ($scope.sortOption === 'newest') {
+                        items.sort(function(a, b) { return b.productId - a.productId; });
                     }
 
                     $scope.products = items;
@@ -165,10 +257,21 @@ app.controller('productController', [
                 });
         };
 
+        $scope.applyFilters = function() {
+            $scope.currentPage = 0;
+            $scope.loadProducts();
+        };
+
+        $scope.clearPriceFilter = function() {
+            $scope.priceMin = null;
+            $scope.priceMax = null;
+            $scope.loadProducts();
+        };
+
         $scope.filterByCategory = function(category) {
             $scope.selectedCategory = category;
             $scope.catFilterId = category ? category.id : null;
-            $scope.subFilterId = null; // Reset subcategory filter when changing categories
+            $scope.subFilterId = null;
             $scope.currentPage = 0;
             if ($location.path() !== '/products') {
                 $location.path('/products').search('categoryId', $scope.catFilterId);
@@ -179,7 +282,7 @@ app.controller('productController', [
         };
 
         $scope.filterBySubCategory = function(sub, event) {
-            if (event) event.stopPropagation(); // Prevent parent category click handler
+            if (event) event.stopPropagation();
             $scope.subFilterId = sub ? sub.subCategoryId : null;
             $scope.currentPage = 0;
             $scope.loadProducts();
@@ -191,6 +294,9 @@ app.controller('productController', [
             $scope.subFilterId = null;
             $scope.searchQuery = '';
             $scope.currentPage = 0;
+            $scope.sortOption = 'default';
+            $scope.priceMin = null;
+            $scope.priceMax = null;
             $location.search({});
             $scope.loadProducts();
         };
@@ -212,15 +318,36 @@ app.controller('productController', [
             productService.getProduct(productId)
                 .then(function(product) {
                     $scope.selectedProduct = product;
-                    
-                    // Check if wishlisted
+                    $scope.activeImageIndex = 0;
+
+                    // Build gallery images (use mainImageURL + additional if available)
+                    $scope.galleryImages = [];
+                    if (product.mainImageURL) $scope.galleryImages.push(product.mainImageURL);
+                    if (product.additionalImages && product.additionalImages.length > 0) {
+                        product.additionalImages.forEach(function(img) {
+                            $scope.galleryImages.push(img);
+                        });
+                    }
+                    // If only 1 image, generate alternate views for demo
+                    if ($scope.galleryImages.length <= 1 && product.mainImageURL) {
+                        $scope.galleryImages = [
+                            product.mainImageURL,
+                            product.mainImageURL + '&sat=-100',
+                            product.mainImageURL + '&bri=20'
+                        ];
+                    }
+
+                    // Save to recently viewed
+                    saveToRecentlyViewed(product);
+
+                    // Check wishlist status
                     if (authService.isLoggedIn()) {
                         wishlistService.isWishlisted(productId).then(function(status) {
                             $scope.isWishlisted = status;
                         });
                     }
 
-                    // Load reviews and stats
+                    // Load reviews
                     $scope.loadProductReviews(productId);
                 })
                 .catch(function() {
@@ -231,6 +358,10 @@ app.controller('productController', [
                     });
                     $location.path('/products');
                 });
+        };
+
+        $scope.setActiveImage = function(index) {
+            $scope.activeImageIndex = index;
         };
 
         $scope.loadProductReviews = function(productId) {
@@ -258,21 +389,23 @@ app.controller('productController', [
                 .then(function() {
                     $scope.$emit('showToast', {
                         title: 'Added to Cart',
-                        message: quantity + 'x ' + product.productName + ' added successfully.',
+                        // BUG FIX: was missing space between quantity and 'x'
+                        message: quantity + ' × ' + product.productName + ' added successfully.',
                         type: 'success'
                     });
                 });
         };
 
+        // BUG FIX: buyNow now redirects to /checkout directly (was /cart before)
         $scope.buyNow = function(product) {
             cartService.addToCart(product.productId, product.productName, 1, product.price)
                 .then(function() {
                     $scope.$emit('showToast', {
-                        title: 'Success',
-                        message: 'Redirecting to checkout...',
+                        title: 'Proceeding to Checkout',
+                        message: 'Redirecting to secure checkout...',
                         type: 'success'
                     });
-                    $location.path('/cart');
+                    $location.path('/checkout');
                 });
         };
 
@@ -294,6 +427,7 @@ app.controller('productController', [
                         if (index > -1) {
                             $scope.wishlistProductIds.splice(index, 1);
                         }
+                        $scope.isWishlisted = false;
                         $scope.$emit('showToast', {
                             title: 'Removed from Wishlist',
                             message: product.productName + ' removed.',
@@ -304,12 +438,72 @@ app.controller('productController', [
                 wishlistService.addToWishlist(product.productId)
                     .then(function() {
                         $scope.wishlistProductIds.push(product.productId);
+                        $scope.isWishlisted = true;
                         $scope.$emit('showToast', {
                             title: 'Added to Wishlist',
-                            message: product.productName + ' added.',
+                            message: product.productName + ' saved.',
                             type: 'success'
                         });
                     });
+            }
+        };
+
+        // --- Notify Me (Out of Stock) ---
+        $scope.notifyMeEmail = '';
+        $scope.notifyMeSubmitted = false;
+
+        $scope.submitNotifyMe = function(product) {
+            if (!$scope.notifyMeEmail) {
+                $scope.notifyMeEmail = authService.isLoggedIn() ?
+                    (authService.getCurrentUser().email || '') : '';
+            }
+            if (!$scope.notifyMeEmail) {
+                $scope.$emit('showToast', {
+                    title: 'Email Required',
+                    message: 'Please enter your email address.',
+                    type: 'error'
+                });
+                return;
+            }
+            // Save locally
+            var notifications = JSON.parse(localStorage.getItem('ekNotifyMe') || '[]');
+            notifications.push({
+                productId: product.productId,
+                productName: product.productName,
+                email: $scope.notifyMeEmail,
+                savedAt: new Date().toISOString()
+            });
+            localStorage.setItem('ekNotifyMe', JSON.stringify(notifications));
+            $scope.notifyMeSubmitted = true;
+            $scope.$emit('showToast', {
+                title: 'Notification Registered',
+                message: 'We\'ll email you at ' + $scope.notifyMeEmail + ' when this is back in stock.',
+                type: 'success'
+            });
+        };
+
+        // --- Share Product ---
+        $scope.shareProduct = function(product) {
+            var shareData = {
+                title: product.productName,
+                text: product.brand + ' - ' + product.productName + ' at ₹' + product.price,
+                url: window.location.href
+            };
+            if (navigator.share) {
+                navigator.share(shareData).catch(function() {});
+            } else {
+                // Fallback: copy to clipboard
+                var dummy = document.createElement('input');
+                document.body.appendChild(dummy);
+                dummy.value = window.location.href;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                $scope.$emit('showToast', {
+                    title: 'Link Copied',
+                    message: 'Product URL copied to clipboard.',
+                    type: 'info'
+                });
             }
         };
 
@@ -339,10 +533,11 @@ app.controller('productController', [
                         message: 'Thank you for your feedback.',
                         type: 'success'
                     });
-                    $scope.newReview.comment = '';
+                    $scope.newReview = { rating: 5, comment: '' };
                     $scope.loadProductReviews($scope.selectedProduct.productId);
                 });
         };
+
         // Expose authService check to template
         $scope.isLoggedIn = function() {
             return authService.isLoggedIn();

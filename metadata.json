@@ -2,8 +2,8 @@
   "project": {
     "name": "EntityKart",
     "displayName": "EntityKart – Enterprise E-commerce Microservices Platform",
-    "description": "A cloud-native, microservices-based e-commerce platform built with Java 17, Spring Boot 3, Spring Cloud, Apache Kafka, and Docker. Features a responsive AngularJS SPA frontend, native Android and Flutter mobile clients, Cloudinary media storage, and full CI/CD with GitHub Actions.",
-    "version": "1.0.0",
+    "description": "A cloud-native, microservices-based e-commerce platform built with Java 17, Spring Boot 3, Spring Cloud, Apache Kafka, and Docker. Features a responsive AngularJS SPA frontend with flash sales, price filters, coupon codes, image gallery, cancel orders, invoice download, mobile-responsive hamburger menu, and native Android + Flutter WebView clients with settings screen and bottom nav bar.",
+    "version": "1.5.0",
     "license": "MIT",
     "repository": "https://github.com/Sadique721/entitykart-enterprise-ecommerce-microservices",
     "homepage": "https://github.com/Sadique721/entitykart-enterprise-ecommerce-microservices#readme"
@@ -15,7 +15,7 @@
     "linkedin": "https://www.linkedin.com/in/md-sadique-amin-b6a948198/"
   },
   "build": {
-    "lastBuildDate": "2026-06-16T21:50:00Z",
+    "lastBuildDate": "2026-06-18T10:24:00Z",
     "javaVersion": "17",
     "springBootVersion": "3.3.4",
     "springCloudVersion": "2023.0.3",
@@ -174,7 +174,7 @@
       "path": "flutter/",
       "appId": "com.entitykart.app",
       "apkOutput": "flutter/build/app/outputs/flutter-apk/app-debug.apk",
-      "description": "Cross-platform WebView wrapper with dynamic API bridge injection"
+      "description": "Cross-platform WebView wrapper with dynamic IP/Port settings screen, bottom navigation bar (Shop + Settings), back-button handling, pull-to-refresh, and orange brand theme."
     }
   ],
   "cloudinaryIntegration": {
