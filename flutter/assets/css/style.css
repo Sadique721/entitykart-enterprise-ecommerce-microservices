@@ -41,12 +41,16 @@
     box-sizing: border-box;
 }
 
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--font-body);
     line-height: 1.6;
-    overflow-x: hidden;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -1521,7 +1525,6 @@ textarea.form-control {
     display: flex;
     align-items: flex-start;
     gap: 0.4rem;
-    flex-wrap: wrap;
 }
 
 .footer-links ul li a {
@@ -2833,61 +2836,6 @@ textarea.form-control {
 
 /* Compact Navbar for Mobile WebViews */
 @media (max-width: 768px) {
-    .navbar {
-        padding: 0.6rem 1rem !important;
-        gap: 0.5rem !important;
-        align-items: stretch !important;
-        flex-direction: column !important;
-    }
-    .nav-logo {
-        text-align: center;
-        margin-bottom: 0.2rem;
-    }
-    .nav-search {
-        width: 100% !important;
-        margin: 0 0 0.5rem 0 !important;
-    }
-    .nav-links {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        justify-content: flex-start !important;
-        width: 100% !important;
-        padding: 0.3rem 0 !important;
-        gap: 0.6rem !important;
-        -webkit-overflow-scrolling: touch;
-        border-bottom: 1px solid var(--glass-border);
-        margin-bottom: 0.4rem;
-    }
-    /* Hide scrollbar for nav links */
-    .nav-links::-webkit-scrollbar {
-        display: none;
-    }
-    .nav-item {
-        padding: 0.4rem 0.6rem !important;
-        font-size: 0.85rem !important;
-        flex-shrink: 0 !important;
-        gap: 0.3rem !important;
-    }
-    .auth-section {
-        margin-top: 0.2rem;
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    .auth-buttons {
-        display: flex;
-        gap: 0.5rem;
-        width: 100%;
-        justify-content: center;
-    }
-    .auth-buttons .btn {
-        flex: 1;
-        padding: 0.5rem 1rem !important;
-        font-size: 0.85rem !important;
-    }
-
     /* Fixed Centered Dropdown for Backend Selector on Mobile */
     .backend-dropdown-menu {
         position: fixed !important;
@@ -3934,13 +3882,13 @@ textarea.form-control {
     .nav-links {
         position: fixed;
         top: 0;
-        right: -320px;
+        right: -300px;
         width: 300px;
         height: 100vh;
         background: var(--bg-secondary);
         border-left: 1px solid var(--glass-border);
         z-index: 200;
-        transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s;
         display: block !important;
         overflow-y: auto;
         padding-top: 70px;
@@ -3999,14 +3947,14 @@ textarea.form-control {
     /* Top header hidden on mobile to save space */
     .top-header { display: none; }
 
-    /* ── FOOTER: 2-column layout on tablet/mobile ── */
+    /* ── FOOTER: Clean stack on tablet/mobile ── */
     .footer-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr;
         gap: 2rem;
     }
     /* EntityKart brand info spans full width on mobile */
     .footer-info {
-        grid-column: 1 / -1;
+        grid-column: auto;
     }
     .footer-info p {
         max-width: 100%;

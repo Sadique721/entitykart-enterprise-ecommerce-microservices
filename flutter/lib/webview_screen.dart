@@ -33,21 +33,11 @@ class _WebViewScreenState extends State<WebViewScreen> {
     _loadIpConfig().then((_) => _initWebView());
   }
 
-  // ---- Load backend IP from SharedPreferences ----
+  // ---- Load backend IP from SharedPreferences (Hardlocked to Render Cloud) ----
   Future<void> _loadIpConfig() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedIp = prefs.getString('backend_ip') ?? '';
-    final savedPort = prefs.getString('backend_port') ?? '9080';
-    if (savedIp.isNotEmpty) {
-      setState(() {
-        _backendApiBase = 'http://$savedIp:$savedPort';
-      });
-    } else {
-      // Default: use Render production URL
-      setState(() {
-        _backendApiBase = 'https://entitykart-enterprise-ecommerce.onrender.com';
-      });
-    }
+    setState(() {
+      _backendApiBase = 'https://entitykart-enterprise-ecommerce.onrender.com';
+    });
   }
 
   void _initWebView() {

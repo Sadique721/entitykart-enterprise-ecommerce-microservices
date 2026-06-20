@@ -12,8 +12,15 @@ app.constant('API_BASE', (function() {
         var protocol = window.location.protocol;
         var host = window.location.hostname;
 
-        // ── Mobile WebView / APK Context (file:// protocol or AndroidBridge) ──
-        if (protocol === 'file:' || (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function')) {
+        // ── Mobile WebView / APK Context (file:// protocol or AndroidConfig / AndroidBridge) ──
+        if (protocol === 'file:' || 
+            (window.AndroidConfig && window.AndroidConfig.apiBase) || 
+            (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function')) {
+            
+            // Check for window.AndroidConfig injected from Flutter/WebView
+            if (window.AndroidConfig && window.AndroidConfig.apiBase) {
+                return window.AndroidConfig.apiBase;
+            }
             // Use native Android bridge if available (injected from MainActivity.kt)
             if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
                 return window.AndroidBridge.getApiBase();
