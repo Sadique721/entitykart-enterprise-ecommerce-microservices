@@ -26,9 +26,15 @@ unset SERVER_PORT
 echo "Starting api-gateway on port 9901..."
 java $JVM_OPTS -jar /app/api-gateway.jar \
   --server.port=9901 \
+  --spring.cloud.gateway.routes[0].id=user-service \
   --spring.cloud.gateway.routes[0].uri=http://localhost:9902 \
+  --spring.cloud.gateway.routes[0].predicates[0]=Path=/api/users/** \
+  --spring.cloud.gateway.routes[1].id=product-service-products \
   --spring.cloud.gateway.routes[1].uri=http://localhost:9903 \
+  --spring.cloud.gateway.routes[1].predicates[0]=Path=/api/products/** \
+  --spring.cloud.gateway.routes[2].id=product-service-categories \
   --spring.cloud.gateway.routes[2].uri=http://localhost:9903 \
+  --spring.cloud.gateway.routes[2].predicates[0]=Path=/api/categories/** \
   > /var/log/api-gateway.log 2>&1 &
 
 # Wait for API Gateway to boot
