@@ -106,6 +106,13 @@ http {
             proxy_set_header X-Forwarded-Proto $scheme;
         }
 
+        # ── Logs Proxy ────────────────────────────────────────────────────────
+        location /logs/ {
+            alias /var/log/;
+            autoindex on;
+            default_type text/plain;
+        }
+
         # ── Friendly error handler for API 502/503/504 ───────────────────────
         location @api_error {
             add_header Content-Type "application/json" always;
