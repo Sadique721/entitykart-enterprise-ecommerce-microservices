@@ -33,7 +33,13 @@ app.constant('API_BASE', (function() {
         localStorage.setItem('API_IP', activeIp);
         localStorage.setItem('API_PORT', activePort);
 
-        return window.location.protocol + '//' + (host === 'localhost' || host === '127.0.0.1' ? host : activeIp) + ':' + activePort;
+        // Local development on localhost/127.0.0.1
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return window.location.protocol + '//' + host + ':' + activePort;
+        } else {
+            // Production deployment (e.g. Render): API gateway is proxied on the same host and port
+            return window.location.protocol + '//' + window.location.host;
+        }
     }
     return 'http://localhost:9080';
 })());

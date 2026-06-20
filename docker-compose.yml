@@ -339,7 +339,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: user_service          # ← अपने database name से बदलना
+      DB_NAME: defaultdb
       SERVER_PORT: 8081
       JWT_SECRET: ${JWT_SECRET}
       MAIL_USERNAME: ${MAIL_USERNAME}
@@ -363,7 +363,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: product_service
+      DB_NAME: defaultdb
       SERVER_PORT: 8082
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
@@ -382,7 +382,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: cart_service
+      DB_NAME: defaultdb
       SERVER_PORT: 8083
     restart: on-failure
 
@@ -398,7 +398,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: order_service
+      DB_NAME: defaultdb
       SERVER_PORT: 8084
     restart: on-failure
 
@@ -416,7 +416,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      DB_NAME: payment_service
+      DB_NAME: defaultdb
       SERVER_PORT: 8085
       AUTHORIZE_NET_API_LOGIN_ID: ${AUTHORIZE_NET_API_LOGIN_ID}
       AUTHORIZE_NET_TRANSACTION_KEY: ${AUTHORIZE_NET_TRANSACTION_KEY}
@@ -433,7 +433,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: wishlist_service
+      DB_NAME: defaultdb
       SERVER_PORT: 8086
     restart: on-failure
 
@@ -447,7 +447,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: review_service
+      DB_NAME: defaultdb
       SERVER_PORT: 8087
     restart: on-failure
 
@@ -467,7 +467,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      DB_NAME: return_service
+      DB_NAME: defaultdb
       SERVER_PORT: 8088
     restart: on-failure
 
@@ -483,7 +483,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: notification_service
+      DB_NAME: defaultdb
       SERVER_PORT: 8089
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}

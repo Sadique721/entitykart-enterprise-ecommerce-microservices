@@ -5,7 +5,7 @@ spring:
   application:
     name: cart-service
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:cart_service}?useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:defaultdb}?useSSL=true&requireSSL=true&trustServerCertificate=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:0721}
     driver-class-name: com.mysql.cj.jdbc.Driver
