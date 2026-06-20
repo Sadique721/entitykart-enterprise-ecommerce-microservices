@@ -26,7 +26,7 @@ sleep 8
 # 3. Define JVM Memory optimization arguments
 # We use serial GC, tiered compilation (C1 compiler only), minimal thread stacks, metaspace limit,
 # lazy initialization, and serialized startup order to fit into Render's 512MB RAM free tier.
-JVM_OPTS="-Xmx24m -Xms16m -XX:MaxMetaspaceSize=32m -XX:ReservedCodeCacheSize=16m -Xss256k -XX:CICompilerCount=2 -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Dspring.main.lazy-initialization=true -Dspring.devtools.restart.enabled=false"
+JVM_OPTS="-Xmx24m -Xms16m -XX:MaxMetaspaceSize=32m -XX:ReservedCodeCacheSize=16m -Xss256k -XX:CICompilerCount=2 -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom -Dspring.main.lazy-initialization=true -Dspring.devtools.restart.enabled=false"
 
 # Clear SERVER_PORT environment variable so it doesn't cause conflicts
 unset SERVER_PORT
