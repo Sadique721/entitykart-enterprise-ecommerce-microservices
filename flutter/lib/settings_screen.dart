@@ -33,7 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _ipController.text = ip;
       _portController.text = port;
-      _currentTarget = ip.isNotEmpty ? 'http://$ip:$port' : 'https://entitykart.onrender.com (Render Cloud)';
+      _currentTarget = ip.isNotEmpty ? 'http://$ip:$port' : 'https://entitykart-enterprise-ecommerce.onrender.com (Render Cloud)';
     });
   }
 
@@ -72,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _ipController.clear();
       _portController.text = '9080';
-      _currentTarget = 'https://entitykart.onrender.com (Render Cloud)';
+      _currentTarget = 'https://entitykart-enterprise-ecommerce.onrender.com (Render Cloud)';
       _saved = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(

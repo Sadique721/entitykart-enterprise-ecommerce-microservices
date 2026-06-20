@@ -36,7 +36,7 @@
 
 | Property | Value |
 |----------|-------|
-| **Live URL** | [https://entitykart.onrender.com](https://entitykart.onrender.com) |
+| **Live URL** | [https://entitykart-enterprise-ecommerce.onrender.com](https://entitykart-enterprise-ecommerce.onrender.com) |
 | **Platform** | [Render](https://render.com) (Docker container, free tier) |
 | **Database** | [Aiven Cloud MySQL](https://aiven.io) — managed cloud MySQL (host: `mysql-36ce7779-...aivencloud.com:23778`) |
 | **Image Storage** | [Cloudinary](https://cloudinary.com) CDN — cloud name: `ddwrdkpkv` |
@@ -50,7 +50,7 @@ The pre-compiled Android APK (`app-debug.apk`) **automatically connects to the R
 
 1. Install `app-debug.apk` on any Android 8+ device (enable "Install from Unknown Sources")
 2. Open the app → it loads the AngularJS frontend from local assets
-3. All API calls route to `https://entitykart.onrender.com`
+3. All API calls route to `https://entitykart-enterprise-ecommerce.onrender.com`
 4. **First launch after Render cold start may take 30–60 seconds** — this is normal for free-tier containers
 
 > **Note:** If you want to test against a local backend on the same Wi-Fi, use the **Docker API / Local API** selector button (top-right of navbar) and enter your PC's LAN IP. This overrides the Render URL until cleared.
@@ -72,7 +72,7 @@ DB_SSL_PARAMS=?useSSL=true&requireSSL=true&trustServerCertificate=true
 JWT_SECRET=<your-super-secret-jwt-key>
 
 # Application URL
-APP_URL=https://entitykart.onrender.com
+APP_URL=https://entitykart-enterprise-ecommerce.onrender.com
 ADMIN_EMAIL=mdsadiqueamin721721@gmail.com
 
 # Gmail SMTP (for welcome/order/payment emails)

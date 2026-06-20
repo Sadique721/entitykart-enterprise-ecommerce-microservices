@@ -45,7 +45,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     } else {
       // Default: use Render production URL
       setState(() {
-        _backendApiBase = 'https://entitykart.onrender.com';
+        _backendApiBase = 'https://entitykart-enterprise-ecommerce.onrender.com';
       });
     }
   }
@@ -96,7 +96,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
         // Expose backend config to AngularJS app
         window.AndroidConfig = {
-          apiBase: "${_backendApiBase.isNotEmpty ? _backendApiBase : 'https://entitykart.onrender.com'}",
+          apiBase: "${_backendApiBase.isNotEmpty ? _backendApiBase : 'https://entitykart-enterprise-ecommerce.onrender.com'}",
           platform: "flutter",
           version: "1.5.0"
         };

@@ -11,7 +11,7 @@
   🌐 LIVE DEPLOYMENT (Render Cloud)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Live URL     : https://entitykart.onrender.com
+  Live URL     : https://entitykart-enterprise-ecommerce.onrender.com
   Platform     : Render (Docker container, free tier)
   Database     : Aiven Cloud MySQL (SSL required)
   Images       : Cloudinary CDN (cloud: ddwrdkpkv)
