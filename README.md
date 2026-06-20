@@ -13,6 +13,9 @@
   <img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white">
   <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white">
   <img src="https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white">
+  <img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white">
+  <img src="https://img.shields.io/badge/Authorize.Net-4B0082?style=for-the-badge&logoColor=white">
+  <img src="https://img.shields.io/badge/Aiven_MySQL-FF6C00?style=for-the-badge&logo=mysql&logoColor=white">
 </p>
 
 <p align="center">
@@ -24,6 +27,79 @@
   <img src="https://img.shields.io/github/forks/Sadique721/Entitykart?style=for-the-badge&color=8b5cf6" alt="Forks">
   <img src="https://img.shields.io/github/license/Sadique721/Entitykart?style=for-the-badge&color=10b981" alt="License">
 </p>
+
+---
+
+## 🌐 Live Deployment
+
+> **Deployed on Render** — Single Docker container running all 11 Spring Boot microservices + Nginx + Kafka in KRaft mode.
+
+| Property | Value |
+|----------|-------|
+| **Live URL** | [https://entitykart-enterprise-ecommerce-microservices.onrender.com](https://entitykart-enterprise-ecommerce-microservices.onrender.com) |
+| **Platform** | [Render](https://render.com) (Docker container, free tier) |
+| **Database** | [Aiven Cloud MySQL](https://aiven.io) — managed cloud MySQL (host: `mysql-36ce7779-...aivencloud.com:23778`) |
+| **Image Storage** | [Cloudinary](https://cloudinary.com) CDN — cloud name: `ddwrdkpkv` |
+| **Payment Gateway** | [Authorize.Net](https://developer.authorize.net) — Sandbox environment |
+| **Email (SMTP)** | Gmail SMTP via `mdsadiqueamin721786@gmail.com` — triggers on: registration, order placed, payment confirmed, return processed |
+| **Admin Email** | `mdsadiqueamin721721@gmail.com` |
+
+### 📱 APK → Render Connection
+
+The pre-compiled Android APK (`app-debug.apk`) **automatically connects to the Render deployment** — no Wi-Fi LAN or manual IP configuration needed:
+
+1. Install `app-debug.apk` on any Android 8+ device (enable "Install from Unknown Sources")
+2. Open the app → it loads the AngularJS frontend from local assets
+3. All API calls route to `https://entitykart-enterprise-ecommerce-microservices.onrender.com`
+4. **First launch after Render cold start may take 30–60 seconds** — this is normal for free-tier containers
+
+> **Note:** If you want to test against a local backend on the same Wi-Fi, use the **Docker API / Local API** selector button (top-right of navbar) and enter your PC's LAN IP. This overrides the Render URL until cleared.
+
+### ⚙️ Render Environment Variables Required
+
+Set these in your Render service → **Environment** tab:
+
+```env
+# Aiven Cloud MySQL
+DB_HOST=mysql-36ce7779-mdsadiqueamin721721-a526.i.aivencloud.com
+DB_PORT=23778
+DB_NAME=defaultdb
+DB_USERNAME=avnadmin
+DB_PASSWORD=<your-aiven-password>
+DB_SSL_PARAMS=?useSSL=true&requireSSL=true&trustServerCertificate=true
+
+# JWT
+JWT_SECRET=<your-super-secret-jwt-key>
+
+# Application URL
+APP_URL=https://entitykart-enterprise-ecommerce-microservices.onrender.com
+ADMIN_EMAIL=mdsadiqueamin721721@gmail.com
+
+# Gmail SMTP (for welcome/order/payment emails)
+MAIL_USERNAME=mdsadiqueamin721786@gmail.com
+MAIL_PASSWORD=<gmail-app-password>
+
+# Cloudinary (product image upload from Admin Panel)
+CLOUDINARY_CLOUD_NAME=ddwrdkpkv
+CLOUDINARY_API_KEY=<your-cloudinary-api-key>
+CLOUDINARY_API_SECRET=<your-cloudinary-api-secret>
+
+# Authorize.Net Payment Gateway (Sandbox)
+AUTHORIZE_NET_API_LOGIN_ID=<your-login-id>
+AUTHORIZE_NET_TRANSACTION_KEY=<your-transaction-key>
+AUTHORIZE_NET_ENVIRONMENT=sandbox
+```
+
+### 📧 Email Notifications (Kafka-driven)
+
+EntityKart sends transactional emails via **Gmail SMTP** triggered by Kafka events:
+
+| Event | Trigger | Email Type |
+|-------|---------|------------|
+| User registers | `user-events` topic | Welcome email |
+| Order placed | `order-events` topic | Order confirmation |
+| Payment processed | `payment-events` topic | Payment receipt |
+| Return approved/rejected | `return-events` topic | Return status update |
 
 ---
 
@@ -155,8 +231,11 @@ flowchart TB
 | Tool | Purpose |
 |------|---------|
 | Docker & Docker Compose | Containerization & local orchestration |
-| Aiven Cloud | Managed MySQL database |
-| Cloudinary | Cloud image storage |
+| **Render** | **Cloud hosting — single Docker container (all 11 services)** |
+| Aiven Cloud | Managed MySQL database (cloud-hosted, SSL required) |
+| Cloudinary | Cloud image storage & CDN for product images |
+| Authorize.Net | Payment gateway (sandbox & production) |
+| Gmail SMTP | Transactional email (Kafka-driven notifications) |
 | GitHub Actions | CI/CD – build, test, push images |
 | Git / GitHub | Version control & repository hosting |
 
@@ -417,6 +496,34 @@ jobs:
 ---
 
 ## 📋 Changelog
+
+### [2026-06-20] v1.6.0 — APK Render Connectivity, Mobile Responsiveness & API Error Handling
+**🔌 APK / Mobile Fixes:**
+- **APK Now Connects to Render Deployment**: `MainActivity.kt` `BACKEND_API_BASE` updated from hardcoded LAN IP (`192.168.1.6`) to production Render URL. APK works on any network without Wi-Fi configuration.
+- **WebView HTTPS Support**: Changed `MIXED_CONTENT_NEVER_ALLOW` → `MIXED_CONTENT_COMPATIBILITY_MODE` to allow Render HTTPS + CDN assets. Added `useWideViewPort = true` + `loadWithOverviewMode = true` for proper mobile responsive rendering.
+- **Nav Whitelist Updated**: Added Render HTTPS domain, Google Fonts CDNs, Cloudflare, and Cloudinary to `allowedPrefixes` in `shouldOverrideUrlLoading`.
+- **Stale LAN IP Cleanup**: `onPageFinished` now clears stale `192.168.1.x` / `localhost` IPs from localStorage so Render URL is always used.
+- **app.js APK Fallback Fixed**: file:// protocol fallback now correctly uses Render production URL instead of `192.168.1.6:9080` hardcode.
+
+**📱 Mobile UI / Responsiveness Fixes:**
+- **Footer 2-Column Layout (768px)**: Footer grid now switches to `repeat(2, 1fr)` on tablets/phones, with EntityKart brand info spanning full width.
+- **Footer Single Column (480px)**: All footer sections stack vertically on budget Android phones.
+- **Contact Section Word-Wrap Fixed**: `support@entitykart.com`, phone number, and address now use `word-break: break-word` + `overflow-wrap: break-word` — no more horizontal overflow.
+- **Search Category Dropdown Hidden (480px)**: "All Categories" select dropdown hidden on very small screens to prevent search bar overflow.
+- **Navbar Tighter on 360px**: Logo and badge scale down; padding reduced for compact display.
+- **Safe Area Insets**: Added `env(safe-area-inset-*)` CSS for notched phones (Samsung Galaxy notch, etc.).
+- **Toast Full-Width on Mobile**: Toast notifications now use `calc(100vw - 2rem)` width on small screens.
+
+**🛡️ API Error Handling:**
+- **Friendly 502/503/504 Messages**: Instead of showing raw nginx HTML error pages, users now see "Service is starting up on Render. Please wait 30-60 seconds and try again."
+- **HTML Error Body Filter**: Raw HTML responses (nginx error pages) are now detected by checking `charAt(0) !== '<'` and replaced with a user-friendly message.
+- **Status Code Message Map**: Added `getStatusMessage()` helper covering 400, 401, 403, 404, 409, 422, 429, 500, 502, 503, 504.
+
+**🔄 Asset Sync:**
+- Updated `app.js`, `css/style.css`, `apiService.js` synced to `android/app/src/main/assets/` and `flutter/assets/`.
+
+**📚 Documentation:**
+- README updated with Live Deployment section: Render URL, Aiven MySQL, Cloudinary, Authorize.Net, Gmail SMTP Kafka-driven email flow, APK connection guide, Render environment variables reference.
 
 ### [2026-06-18] v1.5.0 — Full System Audit, Bug Fixes & Major Feature Expansion
 **🐛 Critical Bug Fixes:**

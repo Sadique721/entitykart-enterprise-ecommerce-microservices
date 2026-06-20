@@ -1469,6 +1469,8 @@ textarea.form-control {
     background: var(--bg-secondary);
     border-top: 1px solid var(--glass-border);
     padding: 4rem 2rem 2rem;
+    /* Safe area for notched phones (bottom bar) */
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
     margin-top: auto;
 }
 
@@ -1515,10 +1517,19 @@ textarea.form-control {
 
 .footer-links ul li {
     margin-bottom: 0.7rem;
+    /* Prevent long emails / URLs from overflowing on mobile */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    flex-wrap: wrap;
 }
 
 .footer-links ul li a {
     color: var(--text-secondary);
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 .footer-links ul li a:hover {
     color: var(--text-primary);
@@ -1526,8 +1537,10 @@ textarea.form-control {
 }
 
 .footer-links ul li i {
-    margin-right: 0.6rem;
+    margin-right: 0.3rem;
     color: var(--color-accent);
+    flex-shrink: 0;
+    margin-top: 0.2rem;
 }
 
 .footer-bottom {
@@ -1538,6 +1551,7 @@ textarea.form-control {
     text-align: center;
     color: var(--text-muted);
     font-size: 0.9rem;
+    word-break: break-word;
 }
 
 /* Animations */
@@ -3901,7 +3915,7 @@ textarea.form-control {
 }
 
 /* =============================================================
-   MOBILE RESPONSIVE — v1.5.0
+   MOBILE RESPONSIVE — v1.6.0 (Footer fix, APK display fix)
    ============================================================= */
 @media (max-width: 768px) {
 
@@ -3918,7 +3932,7 @@ textarea.form-control {
         display: none;
     }
 
-    /* Mobile nav panel */
+    /* Mobile nav panel — slide-in drawer */
     .nav-links {
         position: fixed;
         top: 0;
@@ -3971,34 +3985,37 @@ textarea.form-control {
         margin: 0.5rem 0 0 !important;
     }
 
-    /* Top header hidden on mobile */
+    /* Top header hidden on mobile to save space */
     .top-header { display: none; }
 
-    /* Cart layout stack */
-    .cart-layout {
-        grid-template-columns: 1fr;
+    /* ── FOOTER: 2-column layout on tablet/mobile ── */
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
     }
+    /* EntityKart brand info spans full width on mobile */
+    .footer-info {
+        grid-column: 1 / -1;
+    }
+    .footer-info p {
+        max-width: 100%;
+    }
+
+    /* Cart layout stack */
+    .cart-layout { grid-template-columns: 1fr; }
 
     /* Checkout layout stack */
-    .checkout-layout {
-        grid-template-columns: 1fr;
-    }
+    .checkout-layout { grid-template-columns: 1fr; }
 
     /* Product detail stack */
-    .product-detail-layout {
-        grid-template-columns: 1fr;
-    }
+    .product-detail-layout { grid-template-columns: 1fr; }
     .product-gallery { position: static; }
 
     /* Reviews layout stack */
-    .reviews-layout {
-        grid-template-columns: 1fr;
-    }
+    .reviews-layout { grid-template-columns: 1fr; }
 
     /* Delivery info stack */
-    .delivery-info {
-        grid-template-columns: 1fr;
-    }
+    .delivery-info { grid-template-columns: 1fr; }
 
     /* Flash sale header stack */
     .flash-sale-header {
@@ -4008,9 +4025,7 @@ textarea.form-control {
     .flash-countdown { margin-left: 0; }
 
     /* Admin layout stack */
-    .admin-layout {
-        grid-template-columns: 1fr !important;
-    }
+    .admin-layout { grid-template-columns: 1fr !important; }
 
     /* Grid adjustments */
     .grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -4024,12 +4039,64 @@ textarea.form-control {
     .order-header-row { flex-direction: column; align-items: flex-start; }
 }
 
+/* Very small screens: 360–480px (common budget Android phones & APK) */
 @media (max-width: 480px) {
+    /* ── FOOTER: Single column on very small screens ── */
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .footer-info { grid-column: auto; }
+    .footer-container { padding: 2rem 1rem 1.5rem; }
+    .footer-links ul li {
+        font-size: 0.9rem;
+    }
+
+    /* ── SEARCH: Hide category dropdown to save horizontal space ── */
+    .search-category-select { display: none; }
+    .search-input-wrapper input { font-size: 0.85rem; }
+
+    /* ── NAVBAR: Tighter on 360px ── */
+    .navbar { padding: 0.5rem 0.75rem !important; }
+    .nav-logo a { font-size: 1.4rem; }
+    .logo-plus-badge { font-size: 0.65rem; }
+
+    /* Grid single-column */
     .grid-4 { grid-template-columns: 1fr; }
     .stats-row { grid-template-columns: 1fr; }
+
+    /* Countdown boxes */
     .countdown-box { min-width: 44px; padding: 4px 8px; }
     .countdown-box span { font-size: 1.2rem; }
+
+    /* Cart and product adjustments */
     .cart-item { flex-wrap: wrap; }
     .detail-title { font-size: 1.3rem; }
+
+    /* Toast width on very small screens */
+    .toast-card {
+        min-width: calc(100vw - 2rem);
+        max-width: calc(100vw - 2rem);
+        right: 1rem;
+        left: 1rem;
+    }
+    .toast-container {
+        right: 0;
+        left: 0;
+        bottom: 1rem;
+        padding: 0 1rem;
+    }
+
+    /* Auth page: tighter on small screens */
+    .auth-container { padding: 1rem 0; }
 }
 
+/* Safe area insets for notched Android phones */
+@supports (padding: env(safe-area-inset-top)) {
+    .navbar-container {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+    .toast-container {
+        bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    }
+}

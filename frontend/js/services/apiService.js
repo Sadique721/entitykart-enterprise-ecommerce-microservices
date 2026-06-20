@@ -19,6 +19,24 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
         }
     }
 
+    // Human-readable messages for common HTTP status codes
+    function getStatusMessage(status) {
+        switch (status) {
+            case 400: return 'Invalid request. Please check your input and try again.';
+            case 401: return 'Session expired. Please sign in again.';
+            case 403: return 'You do not have permission to perform this action.';
+            case 404: return 'The requested resource was not found.';
+            case 409: return 'A conflict occurred. The record may already exist.';
+            case 422: return 'Validation failed. Please check your input.';
+            case 429: return 'Too many requests. Please wait a moment and try again.';
+            case 500: return 'Internal server error. Our team has been notified.';
+            case 502: return 'Service is starting up on Render. Please wait 30-60 seconds and try again.';
+            case 503: return 'Service temporarily unavailable. Please wait and retry.';
+            case 504: return 'Request timed out. The service may be overloaded — please retry.';
+            default:  return 'An unexpected error occurred. Please try again.';
+        }
+    }
+
     return {
         request: function(config) {
             showLoading();
@@ -36,12 +54,10 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
         responseError: function(rejection) {
             hideLoading();
 
-            // --- BUG FIX: Do NOT show generic API error for 401/403/network issues already handled below ---
-            var errorTitle = 'API Error';
-            var errorMsg = 'An unexpected error occurred.';
+            var status = rejection.status;
 
-            if (rejection.status === 401) {
-                // Auth expired — clear session and redirect without duplicate error toast
+            // ── 401: Session expired ─────────────────────────────────────────
+            if (status === 401) {
                 localStorage.removeItem('ekToken');
                 localStorage.removeItem('ekUser');
                 $rootScope.$broadcast('auth:logout');
@@ -53,7 +69,8 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
                 return $q.reject(rejection);
             }
 
-            if (rejection.status === 403) {
+            // ── 403: Forbidden ───────────────────────────────────────────────
+            if (status === 403) {
                 $rootScope.$broadcast('showToast', {
                     title: 'Access Denied',
                     message: 'You do not have permission to perform this action.',
@@ -62,20 +79,37 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
                 return $q.reject(rejection);
             }
 
-            // --- For all other errors, show a generic toast ---
-            if (rejection.data) {
-                if (typeof rejection.data === 'string') {
-                    errorMsg = rejection.data;
-                } else if (rejection.data.message) {
-                    errorMsg = rejection.data.message;
-                }
-            } else if (rejection.status === -1) {
-                // Network/Gateway offline — do NOT spam toast, just reject
+            // ── Network offline / CORS blocked ───────────────────────────────
+            if (status === -1) {
+                // Silently reject — avoid spamming toasts on slow/offline networks
                 return $q.reject(rejection);
             }
 
+            // ── 502/503/504: Backend service starting up (Render cold start) ─
+            if (status === 502 || status === 503 || status === 504) {
+                $rootScope.$broadcast('showToast', {
+                    title: 'Service Starting',
+                    message: getStatusMessage(status),
+                    type: 'error'
+                });
+                return $q.reject(rejection);
+            }
+
+            // ── All other errors: extract message from response body ─────────
+            var errorMsg = getStatusMessage(status);
+            if (rejection.data) {
+                if (typeof rejection.data === 'string' && rejection.data.trim().charAt(0) !== '<') {
+                    // Only use raw string if it's not an HTML error page (like nginx 502 HTML)
+                    errorMsg = rejection.data;
+                } else if (rejection.data && rejection.data.message) {
+                    errorMsg = rejection.data.message;
+                } else if (rejection.data && rejection.data.error) {
+                    errorMsg = rejection.data.error;
+                }
+            }
+
             $rootScope.$broadcast('showToast', {
-                title: errorTitle,
+                title: 'Error ' + (status > 0 ? status : ''),
                 message: errorMsg,
                 type: 'error'
             });
@@ -84,6 +118,7 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
         }
     };
 }]);
+
 
 app.service('apiService', ['$http', 'API_BASE', function($http, API_BASE) {
 
