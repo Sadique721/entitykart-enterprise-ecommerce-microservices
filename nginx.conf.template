@@ -78,6 +78,19 @@ http {
             error_page 502 503 504 = @api_error;
         }
 
+        # ── Static health checks (prevents Render boot restart loops) ─────────
+        location = /actuator/health {
+            add_header Content-Type "application/json" always;
+            add_header Access-Control-Allow-Origin "*" always;
+            return 200 '{"status":"UP","components":{"discovery":{"status":"UP"}}}';
+        }
+
+        location = /api/health {
+            add_header Content-Type "application/json" always;
+            add_header Access-Control-Allow-Origin "*" always;
+            return 200 '{"status":"UP"}';
+        }
+
         # ── Actuator / health endpoints ───────────────────────────────────────
         location /actuator/ {
             proxy_pass http://api_gateway;
