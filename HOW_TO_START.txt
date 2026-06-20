@@ -4,8 +4,25 @@
 ================================================================================
   Author  : Md Sadique Amin
   GitHub  : https://github.com/Sadique721/Entitykart
-  Updated : 2026-06-16
+  Updated : 2026-06-20
 ================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  🌐 LIVE DEPLOYMENT (Render Cloud)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Live URL     : https://entitykart-enterprise-ecommerce-microservices.onrender.com
+  Platform     : Render (Docker container, free tier)
+  Database     : Aiven Cloud MySQL (SSL required)
+  Images       : Cloudinary CDN (cloud: ddwrdkpkv)
+  Payments     : Authorize.Net Sandbox
+  Email (SMTP) : Gmail via mdsadiqueamin721786@gmail.com (Kafka-triggered)
+
+  📌 APK → Render: The Android app-debug.apk automatically connects to Render.
+     No Wi-Fi LAN IP needed. Install and open on any Android 8+ phone.
+
+  ⚠️  COLD START WARNING: On first request after inactivity, Render's free tier
+     spins up services. This can take 30-60 seconds. Wait and retry.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   PORT REFERENCE (Local Dev – without Docker)
@@ -655,6 +672,24 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   CHANGELOG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [2026-06-20] v1.6.0 — APK Render Connectivity, Mobile Responsiveness & API Error Handling
+  ─────────────────────────────────────────────────────────────
+  ✅ APK now auto-connects to Render production URL (no LAN IP needed).
+  ✅ MainActivity.kt updated: BACKEND_API_BASE → Render HTTPS URL.
+  ✅ WebView: MIXED_CONTENT_COMPATIBILITY_MODE + useWideViewPort for correct mobile render.
+  ✅ Stale LAN IPs (192.168.1.x, localhost) cleared from localStorage on APK open.
+  ✅ Footer mobile layout: 2-col on 768px, single column on 480px.
+  ✅ Contact section word-break fix: email/phone/address no longer overflow off-screen.
+  ✅ Search category dropdown hidden on <=480px to prevent navbar overflow.
+  ✅ Safe-area-inset CSS for notched phones added.
+  ✅ API error handling: 502/503/504 shows "Service starting up" message instead of HTML.
+  ✅ Auth error message improved: context-aware Render vs. local dev hint.
+  ✅ nginx.conf.template: gzip compression, CORS headers, friendly 503 JSON error body.
+  ✅ Android & Flutter assets synced (app.js, style.css, apiService.js, authService.js).
+  ✅ README updated with Live Deployment section, Render/Aiven/Auth.Net/Gmail docs.
+  ✅ HOW_TO_START.txt updated with Render Live URL and cold start warning.
+  ✅ APK rebuilt with Render URL via Gradle assembleDebug.
 
   [2026-06-18] v1.5.0 — Full System Audit, Bug Fixes & Major Feature Expansion
   ─────────────────────────────────────────────────────────────

@@ -99,8 +99,13 @@ app.service('authService', ['apiService', '$rootScope', function(apiService, $ro
                     
                     return currentUser;
                 } else {
-                    // It was not a mock user, so the login failed because the backend is down!
-                    throw { data: { message: 'Connection Error: Cannot connect to the API Gateway. Please verify that your microservices are running and select the correct API Environment in the top-right menu (Docker API on port 9080 vs Local API on port 9901).' } };
+                    // Backend is down and this email is not in the mock database
+                    // Give a context-aware error depending on deployment mode
+                    var isRender = (typeof RENDER_PRODUCTION_URL !== 'undefined') || (localStorage.getItem('RENDER_DEPLOY') === 'true');
+                    var hint = isRender
+                        ? 'The Render service may still be starting up (cold start). Please wait 30–60 seconds and try again.'
+                        : 'Check that your microservices are running and the correct API Environment is selected (Docker API on port 9080 vs Local API on port 9901).';
+                    throw { data: { message: 'Connection Error: Cannot reach the API Gateway. ' + hint } };
                 }
             });
     };
