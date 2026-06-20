@@ -13,6 +13,13 @@ nginx
 
 # 2. Skip Kafka and Eureka to conserve memory on Render 512MB free tier
 echo "Skipping Kafka and Eureka startup to save memory..."
+echo "DB_HOST=$DB_HOST" > /var/log/db_info.log
+echo "DB_PORT=$DB_PORT" >> /var/log/db_info.log
+echo "DB_USERNAME=$DB_USERNAME" >> /var/log/db_info.log
+echo "DB_NAME=$DB_NAME" >> /var/log/db_info.log
+echo "DB_PASSWORD_LEN=${#DB_PASSWORD}" >> /var/log/db_info.log
+echo "DB_PASSWORD_START=${DB_PASSWORD:0:4}" >> /var/log/db_info.log
+echo "DB_PASSWORD_END=${DB_PASSWORD: -4}" >> /var/log/db_info.log
 
 # 3. Define JVM Memory optimization arguments
 # We use serial GC, tiered compilation (C1 compiler only), minimal thread stacks, metaspace limit (75m to avoid Metaspace OOM),
