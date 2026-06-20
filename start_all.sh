@@ -11,32 +11,31 @@ sed "s/PORT_NUMBER/${PORT}/g" /app/nginx.conf.template > /etc/nginx/nginx.conf
 echo "Starting Nginx..."
 nginx
 
-# 2. Skip Kafka to conserve memory on Render 512MB free tier
-echo "Skipping Kafka startup to save memory..."
+# 2. Skip Kafka and Eureka to conserve memory on Render 512MB free tier
+echo "Skipping Kafka and Eureka startup to save memory..."
 
 # 3. Define JVM Memory optimization arguments
-# We use serial GC, tiered compilation (C1 compiler only), minimal thread stacks, metaspace limit,
-# lazy initialization, and serialized startup order to fit into Render's 512MB RAM free tier.
-JVM_OPTS="-Xmx32m -Xms20m -XX:MaxMetaspaceSize=36m -XX:ReservedCodeCacheSize=12m -Xss192k -XX:CICompilerCount=1 -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom -Dspring.main.lazy-initialization=true -Dspring.devtools.restart.enabled=false"
+# We use serial GC, tiered compilation (C1 compiler only), minimal thread stacks, metaspace limit (75m to avoid Metaspace OOM),
+# lazy initialization, disabled discovery client, and serialized startup order to fit into Render's 512MB RAM free tier.
+JVM_OPTS="-Xmx32m -Xms20m -XX:MaxMetaspaceSize=75m -XX:ReservedCodeCacheSize=12m -Xss192k -XX:CICompilerCount=1 -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom -Dspring.main.lazy-initialization=true -Dspring.devtools.restart.enabled=false -Dspring.cloud.discovery.enabled=false -Deureka.client.enabled=false"
 
 # Clear SERVER_PORT environment variable so it doesn't cause conflicts
 unset SERVER_PORT
-export EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
 
-# 4. Start Discovery Server (Eureka)
-echo "Starting discovery-server on port 9900..."
-java $JVM_OPTS -jar /app/discovery-server.jar --server.port=9900 > /var/log/discovery-server.log 2>&1 &
-
-# Wait for Eureka to be fully up before starting API Gateway and other services
-echo "Waiting for Eureka discovery-server to initialize..."
-sleep 25
-
-# 5. Start API Gateway
+# 4. Start API Gateway (direct routing to local ports, disabling Eureka client)
 echo "Starting api-gateway on port 9901..."
-java $JVM_OPTS -jar /app/api-gateway.jar --server.port=9901 > /var/log/api-gateway.log 2>&1 &
-sleep 15
+java $JVM_OPTS -jar /app/api-gateway.jar \
+  --server.port=9901 \
+  --spring.cloud.gateway.routes[0].uri=http://localhost:9902 \
+  --spring.cloud.gateway.routes[1].uri=http://localhost:9903 \
+  --spring.cloud.gateway.routes[2].uri=http://localhost:9903 \
+  > /var/log/api-gateway.log 2>&1 &
 
-# 6. Start core microservices (user-service and product-service) sequentially
+# Wait for API Gateway to boot
+echo "Waiting for api-gateway to initialize..."
+sleep 20
+
+# 5. Start core microservices (user-service and product-service) sequentially
 services=(
     "user-service:9902"
     "product-service:9903"
@@ -55,4 +54,4 @@ echo "EntityKart microservices are running!"
 echo "Monitoring logs..."
 
 # Keep container alive by tailing logs
-tail -f /var/log/discovery-server.log /var/log/api-gateway.log /var/log/user-service.log
+tail -f /var/log/api-gateway.log /var/log/user-service.log /var/log/product-service.log
