@@ -1,46 +1,39 @@
-# Stage 1: Build the Java applications
-FROM gradle:8.5-jdk17 AS builder
+# Stage 1: Build all Java microservices
+FROM eclipse-temurin:17-jdk-jammy AS builder
 WORKDIR /app
 
-# Copy gradle config and wrappers first to leverage cache
-COPY gradle /app/gradle
-COPY gradlew /app/gradlew
-COPY settings.gradle /app/settings.gradle
-COPY build.gradle.kts /app/build.gradle.kts
+# Copy all repository source code
+COPY . .
 
-# Copy the source code of all microservices
-COPY common-service /app/common-service
-COPY discovery-server /app/discovery-server
-COPY api-gateway /app/api-gateway
-COPY user-service /app/user-service
-COPY product-service /app/product-service
-COPY cart-service /app/cart-service
-COPY order-service /app/order-service
-COPY payment-service /app/payment-service
-COPY wishlist-service /app/wishlist-service
-COPY review-service /app/review-service
-COPY return-service /app/return-service
-COPY notification-service /app/notification-service
-COPY frontend /app/frontend
+# Grant execute permissions to the Gradle wrappers in all microservice directories
+RUN chmod +x common-service/gradlew \
+             discovery-server/gradlew \
+             api-gateway/gradlew \
+             user-service/gradlew \
+             product-service/gradlew \
+             cart-service/gradlew \
+             order-service/gradlew \
+             payment-service/gradlew \
+             wishlist-service/gradlew \
+             review-service/gradlew \
+             return-service/gradlew \
+             notification-service/gradlew
 
-# Grant execute permission to the gradle wrapper
-RUN chmod +x gradlew
+# Build common-service (shared library) first and publish it to local maven repository
+RUN cd common-service && ./gradlew publishToMavenLocal --no-daemon
 
-# Build common-service first and publish it to maven local
-RUN cd common-service && ../gradlew publishToMavenLocal
-
-# Build all other microservices into boot Jars
-RUN cd discovery-server && ../gradlew bootJar --no-daemon
-RUN cd api-gateway && ../gradlew bootJar --no-daemon
-RUN cd user-service && ../gradlew bootJar --no-daemon
-RUN cd product-service && ../gradlew bootJar --no-daemon
-RUN cd cart-service && ../gradlew bootJar --no-daemon
-RUN cd order-service && ../gradlew bootJar --no-daemon
-RUN cd payment-service && ../gradlew bootJar --no-daemon
-RUN cd wishlist-service && ../gradlew bootJar --no-daemon
-RUN cd review-service && ../gradlew bootJar --no-daemon
-RUN cd return-service && ../gradlew bootJar --no-daemon
-RUN cd notification-service && ../gradlew bootJar --no-daemon
+# Build each individual microservice using its own local Gradle wrapper
+RUN cd discovery-server && ./gradlew bootJar --no-daemon
+RUN cd api-gateway && ./gradlew bootJar --no-daemon
+RUN cd user-service && ./gradlew bootJar --no-daemon
+RUN cd product-service && ./gradlew bootJar --no-daemon
+RUN cd cart-service && ./gradlew bootJar --no-daemon
+RUN cd order-service && ./gradlew bootJar --no-daemon
+RUN cd payment-service && ./gradlew bootJar --no-daemon
+RUN cd wishlist-service && ./gradlew bootJar --no-daemon
+RUN cd review-service && ./gradlew bootJar --no-daemon
+RUN cd return-service && ./gradlew bootJar --no-daemon
+RUN cd notification-service && ./gradlew bootJar --no-daemon
 
 # Stage 2: Minimal runner image
 FROM eclipse-temurin:17-jre-jammy
@@ -50,7 +43,7 @@ RUN apt-get update && apt-get install -y nginx wget tar procps && rm -rf /var/li
 
 WORKDIR /app
 
-# Copy compiled JAR files from builder
+# Copy compiled JAR files from the builder stage
 COPY --from=builder /app/discovery-server/build/libs/discovery-server.jar /app/
 COPY --from=builder /app/api-gateway/build/libs/api-gateway.jar /app/
 COPY --from=builder /app/user-service/build/libs/user-service.jar /app/
