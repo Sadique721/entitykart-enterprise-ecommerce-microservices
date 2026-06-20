@@ -413,9 +413,7 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (max-width: 768px) {
     .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
-    .navbar { flex-direction: column; gap: 1rem; }
     .nav-search { width: 100%; margin: 0; }
-    .nav-links { width: 100%; justify-content: center; flex-wrap: wrap; }
 }
 
 /* White Cards & Layout elements */
@@ -3946,9 +3944,13 @@ textarea.form-control {
         display: block !important;
         overflow-y: auto;
         padding-top: 70px;
+        visibility: hidden; /* Prevent horizontal layout overflow */
     }
 
-    .nav-links.mobile-nav-open { right: 0; }
+    .nav-links.mobile-nav-open {
+        right: 0;
+        visibility: visible;
+    }
     .nav-links.mobile-nav-open .mobile-nav-overlay { display: block; }
 
     .mobile-nav-panel {
@@ -3974,10 +3976,19 @@ textarea.form-control {
 
     .backend-selector-wrapper { padding: 0.5rem 1.5rem; }
 
-    /* Search bar stacks below logo on mobile */
+    /* Search bar stacks below logo on mobile with clean row wrap */
     .navbar {
-        flex-wrap: wrap;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
+        align-items: center !important;
         padding: 0.6rem 1rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    .nav-logo {
+        flex: 0 1 auto !important;
     }
     .nav-search {
         order: 4;
