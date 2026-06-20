@@ -24,8 +24,9 @@ echo "Waiting for Kafka to start..."
 sleep 8
 
 # 3. Define JVM Memory optimization arguments
-# We use serial GC, minimal thread stacks, minimal heap size, lazy initialization to fit into 512MB RAM.
-JVM_OPTS="-Xmx24m -Xms16m -XX:MaxMetaspaceSize=32m -XX:ReservedCodeCacheSize=16m -Xss256k -XX:CICompilerCount=2 -XX:+UseSerialGC -Dspring.main.lazy-initialization=true -Dspring.devtools.restart.enabled=false"
+# We use serial GC, tiered compilation (C1 compiler only), minimal thread stacks, metaspace limit,
+# lazy initialization, and serialized startup order to fit into Render's 512MB RAM free tier.
+JVM_OPTS="-Xmx24m -Xms16m -XX:MaxMetaspaceSize=32m -XX:ReservedCodeCacheSize=16m -Xss256k -XX:CICompilerCount=2 -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Dspring.main.lazy-initialization=true -Dspring.devtools.restart.enabled=false"
 
 # Clear SERVER_PORT environment variable so it doesn't cause conflicts
 unset SERVER_PORT
@@ -38,12 +39,12 @@ java $JVM_OPTS -jar /app/discovery-server.jar --server.port=9900 > /var/log/disc
 
 # Wait for Eureka to be fully up before starting API Gateway and other services
 echo "Waiting for Eureka discovery-server to initialize..."
-sleep 15
+sleep 20
 
 # 5. Start API Gateway
 echo "Starting api-gateway on port 9901..."
 java $JVM_OPTS -jar /app/api-gateway.jar --server.port=9901 > /var/log/api-gateway.log 2>&1 &
-sleep 3
+sleep 6
 
 # 6. Start the other microservices sequentially to spread CPU load during startup
 services=(
@@ -62,7 +63,7 @@ for s in "${services[@]}"; do
     IFS=":" read -r name port <<< "$s"
     echo "Starting $name on port $port..."
     java $JVM_OPTS -jar /app/${name}.jar --server.port=${port} > /var/log/${name}.log 2>&1 &
-    sleep 3
+    sleep 5
 done
 
 echo "EntityKart microservices are running!"
