@@ -21,14 +21,14 @@ import androidx.compose.ui.viewinterop.AndroidView
  * The backend API base URL is injected via JavascriptInterface so the JS layer
  * can call the correct Render cloud gateway without hardcoding any LAN IP.
  *
- * Production:   https://entitykart-enterprise-ecommerce-microservices.onrender.com
+ * Production:   https://entitykart.onrender.com
  * Local Dev:    Uncomment the http://192.168.1.x line below and rebuild
  * AVD Emulator: Use http://10.0.2.2:9080 for host machine localhost
  */
 class MainActivity : ComponentActivity() {
 
     // ── Production Render Cloud Deployment ────────────────────────────────────
-    private val BACKEND_API_BASE = "https://entitykart-enterprise-ecommerce-microservices.onrender.com"
+    private val BACKEND_API_BASE = "https://entitykart.onrender.com"
     // ── Local Dev (uncomment for local Wi-Fi testing, rebuild APK after): ─────
     // private val BACKEND_API_BASE = "http://192.168.1.6:9080"
     // ── Android Emulator (AVD): ───────────────────────────────────────────────
@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity() {
                                 // Whitelist: local assets, Render HTTPS backend, public CDNs
                                 val allowedPrefixes = listOf(
                                     "file:///android_asset/",
-                                    "https://entitykart-enterprise-ecommerce-microservices.onrender.com",
+                                    "https://entitykart.onrender.com",
                                     "https://fonts.googleapis.com",
                                     "https://fonts.gstatic.com",
                                     "https://cdnjs.cloudflare.com",

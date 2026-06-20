@@ -5,7 +5,7 @@ var app = angular.module('entitykartApp', ['ngRoute']);
 
 // Base URL for the API Gateway – dynamically detected from current host
 // Production Render URL (used by APK when no custom LAN IP is saved)
-var RENDER_PRODUCTION_URL = 'https://entitykart-enterprise-ecommerce-microservices.onrender.com';
+var RENDER_PRODUCTION_URL = 'https://entitykart.onrender.com';
 
 app.constant('API_BASE', (function() {
     if (typeof window !== 'undefined') {
