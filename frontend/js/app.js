@@ -17,15 +17,7 @@ app.constant('API_BASE', (function() {
             (window.AndroidConfig && window.AndroidConfig.apiBase) || 
             (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function')) {
             
-            // Check for window.AndroidConfig injected from Flutter/WebView
-            if (window.AndroidConfig && window.AndroidConfig.apiBase) {
-                return window.AndroidConfig.apiBase;
-            }
-            // Use native Android bridge if available (injected from MainActivity.kt)
-            if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
-                return window.AndroidBridge.getApiBase();
-            }
-            // Otherwise, fall back to Render production URL
+            // Hardlock to Render Cloud for all APK/WebView clients to prevent local IP connection failures
             return RENDER_PRODUCTION_URL;
         }
 
