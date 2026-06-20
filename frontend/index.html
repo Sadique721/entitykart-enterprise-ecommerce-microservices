@@ -109,39 +109,12 @@
                         <i class="fa-solid fa-user-shield"></i> <span>Admin</span>
                     </a>
                     
-                    <!-- Backend Environment Selector -->
-                    <div class="backend-selector-wrapper">
-                        <button class="btn btn-backend-selector" ng-click="toggleBackendMenu()" ng-class="{'docker-mode': getActivePort() === '9080', 'local-mode': getActivePort() === '9901'}">
-                            <i class="fa-solid" ng-class="{'fa-cubes': getActivePort() === '9080', 'fa-laptop-code': getActivePort() === '9901'}"></i>
-                            <span>{{ getActivePort() === '9080' ? 'Docker API' : 'Local API' }}</span>
-                            <i class="fa fa-chevron-down selector-arrow"></i>
-                        </button>
-                        <div class="backend-dropdown-menu" ng-show="backendMenuOpen">
-                            <a href="" ng-click="selectBackend('9080')" ng-class="{selected: getActivePort() === '9080'}">
-                                <i class="fa-solid fa-cubes"></i>
-                                <div class="menu-desc">
-                                    <strong>Docker Compose API</strong>
-                                    <small>Port 9080 (Gateway)</small>
-                                </div>
-                            </a>
-                            <a href="" ng-click="selectBackend('9901')" ng-class="{selected: getActivePort() === '9901'}">
-                                <i class="fa-solid fa-laptop-code"></i>
-                                <div class="menu-desc">
-                                    <strong>Local Dev API</strong>
-                                    <small>Port 9901 (Standalone)</small>
-                                </div>
-                            </a>
-                            <!-- Custom Host configuration for Mobile / WebView testing -->
-                            <div class="custom-ip-entry" style="padding: 12px; border-top: 1px solid var(--glass-border); background: rgba(0,0,0,0.2);">
-                                <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 6px;"><i class="fa fa-network-wired"></i> Server IP / Host</label>
-                                <div style="display: flex; gap: 6px;">
-                                    <input type="text" class="form-control" ng-model="customIp" placeholder="e.g. 192.168.1.6" style="padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); width: 100%; color: var(--text-primary);">
-                                    <button type="button" class="btn btn-primary-gradient btn-sm" ng-click="saveCustomIp(customIp)" style="padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; min-width: 36px;" title="Save IP"><i class="fa fa-save"></i></button>
-                                </div>
-                                <small class="text-muted" style="font-size: 0.7rem; display: block; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Target: {{ getActiveHost() }}</small>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Render Cloud Status Badge -->
+                    <a href="https://entitykart-enterprise-ecommerce-microservices.onrender.com" target="_blank" class="render-status-badge" title="Powered by Render Cloud">
+                        <i class="fa-solid fa-cloud"></i>
+                        <span>Live on Render</span>
+                        <span class="render-dot"></span>
+                    </a>
 
                     <!-- Authentication Status -->
                     <div class="auth-section">

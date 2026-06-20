@@ -33,7 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _ipController.text = ip;
       _portController.text = port;
-      _currentTarget = ip.isNotEmpty ? 'http://$ip:$port' : 'http://10.0.2.2:9080 (default emulator)';
+      _currentTarget = ip.isNotEmpty ? 'http://$ip:$port' : 'https://entitykart-enterprise-ecommerce-microservices.onrender.com (Render Cloud)';
     });
   }
 
@@ -72,11 +72,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _ipController.clear();
       _portController.text = '9080';
-      _currentTarget = 'http://10.0.2.2:9080 (default emulator)';
+      _currentTarget = 'https://entitykart-enterprise-ecommerce-microservices.onrender.com (Render Cloud)';
       _saved = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reset to default emulator settings')),
+      const SnackBar(content: Text('Reset to default Render Cloud connection')),
     );
   }
 

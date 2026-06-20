@@ -12,27 +12,13 @@ app.constant('API_BASE', (function() {
         var protocol = window.location.protocol;
         var host = window.location.hostname;
 
-        var savedIp = localStorage.getItem('API_IP');
-        var savedPort = localStorage.getItem('API_PORT') || '9080';
-
         // ── Mobile WebView / APK Context (file:// protocol or AndroidBridge) ──
         if (protocol === 'file:' || (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function')) {
-
-            // 1. If a valid custom LAN IP is saved by user in the backend selector, use it
-            if (savedIp &&
-                savedIp !== 'localhost' &&
-                savedIp !== '127.0.0.1' &&
-                savedIp !== '10.0.2.2' &&
-                savedIp.trim() !== '') {
-                return 'http://' + savedIp.trim() + ':' + savedPort;
-            }
-
-            // 2. Use native Android bridge if available (injected from MainActivity.kt)
+            // Use native Android bridge if available (injected from MainActivity.kt)
             if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
                 return window.AndroidBridge.getApiBase();
             }
-
-            // 3. Fall back to Render production URL (APK works on any network)
+            // Otherwise, fall back to Render production URL
             return RENDER_PRODUCTION_URL;
         }
 
@@ -44,11 +30,6 @@ app.constant('API_BASE', (function() {
         }
 
         // Production deployment (Render): API gateway is same-origin (proxied by Nginx)
-        // Clear any stale LAN IPs that might have been saved during local dev
-        if (localStorage.getItem('RENDER_DEPLOY') === 'true') {
-            localStorage.removeItem('API_IP');
-            localStorage.removeItem('API_PORT');
-        }
         return window.location.protocol + '//' + window.location.host;
     }
     return 'http://localhost:9080';

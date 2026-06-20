@@ -172,40 +172,8 @@ app.controller('mainController', ['$scope', '$location', 'authService', 'cartSer
         $scope.mobileMenuOpen = false;
     };
 
+    // Mobile WebView Helper
     $scope.isMobileWebView = function() {
         return (window.location.protocol === 'file:' || !!window.AndroidBridge);
-    };
-
-    // Backend environment selector
-    $scope.backendMenuOpen = false;
-    $scope.customIp = localStorage.getItem('API_IP') || '';
-
-    $scope.toggleBackendMenu = function() {
-        $scope.backendMenuOpen = !$scope.backendMenuOpen;
-    };
-    $scope.getActivePort = function() {
-        return localStorage.getItem('API_PORT') || '9080';
-    };
-    $scope.getActiveHost = function() {
-        var ip = localStorage.getItem('API_IP') || 'localhost';
-        var port = localStorage.getItem('API_PORT') || '9080';
-        return 'http://' + ip + ':' + port;
-    };
-    $scope.selectBackend = function(port) {
-        localStorage.setItem('API_PORT', port);
-        $scope.backendMenuOpen = false;
-        $scope.addToast('Backend Switched', 'Switched API Gateway to port ' + port + ' (reloading...)', 'success');
-        setTimeout(function() {
-            window.location.reload();
-        }, 1000);
-    };
-    $scope.saveCustomIp = function(ip) {
-        if (!ip) return;
-        localStorage.setItem('API_IP', ip);
-        $scope.backendMenuOpen = false;
-        $scope.addToast('IP Address Saved', 'Configured active host as ' + ip + ' (reloading...)', 'success');
-        setTimeout(function() {
-            window.location.reload();
-        }, 1000);
     };
 }]);
