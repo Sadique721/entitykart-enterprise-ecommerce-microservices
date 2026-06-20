@@ -53,17 +53,13 @@ services=(
     "cart-service:9904"
     "order-service:9905"
     "payment-service:9906"
-    "wishlist-service:9907"
-    "review-service:9908"
-    "return-service:9909"
-    "notification-service:9910"
 )
 
 for s in "${services[@]}"; do
     IFS=":" read -r name port <<< "$s"
     echo "Starting $name on port $port..."
     java $JVM_OPTS -jar /app/${name}.jar --server.port=${port} > /var/log/${name}.log 2>&1 &
-    sleep 5
+    sleep 8
 done
 
 echo "EntityKart microservices are running!"
