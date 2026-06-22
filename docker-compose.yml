@@ -1,6 +1,7 @@
 #version: '3.8'
 #
-## ─────────────────────────────────────────────────────────────────────────────
+# Updated 2026-06-22: Configured separate DB schemas (user_service, product_service, etc.) for each microservice instead of sharing defaultdb.
+# ─────────────────────────────────────────────────────────────────────────────
 ## EntityKart – Docker Compose
 ## Uses Aiven Cloud MySQL (single DB host for all services via defaultdb).
 ## All secrets are injected via .env file – never hardcode credentials here.
@@ -339,7 +340,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: defaultdb
+      DB_NAME: user_service
       SERVER_PORT: 8081
       JWT_SECRET: ${JWT_SECRET}
       MAIL_USERNAME: ${MAIL_USERNAME}
@@ -363,7 +364,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: defaultdb
+      DB_NAME: product_service
       SERVER_PORT: 8082
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
@@ -382,7 +383,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: defaultdb
+      DB_NAME: cart_service
       SERVER_PORT: 8083
     restart: on-failure
 
@@ -398,7 +399,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: defaultdb
+      DB_NAME: order_service
       SERVER_PORT: 8084
     restart: on-failure
 
@@ -416,7 +417,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      DB_NAME: defaultdb
+      DB_NAME: payment_service
       SERVER_PORT: 8085
       AUTHORIZE_NET_API_LOGIN_ID: ${AUTHORIZE_NET_API_LOGIN_ID}
       AUTHORIZE_NET_TRANSACTION_KEY: ${AUTHORIZE_NET_TRANSACTION_KEY}
@@ -433,7 +434,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: defaultdb
+      DB_NAME: wishlist_service
       SERVER_PORT: 8086
     restart: on-failure
 
@@ -447,7 +448,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: defaultdb
+      DB_NAME: review_service
       SERVER_PORT: 8087
     restart: on-failure
 
@@ -467,7 +468,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      DB_NAME: defaultdb
+      DB_NAME: return_service
       SERVER_PORT: 8088
     restart: on-failure
 
@@ -483,7 +484,7 @@ services:
         condition: service_healthy
     environment:
       <<: *common-env
-      DB_NAME: defaultdb
+      DB_NAME: notification_service
       SERVER_PORT: 8089
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}

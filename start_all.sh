@@ -51,8 +51,10 @@ HIKARI_OPTS="--spring.datasource.hikari.maximum-pool-size=2 --spring.datasource.
 
 for s in "${services[@]}"; do
     IFS=":" read -r name port <<< "$s"
-    echo "Starting $name on port $port..."
-    java $JVM_OPTS -jar /app/${name}.jar --server.port=${port} $HIKARI_OPTS > /var/log/${name}.log 2>&1 &
+    # Updated 2026-06-22: Dynamic DB_NAME mapping to connect each microservice to its own schema on Aiven MySQL
+    db_name=$(echo "$name" | tr '-' '_')
+    echo "Starting $name on port $port with database $db_name..."
+    DB_NAME=$db_name java $JVM_OPTS -jar /app/${name}.jar --server.port=${port} $HIKARI_OPTS > /var/log/${name}.log 2>&1 &
     sleep 20
 done
 
