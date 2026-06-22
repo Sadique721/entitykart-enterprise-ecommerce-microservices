@@ -261,6 +261,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Secondary Sub-Navbar for Categories */
+/*
 .sub-navbar-container {
     background: #ffffff;
     border-bottom: 1px solid #e2e8f0;
@@ -289,6 +290,54 @@ h1, h2, h3, h4, h5, h6 {
 .sub-navbar-item:hover, .sub-navbar-item.active {
     color: var(--color-accent);
     border-color: var(--color-accent);
+}
+*/
+
+.sub-navbar-container {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.6rem 2rem;
+    box-shadow: var(--shadow-sm);
+}
+.sub-navbar {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+}
+.sub-navbar-items-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    flex: 1;
+}
+.sub-navbar-item {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #334155;
+    padding: 0.2rem 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    margin-right: 1.5rem;
+    flex-shrink: 0;
+    display: inline-block;
+}
+.sub-navbar-item:hover, .sub-navbar-item.active {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+.sub-navbar-more {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-weight: 700;
+    padding-left: 1rem;
+    border-bottom: 2px solid transparent;
 }
 
 /* User Dropdown */
@@ -3832,6 +3881,7 @@ textarea.form-control {
 .top-header-links a:hover { color: var(--color-accent); }
 
 /* ---- Sub-Navbar Categories ---- */
+/*
 .sub-navbar-container {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--glass-border);
@@ -3859,6 +3909,7 @@ textarea.form-control {
     color: var(--color-accent);
     border-bottom-color: var(--color-accent);
 }
+*/
 
 /* =============================================================
    MOBILE RESPONSIVE — v1.6.0 (Footer fix, APK display fix)

@@ -94,6 +94,66 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
             subCategoryId: 22,
             sellerId: 11,
             discountPercent: 30
+        },
+        {
+            productId: 107,
+            productName: 'FitPro GPS Smart Watch',
+            description: 'Next-generation fitness smart watch with built-in GPS, blood oxygen monitoring, 14-day battery life, and personalized workout guidance.',
+            brand: 'ActiveFit',
+            price: 7999.00,
+            mrp: 11999.00,
+            stockQuantity: 25,
+            sku: 'WT-FIT-GPS-07',
+            mainImageURL: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=500&auto=format&fit=crop&q=60',
+            categoryId: 1,
+            subCategoryId: 13,
+            sellerId: 10,
+            discountPercent: 33
+        },
+        {
+            productId: 108,
+            productName: 'HydroFlow Stainless Steel Bottle',
+            description: 'Double-walled vacuum insulated water bottle keeping drinks cold for 24 hours or hot for 12. Leak-proof cap with premium powder coat finish.',
+            brand: 'HydroFlow',
+            price: 1499.00,
+            mrp: 1999.00,
+            stockQuantity: 50,
+            sku: 'BT-HYD-SS-08',
+            mainImageURL: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&auto=format&fit=crop&q=60',
+            categoryId: 2,
+            subCategoryId: 23,
+            sellerId: 11,
+            discountPercent: 25
+        },
+        {
+            productId: 109,
+            productName: 'EcoGroove Bamboo Speaker',
+            description: 'Portable wireless bluetooth speaker wrapped in natural sustainably harvested bamboo. Delivers rich acoustics with passive bass radiators.',
+            brand: 'EcoAudio',
+            price: 2999.00,
+            mrp: 3999.00,
+            stockQuantity: 15,
+            sku: 'SP-ECO-BAM-09',
+            mainImageURL: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&auto=format&fit=crop&q=60',
+            categoryId: 1,
+            subCategoryId: 12,
+            sellerId: 10,
+            discountPercent: 25
+        },
+        {
+            productId: 110,
+            productName: 'Apex Leather Bifold Wallet',
+            description: 'Handcrafted top-grain genuine leather wallet with RFID blocking technology, 8 card slots, and an easy-access ID window.',
+            brand: 'ApexLeather',
+            price: 1899.00,
+            mrp: 2499.00,
+            stockQuantity: 30,
+            sku: 'WL-APX-BF-10',
+            mainImageURL: 'https://images.unsplash.com/photo-1627124765138-04f3f1764bc5?w=500&auto=format&fit=crop&q=60',
+            categoryId: 3,
+            subCategoryId: 33,
+            sellerId: 12,
+            discountPercent: 24
         }
     ];
 
@@ -103,18 +163,43 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
         { id: 3, name: 'Apparel & Lifestyle', description: 'Timeless watches, backpacks, and accessories.' }
     ];
 
-    this.getProducts = function(categoryId, sellerId, page, size) {
+    this.getProducts = function(categoryId, sellerId, page, size, searchQuery, priceMin, priceMax, sortOption) {
+        var sortParam = null;
+        if (sortOption === 'price_asc') sortParam = 'price,asc';
+        else if (sortOption === 'price_desc') sortParam = 'price,desc';
+        else if (sortOption === 'newest') sortParam = 'productId,desc';
+        else if (sortOption === 'discount') sortParam = 'discount,desc';
+
         var params = {
             page: page || 0,
             size: size || 10
         };
         if (categoryId) params.categoryId = categoryId;
         if (sellerId) params.sellerId = sellerId;
+        if (searchQuery) params.search = searchQuery;
+        if (priceMin) params.minPrice = priceMin;
+        if (priceMax) params.maxPrice = priceMax;
+        if (sortParam) params.sort = sortParam;
 
         return apiService.get('/api/products', params)
             .then(function(response) {
                 // If API returns an empty list, fallback to mocks
                 if (response.data && response.data.content && response.data.content.length > 0) {
+                    var content = response.data.content;
+                    if (content.length < 10) {
+                        // Pad with mock products up to 10 items
+                        var needed = 10 - content.length;
+                        var pool = mockProducts;
+                        if (categoryId) {
+                            pool = mockProducts.filter(function(p) { return p.categoryId == categoryId; });
+                        }
+                        if (pool.length < needed) {
+                            pool = pool.concat(mockProducts.filter(function(p) { return pool.indexOf(p) === -1; }));
+                        }
+                        var additional = pool.slice(0, needed);
+                        content = content.concat(additional);
+                    }
+                    response.data.content = content;
                     return response.data;
                 }
                 

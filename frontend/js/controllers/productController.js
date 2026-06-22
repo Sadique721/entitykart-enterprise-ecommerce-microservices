@@ -3,8 +3,16 @@
  * v1.5.0 — Bug fixes + new features: sort, price filter, recently viewed, notify-me, share
  */
 app.controller('productController', [
-    '$scope', '$routeParams', '$location', 'productService', 'cartService', 'wishlistService', 'reviewService', 'authService',
-    function($scope, $routeParams, $location, productService, cartService, wishlistService, reviewService, authService) {
+    '$scope', '$routeParams', '$location', 'productService', 'cartService', 'wishlistService', 'reviewService', 'authService', 'userService',
+    function($scope, $routeParams, $location, productService, cartService, wishlistService, reviewService, authService, userService) {
+
+        // Stats cards model
+        $scope.stats = {
+            totalProducts: 50000,
+            totalUsers: 2000000,
+            totalCities: 500,
+            totalSellers: 10000
+        };
 
         // Scope variables
         $scope.products = [];
@@ -164,7 +172,8 @@ app.controller('productController', [
             $scope.loadUserWishlist();
             loadRecentlyViewed();
             // Load featured items
-            productService.getProducts(null, null, 0, 8).then(function(data) {
+            // productService.getProducts(null, null, 0, 8).then(function(data) {
+            productService.getProducts(null, null, 0, 50).then(function(data) {
                 $scope.products = data.content;
                 // Flash sale products = items with discount > 20%
                 $scope.flashSaleProducts = data.content.filter(function(p) {
@@ -174,6 +183,20 @@ app.controller('productController', [
             // Load categories
             productService.getCategories().then(function(data) {
                 $scope.categories = data;
+            });
+
+            // Fetch dynamic stats from database
+            productService.getProductStats().then(function(pStats) {
+                if (pStats && pStats.totalProducts !== undefined) {
+                    $scope.stats.totalProducts = pStats.totalProducts;
+                }
+            });
+            userService.getUserStats().then(function(uStats) {
+                if (uStats) {
+                    if (uStats.totalUsers !== undefined) $scope.stats.totalUsers = uStats.totalUsers;
+                    if (uStats.totalCities !== undefined) $scope.stats.totalCities = uStats.totalCities;
+                    if (uStats.totalSellers !== undefined) $scope.stats.totalSellers = uStats.totalSellers;
+                }
             });
 
             // Auto play slider
@@ -212,7 +235,8 @@ app.controller('productController', [
         };
 
         $scope.loadProducts = function() {
-            productService.getProducts($scope.catFilterId, null, $scope.currentPage, 12)
+            // productService.getProducts($scope.catFilterId, null, $scope.currentPage, 12)
+            productService.getProducts($scope.catFilterId, null, $scope.currentPage, 50, $scope.searchQuery, $scope.priceMin, $scope.priceMax, $scope.sortOption)
                 .then(function(data) {
                     var items = data.content;
 
@@ -224,6 +248,7 @@ app.controller('productController', [
                     }
 
                     // Client-side search filter
+                    /*
                     if ($scope.searchQuery) {
                         var q = $scope.searchQuery.toLowerCase();
                         items = items.filter(function(p) {
@@ -251,6 +276,7 @@ app.controller('productController', [
                     } else if ($scope.sortOption === 'newest') {
                         items.sort(function(a, b) { return b.productId - a.productId; });
                     }
+                    */
 
                     $scope.products = items;
                     $scope.totalPages = data.totalPages;

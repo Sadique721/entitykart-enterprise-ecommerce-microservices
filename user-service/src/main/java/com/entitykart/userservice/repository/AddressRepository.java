@@ -7,4 +7,7 @@ import java.util.List;
 public interface AddressRepository extends JpaRepository<AddressEntity, Long> {
     List<AddressEntity> findByUserId(Long userId);
     void deleteByUserIdAndId(Long userId, Long addressId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(DISTINCT a.city) FROM AddressEntity a")
+    long countDistinctCities();
 }

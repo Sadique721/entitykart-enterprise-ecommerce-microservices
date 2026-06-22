@@ -135,6 +135,37 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    public Page<ProductDTO> getProductsFiltered(
+            Long categoryId,
+            String search,
+            java.math.BigDecimal minPrice,
+            java.math.BigDecimal maxPrice,
+            Pageable pageable) {
+        Pageable sanitized = sanitizePageable(pageable);
+        return productRepository.filterProducts(categoryId, search, minPrice, maxPrice, sanitized)
+                .map(this::convertToDTO);
+    }
+
+    private Pageable sanitizePageable(Pageable pageable) {
+        if (pageable.getSort().isSorted()) {
+            boolean hasDiscount = pageable.getSort().stream()
+                    .anyMatch(order -> order.getProperty().equalsIgnoreCase("discount") || 
+                                       order.getProperty().equalsIgnoreCase("discountPercent"));
+            if (hasDiscount) {
+                return org.springframework.data.domain.PageRequest.of(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.DESC, 
+                                "mrp"
+                        )
+                );
+            }
+        }
+        return pageable;
+    }
+
+    @Transactional(readOnly = true)
     public java.util.Map<String, Object> getProductStats() {
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
         stats.put("totalProducts", productRepository.count());

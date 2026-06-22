@@ -2,8 +2,16 @@
  * Main application controller managing global UI state, navigation, loading, and toast alerts.
  * v1.5.0 — Added hamburger menu, fixed search propagation
  */
-app.controller('mainController', ['$scope', '$location', 'authService', 'cartService', function($scope, $location, authService, cartService) {
+app.controller('mainController', ['$scope', '$location', 'authService', 'cartService', 'productService', function($scope, $location, authService, cartService, productService) {
     
+    // Dynamic Navbar Categories
+    $scope.navbarCategories = [];
+    function loadNavbarCategories() {
+        productService.getCategories().then(function(cats) {
+            $scope.navbarCategories = cats;
+        });
+    }
+    loadNavbarCategories();
     // Core states
     $scope.userMenuOpen = false;
     $scope.loading = false;
@@ -175,5 +183,10 @@ app.controller('mainController', ['$scope', '$location', 'authService', 'cartSer
     // Mobile WebView Helper
     $scope.isMobileWebView = function() {
         return (window.location.protocol === 'file:' || !!window.AndroidBridge);
+    };
+
+    // Active Category check helper
+    $scope.isActiveCategory = function(catId) {
+        return $location.search().categoryId == catId;
     };
 }]);

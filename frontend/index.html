@@ -67,18 +67,8 @@
             <div class="nav-search">
                 <form ng-submit="searchProducts()">
                     <div class="search-input-wrapper">
-                        <select class="search-category-select" ng-model="searchCategory" ng-change="filterCategoryFromSearch()">
+                        <select class="search-category-select" ng-model="searchCategory" ng-change="filterCategoryFromSearch()" ng-options="cat.id as cat.name for cat in navbarCategories">
                             <option value="">All Categories</option>
-                            <option value="1">Electronics</option>
-                            <option value="2">Fashion</option>
-                            <option value="3">Home &amp; Kitchen</option>
-                            <option value="4">Beauty &amp; Personal Care</option>
-                            <option value="5">Grocery</option>
-                            <option value="6">Sports &amp; Fitness</option>
-                            <option value="7">Books &amp; Education</option>
-                            <option value="8">Toys &amp; Games</option>
-                            <option value="9">Automotive</option>
-                            <option value="10">Health &amp; Wellness</option>
                         </select>
                         <input type="text" ng-model="searchQuery" placeholder="Search for products, brands and more..." id="main-search-input">
                         <button type="submit" class="search-submit-btn orange-theme-search-btn"><i class="fa fa-search"></i></button>
@@ -147,15 +137,10 @@
     <!-- Horizontal Categories Navigation Sub-Header Bar -->
     <div class="sub-navbar-container">
         <div class="sub-navbar">
-            <a href="#!/products?categoryId=1" class="sub-navbar-item">Electronics</a>
-            <a href="#!/products?categoryId=2" class="sub-navbar-item">Fashion</a>
-            <a href="#!/products?categoryId=3" class="sub-navbar-item">Home &amp; Kitchen</a>
-            <a href="#!/products?categoryId=4" class="sub-navbar-item">Beauty &amp; Personal Care</a>
-            <a href="#!/products?categoryId=5" class="sub-navbar-item">Grocery</a>
-            <a href="#!/products?categoryId=6" class="sub-navbar-item">Sports &amp; Fitness</a>
-            <a href="#!/products?categoryId=7" class="sub-navbar-item">Books &amp; Education</a>
-            <a href="#!/products?categoryId=8" class="sub-navbar-item">Toys &amp; Games</a>
-            <a href="#!/products" class="sub-navbar-item">&gt; More</a>
+            <div class="sub-navbar-items-wrapper">
+                <a ng-repeat="cat in navbarCategories" href="#!/products?categoryId={{cat.id}}" class="sub-navbar-item" ng-class="{active: isActiveCategory(cat.id)}">{{cat.name}}</a>
+            </div>
+            <a href="#!/products" class="sub-navbar-item sub-navbar-more">&gt; More</a>
         </div>
     </div>
 

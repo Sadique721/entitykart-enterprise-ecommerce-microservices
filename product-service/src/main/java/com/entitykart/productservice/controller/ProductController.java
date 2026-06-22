@@ -44,18 +44,32 @@ public class ProductController {
         return productService.getProduct(id);
     }
 
+    // @GetMapping
+    // public Page<ProductDTO> getProducts(
+    //         @RequestParam(required = false) Long categoryId,
+    //         @RequestParam(required = false) Long sellerId,
+    //         Pageable pageable) {
+    //     if (categoryId != null) {
+    //         return productService.getProductsByCategory(categoryId, pageable);
+    //     }
+    //     if (sellerId != null) {
+    //         return productService.getProductsBySeller(sellerId, pageable);
+    //     }
+    //     return productService.getProducts(pageable);
+    // }
+
     @GetMapping
     public Page<ProductDTO> getProducts(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Long sellerId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) java.math.BigDecimal minPrice,
+            @RequestParam(required = false) java.math.BigDecimal maxPrice,
             Pageable pageable) {
-        if (categoryId != null) {
-            return productService.getProductsByCategory(categoryId, pageable);
-        }
         if (sellerId != null) {
             return productService.getProductsBySeller(sellerId, pageable);
         }
-        return productService.getProducts(pageable);
+        return productService.getProductsFiltered(categoryId, search, minPrice, maxPrice, pageable);
     }
 
     @GetMapping("/all")

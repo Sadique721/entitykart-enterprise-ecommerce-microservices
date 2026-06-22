@@ -7,6 +7,7 @@ import com.entitykart.userservice.entity.UserEntity;
 import com.entitykart.userservice.event.UserCreatedEvent;
 import com.entitykart.userservice.event.PasswordResetEvent;
 import com.entitykart.userservice.repository.UserRepository;
+import com.entitykart.userservice.repository.AddressRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -28,6 +29,7 @@ public class UserService {
     private static final String USER_EVENTS_TOPIC = "user-events";
 
     private final UserRepository userRepository;
+    private final AddressRepository addressRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -191,9 +193,12 @@ public class UserService {
 
     public java.util.Map<String, Object> getUserStats() {
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        // stats.put("totalUsers", userRepository.count());
         stats.put("totalUsers", userRepository.count());
         stats.put("totalAdmins", userRepository.countByRole("ADMIN"));
         stats.put("totalActive", userRepository.countByActive(true));
+        stats.put("totalSellers", userRepository.countByRole("SELLER"));
+        stats.put("totalCities", addressRepository.countDistinctCities());
         return stats;
     }
 }

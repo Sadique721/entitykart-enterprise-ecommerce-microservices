@@ -21,28 +21,28 @@
         <div class="stat-card-premium">
             <div class="stat-card-icon"><i class="fa fa-box-open"></i></div>
             <div class="stat-card-info">
-                <h3>50,000+</h3>
+                <h3>{{ (stats.totalProducts || 50000) | number:0 }}+</h3>
                 <p>Products Listed</p>
             </div>
         </div>
         <div class="stat-card-premium">
             <div class="stat-card-icon"><i class="fa fa-face-smile"></i></div>
             <div class="stat-card-info">
-                <h3>2M+ Customers</h3>
+                <h3>{{ (stats.totalUsers || 2000000) | number:0 }}+ Customers</h3>
                 <p>Happy Shoppers</p>
             </div>
         </div>
         <div class="stat-card-premium">
             <div class="stat-card-icon"><i class="fa fa-map-pin"></i></div>
             <div class="stat-card-info">
-                <h3>500+ Cities</h3>
+                <h3>{{ (stats.totalCities || 500) | number:0 }}+ Cities</h3>
                 <p>Served Nationwide</p>
             </div>
         </div>
         <div class="stat-card-premium">
             <div class="stat-card-icon"><i class="fa fa-store"></i></div>
             <div class="stat-card-info">
-                <h3>10,000+ Sellers</h3>
+                <h3>{{ (stats.totalSellers || 10000) | number:0 }}+ Sellers</h3>
                 <p>Verified Merchants</p>
             </div>
         </div>
