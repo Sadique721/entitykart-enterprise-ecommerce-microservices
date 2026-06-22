@@ -603,6 +603,16 @@ jobs:
 
 ---
 
+## 🚀 Dynamic Catalog, Stats & Hybrid WebView Features
+
+The application features:
+- **Dynamic Homepage Statistics**: Product, User, Cities, and Seller counts are fetched dynamically from the database microservices.
+- **Server-side Search & Sorting**: Implemented pagination, keyword search, price range filter, and server-side sorting (Relevance, Price High-Low/Low-High, Newest) at the JPA layer.
+- **Horizontal Responsive Categories Bar**: A sub-navbar loads database categories dynamically and hides overflow horizontally with a `> More` link aligned on the right.
+- **Stand-alone WebView Connectivity**: Native Android and Flutter wrappers dynamically resolve the Render API gateway via Java/Dart bridges for offline/independent cloud connections.
+
+---
+
 ## 🤝 Contributing
 
 1. Fork the repository

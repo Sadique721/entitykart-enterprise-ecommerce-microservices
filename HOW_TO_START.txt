@@ -747,6 +747,15 @@
   ✅ Admin Telemetry Dashboard: Integrated Chart.js from CDN to visualize real-time or mock telemetry charts (pie, doughnut, bar) for all 10 microservices.
   ✅ Dual APK Repackaging: Automated patching, alignment, and signing of both Native Android (app-debug.apk) and Flutter (flutter-app-debug.apk) wrappers.
 
+  [2026-06-22] v1.6.0
+  ─────────────────────────────────────────────────────────────
+  ✅ Restructured sub-navbar to load categories dynamically from database with responsive horizontal scroll alignment and a pinned "> More" link.
+  ✅ Implemented dynamic home page stats (Products, Users, Cities, and Sellers) populated from microservices metrics.
+  ✅ Implemented server-side search, price range filtering, and query sorting in product-service.
+  ✅ Added client-side padding to show a minimum of 10 products when the database is empty or has fewer items.
+  ✅ Added dynamic bridge connection checking (Render API gateway fallback) in Android & Flutter WebView wrappers.
+  ✅ Synced all UI/UX modifications to Android and Flutter assets.
+
   [2026-06-16] v1.1.0
   ─────────────────────────────────────────────────────────────
   ✅ Enhanced Admin Control Panel with Dashboard Overview (metric cards, recent products & orders).

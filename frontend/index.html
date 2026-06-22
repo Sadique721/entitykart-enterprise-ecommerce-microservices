@@ -67,8 +67,9 @@
             <div class="nav-search">
                 <form ng-submit="searchProducts()">
                     <div class="search-input-wrapper">
-                        <select class="search-category-select" ng-model="searchCategory" ng-change="filterCategoryFromSearch()" ng-options="cat.id as cat.name for cat in navbarCategories">
+                        <select class="search-category-select" ng-model="searchCategory" ng-change="filterCategoryFromSearch()">
                             <option value="">All Categories</option>
+                            <option ng-repeat="cat in navbarCategories" value="{{cat.id}}">{{cat.name}}</option>
                         </select>
                         <input type="text" ng-model="searchQuery" placeholder="Search for products, brands and more..." id="main-search-input">
                         <button type="submit" class="search-submit-btn orange-theme-search-btn"><i class="fa fa-search"></i></button>

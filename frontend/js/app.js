@@ -17,6 +17,19 @@ app.constant('API_BASE', (function() {
             (window.AndroidConfig && window.AndroidConfig.apiBase) || 
             (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function')) {
             
+            var bridgeUrl = '';
+            if (window.AndroidConfig && window.AndroidConfig.apiBase) {
+                bridgeUrl = window.AndroidConfig.apiBase;
+            } else if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
+                bridgeUrl = window.AndroidBridge.getApiBase();
+            } else if (window.ENTITYKART_API_BASE) {
+                bridgeUrl = window.ENTITYKART_API_BASE;
+            }
+            
+            if (bridgeUrl && bridgeUrl.trim().length > 0) {
+                return bridgeUrl;
+            }
+            
             // Hardlock to Render Cloud for all APK/WebView clients to prevent local IP connection failures
             return RENDER_PRODUCTION_URL;
         }
