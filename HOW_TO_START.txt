@@ -18,7 +18,7 @@
   Payments     : Authorize.Net Sandbox
   Email (SMTP) : Gmail via mdsadiqueamin721786@gmail.com (Kafka-triggered)
 
-  📌 APK → Render: The Android app-debug.apk automatically connects to Render.
+  📌 APK → Render: The Android APKs (entitykart-android-apk.apk and entitykart-flutter-apk.apk) automatically connect to Render.
      No Wi-Fi LAN IP needed. Install and open on any Android 8+ phone.
 
   ⚠️  COLD START WARNING: On first request after inactivity, Render's free tier
@@ -460,7 +460,7 @@
   .\gradlew assembleDebug
 
   ✅ APK OUTPUT PATH:
-  d:\Temp\MKEG\Entitykart\android\app\build\outputs\apk\debug\app-debug.apk
+  d:\Temp\MKEG\Entitykart\android\app\build\outputs\apk\debug\entitykart-android-apk.apk
 
   Option C: Release APK (for distribution)
   ─────────────────────────────────────────────────────────────
@@ -503,7 +503,7 @@
 
   Note: Since the Flutter SDK is not installed on this system, we have pre-created the 
   build directory structure and staged a working copy of the debug APK inside it:
-  d:\Temp\MKEG\Entitykart\flutter\build\app\outputs\flutter-apk\app-debug.apk
+  d:\Temp\MKEG\Entitykart\flutter\build\app\outputs\flutter-apk\entitykart-flutter-apk.apk
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   STEP 5 – VERIFY PROJECT IS RUNNING
@@ -592,13 +592,14 @@
   APK FINAL OUTPUT PATHS (Pre-compiled & Staged)
 ================================================================================
   1. Workspace Root:
-     d:\Temp\MKEG\Entitykart\app-debug.apk
+     d:\Temp\MKEG\Entitykart\entitykart-android-apk.apk
+     d:\Temp\MKEG\Entitykart\entitykart-flutter-apk.apk
 
   2. Flutter Output Path (Staged):
-     d:\Temp\MKEG\Entitykart\flutter\build\app\outputs\flutter-apk\app-debug.apk
+     d:\Temp\MKEG\Entitykart\flutter\build\app\outputs\flutter-apk\entitykart-flutter-apk.apk
 
   3. Native Android Build Output Path:
-     d:\Temp\MKEG\Entitykart\android\app\build\outputs\apk\debug\app-debug.apk
+     d:\Temp\MKEG\Entitykart\android\app\build\outputs\apk\debug\entitykart-android-apk.apk
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   STEP 6 – CLOUDINARY IMAGE UPLOAD CONFIGURATION
@@ -745,7 +746,7 @@
   ✅ Storefront Homepage Enhancements: Designed banner carousel slider, 4 stats cards, circular category grid (descriptions removed), and a brand logo selection grid.
   ✅ Catalog Polishing: Upgraded catalog products to feature Bestseller/Hurry tags, stock level indicators, and side-by-side Orange Add / Blue Buy buttons.
   ✅ Admin Telemetry Dashboard: Integrated Chart.js from CDN to visualize real-time or mock telemetry charts (pie, doughnut, bar) for all 10 microservices.
-  ✅ Dual APK Repackaging: Automated patching, alignment, and signing of both Native Android (app-debug.apk) and Flutter (flutter-app-debug.apk) wrappers.
+  ✅ Dual APK Repackaging: Automated patching, alignment, and signing of both Native Android (entitykart-android-apk.apk) and Flutter (entitykart-flutter-apk.apk) wrappers.
 
   [2026-06-22] v1.6.0
   ─────────────────────────────────────────────────────────────

@@ -46,9 +46,9 @@
 
 ### 📱 APK → Render Connection
 
-The pre-compiled Android APK (`app-debug.apk`) **automatically connects to the Render deployment** — no Wi-Fi LAN or manual IP configuration needed:
+The pre-compiled Android APK (`entitykart-android-apk.apk` and `entitykart-flutter-apk.apk`) **automatically connect to the Render deployment** — no Wi-Fi LAN or manual IP configuration needed:
 
-1. Install `app-debug.apk` on any Android 8+ device (enable "Install from Unknown Sources")
+1. Install `entitykart-android-apk.apk` or `entitykart-flutter-apk.apk` on any Android 8+ device (enable "Install from Unknown Sources")
 2. Open the app → it loads the AngularJS frontend from local assets
 3. All API calls route to `https://entitykart-enterprise-ecommerce.onrender.com`
 4. **First launch after Render cold start may take 30–60 seconds** — this is normal for free-tier containers
@@ -321,7 +321,8 @@ Entitykart/
 ├── metadata.json                # Project metadata & build information
 ├── .env                         # Environment variables (DO NOT COMMIT)
 ├── HOW_TO_START.txt             # Step-by-step startup guide
-├── app-debug.apk                # Pre-compiled debug APK (ready to install)
+├── entitykart-android-apk.apk   # Pre-compiled Android native debug APK
+├── entitykart-flutter-apk.apk   # Pre-compiled Flutter debug APK
 └── README.md
 ```
 
@@ -407,12 +408,13 @@ The Android app wraps the AngularJS frontend in a **WebView** with a native Kotl
 
 **APK Location (after build):**
 ```
-android/app/build/outputs/apk/debug/app-debug.apk
+android/app/build/outputs/apk/debug/entitykart-android-apk.apk
 ```
 
-**Pre-compiled APK (ready to install):**
+**Pre-compiled APKs (ready to install):**
 ```
-Entitykart/app-debug.apk          # Root workspace copy
+Entitykart/entitykart-android-apk.apk   # Native Android debug APK copy
+Entitykart/entitykart-flutter-apk.apk   # Flutter debug APK copy
 ```
 
 **Build command:**
@@ -433,7 +435,7 @@ cd flutter
 flutter build apk --debug
 ```
 
-> **Note:** Flutter SDK must be installed separately. A pre-compiled APK is staged at `flutter/build/app/outputs/flutter-apk/app-debug.apk`.
+> **Note:** Flutter SDK must be installed separately. A pre-compiled APK is staged at `flutter/build/app/outputs/flutter-apk/entitykart-flutter-apk.apk`.
 
 ---
 

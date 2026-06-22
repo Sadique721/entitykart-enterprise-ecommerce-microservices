@@ -165,7 +165,7 @@
       "appId": "com.entitykart.app",
       "minSdk": 24,
       "targetSdk": 36,
-      "apkOutput": "android/app/build/outputs/apk/debug/app-debug.apk",
+      "apkOutput": "android/app/build/outputs/apk/debug/entitykart-android-apk.apk",
       "description": "Hybrid WebView wrapper with native Kotlin bridge for API URL injection"
     },
     {
@@ -173,7 +173,7 @@
       "technology": "Flutter + webview_flutter + shared_preferences",
       "path": "flutter/",
       "appId": "com.entitykart.app",
-      "apkOutput": "flutter/build/app/outputs/flutter-apk/app-debug.apk",
+      "apkOutput": "flutter/build/app/outputs/flutter-apk/entitykart-flutter-apk.apk",
       "description": "Cross-platform WebView wrapper with dynamic IP/Port settings screen, bottom navigation bar (Shop + Settings), back-button handling, pull-to-refresh, and orange brand theme."
     }
   ],
@@ -224,8 +224,9 @@
     "application": ["APP_URL", "ADMIN_EMAIL"]
   },
   "apkOutputPaths": {
-    "workspaceRoot": "app-debug.apk",
-    "nativeAndroidBuild": "android/app/build/outputs/apk/debug/app-debug.apk",
-    "flutterStaged": "flutter/build/app/outputs/flutter-apk/app-debug.apk"
+    "workspaceRootAndroid": "entitykart-android-apk.apk",
+    "workspaceRootFlutter": "entitykart-flutter-apk.apk",
+    "nativeAndroidBuild": "android/app/build/outputs/apk/debug/entitykart-android-apk.apk",
+    "flutterStaged": "flutter/build/app/outputs/flutter-apk/entitykart-flutter-apk.apk"
   }
 }
