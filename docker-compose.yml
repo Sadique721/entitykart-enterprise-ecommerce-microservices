@@ -339,6 +339,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+      api-gateway:
+        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: user_service
@@ -363,6 +365,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+      api-gateway:
+        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: product_service
@@ -382,6 +386,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+      api-gateway:
+        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: cart_service
@@ -398,6 +404,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+      api-gateway:
+        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: order_service
@@ -414,6 +422,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+      api-gateway:
+        condition: service_started
       order-service:
         condition: service_started
     environment:
@@ -433,6 +443,8 @@ services:
     depends_on:
       discovery-server:
         condition: service_healthy
+      api-gateway:
+        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: wishlist_service
@@ -447,6 +459,8 @@ services:
     depends_on:
       discovery-server:
         condition: service_healthy
+      api-gateway:
+        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: review_service
@@ -463,6 +477,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+      api-gateway:
+        condition: service_started
       order-service:
         condition: service_started
       payment-service:
