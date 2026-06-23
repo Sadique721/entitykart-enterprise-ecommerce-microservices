@@ -3,6 +3,9 @@
 # Ensure log directory exists
 mkdir -p /var/log
 
+# Limit glibc memory arenas to drastically reduce memory usage/fragmentation in JVMs
+export MALLOC_ARENA_MAX=1
+
 # 1. Setup Nginx Configuration
 PORT=${PORT:-80}
 echo "Configuring Nginx to listen on public port ${PORT}..."
@@ -16,7 +19,7 @@ echo "Formatting Kafka log directories..."
 /opt/kafka/bin/kafka-storage.sh format -t 4L62xAE-Td61chw27IL65g -c /opt/kafka/config/kraft/server.properties
 
 echo "Starting Kafka broker..."
-export KAFKA_HEAP_OPTS="-Xmx40m -Xms40m"
+export KAFKA_HEAP_OPTS="-Xmx32m -Xms32m"
 /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/kraft/server.properties > /var/log/kafka.log 2>&1 &
 
 # Wait for Kafka to initialize
@@ -26,7 +29,7 @@ sleep 15
 # 3. Define JVM Memory optimization arguments for Render deployment
 # We use serial GC, tiered compilation (C1 compiler only), minimal thread stacks, metaspace limit (75m),
 # lazy initialization, and serialized startup order to fit into Render's 512MB RAM free tier.
-JVM_OPTS="-Xmx24m -Xms16m -XX:MaxMetaspaceSize=60m -XX:ReservedCodeCacheSize=8m -Xss160k -XX:CICompilerCount=1 -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom -Dspring.main.lazy-initialization=true -Dspring.devtools.restart.enabled=false"
+JVM_OPTS="-Xmx20m -Xms12m -XX:MaxMetaspaceSize=55m -XX:ReservedCodeCacheSize=6m -Xss160k -XX:CICompilerCount=1 -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseStringDeduplication -Djava.security.egd=file:/dev/./urandom -Dspring.main.lazy-initialization=true -Dspring.devtools.restart.enabled=false"
 
 # Clear SERVER_PORT environment variable so it doesn't cause conflicts
 unset SERVER_PORT
