@@ -1,6 +1,6 @@
 /**
  * Cart and Checkout Flow Controller
- * v1.5.0 — Bug fixes: payment validation per method, + coupon code, save-for-later
+ * v2.0 — Full payment flow: checkout → processPayment → success/failure toast
  */
 app.controller('cartController', [
     '$scope', '$location', 'cartService', 'authService', 'orderService', 'apiService',
@@ -33,8 +33,13 @@ app.controller('cartController', [
             cardNumber: '',
             expiry: '',
             cvv: '',
-            upiId: ''
+            upiId: '',
+            bankName: '',
+            walletType: 'PAYTM',
+            emiTenure: 3
         };
+
+        $scope.isSubmitting = false;
 
         // ========== Coupon Functions ==========
         $scope.applyCoupon = function() {
@@ -118,7 +123,6 @@ app.controller('cartController', [
                     $scope.$emit('showToast', { title: 'Address Added', message: 'New shipping address saved successfully.', type: 'success' });
                 })
                 .catch(function() {
-                    // Mock fallback for demo
                     var mockAddr = angular.copy(addressData);
                     mockAddr.id = Date.now();
                     mockAddr.isDefault = $scope.userAddresses.length === 0;
@@ -171,10 +175,8 @@ app.controller('cartController', [
         // Save for Later — moves item from cart to wishlist
         $scope.saveForLater = function(item) {
             cartService.removeItem(item.productId).then(function() {
-                // Add to wishlist service
                 apiService.post('/api/wishlist/add', null, { productId: item.productId })
                     .catch(function() {
-                        // Mock: store locally
                         var wl = JSON.parse(localStorage.getItem('ekWishlistLocal') || '[]');
                         if (!wl.find(function(w) { return w.productId === item.productId; })) {
                             wl.push({ productId: item.productId, productName: item.productName, price: item.price });
@@ -205,6 +207,7 @@ app.controller('cartController', [
 
             $scope.checkoutStep = 1;
             $scope.paymentMethod = 'card';
+            $scope.isSubmitting = false;
             $scope.loadAddresses();
 
             cartService.getCart().then(function(items) {
@@ -222,20 +225,21 @@ app.controller('cartController', [
 
         // ========== SINGLE submitCheckout Function ==========
         $scope.submitCheckout = function() {
+            if ($scope.isSubmitting) return;
+
             // Check address
             if (!$scope.selectedAddressId) {
                 $scope.$emit('showToast', { title: 'Address Required', message: 'Please select or add a shipping address.', type: 'error' });
                 return;
             }
 
-            // --- BUG FIX: Validate payment fields only for the selected payment method ---
+            // Validate payment fields per selected method
             var pmt = $scope.paymentData;
             if ($scope.paymentMethod === 'card') {
                 if (!pmt.cardName || !pmt.cardNumber || !pmt.expiry || !pmt.cvv) {
                     $scope.$emit('showToast', { title: 'Card Details Incomplete', message: 'Please fill in all card details.', type: 'error' });
                     return;
                 }
-                // Basic card number validation (16 digits)
                 var cleanCard = pmt.cardNumber.replace(/\s/g, '');
                 if (cleanCard.length < 13 || cleanCard.length > 19 || !/^\d+$/.test(cleanCard)) {
                     $scope.$emit('showToast', { title: 'Invalid Card', message: 'Please enter a valid card number.', type: 'error' });
@@ -246,22 +250,70 @@ app.controller('cartController', [
                     $scope.$emit('showToast', { title: 'UPI ID Required', message: 'Please enter a valid UPI ID (e.g., name@upi).', type: 'error' });
                     return;
                 }
+            } else if ($scope.paymentMethod === 'netbanking') {
+                if (!pmt.bankName) {
+                    $scope.$emit('showToast', { title: 'Bank Required', message: 'Please select your bank for Net Banking.', type: 'error' });
+                    return;
+                }
+            } else if ($scope.paymentMethod === 'wallet') {
+                if (!pmt.walletType) {
+                    $scope.$emit('showToast', { title: 'Wallet Required', message: 'Please select your wallet provider.', type: 'error' });
+                    return;
+                }
+            } else if ($scope.paymentMethod === 'emi') {
+                if (!pmt.cardNumber || !pmt.expiry || !pmt.cvv) {
+                    $scope.$emit('showToast', { title: 'EMI Card Details Incomplete', message: 'Please fill in your card details for EMI.', type: 'error' });
+                    return;
+                }
             }
             // COD: no additional validation needed
 
-            cartService.checkout($scope.selectedAddressId)
+            $scope.isSubmitting = true;
+
+            // Step 1: Create order via checkout
+            cartService.checkout($scope.selectedAddressId, $scope.paymentMethod, $scope.paymentData)
                 .then(function(order) {
-                    $scope.$emit('showToast', {
-                        title: '🎉 Order Placed Successfully!',
-                        message: 'Order #' + (order.orderId || '') + ' confirmed. You\'ll receive a confirmation email shortly.',
-                        type: 'success'
+                    var orderId = order ? order.orderId : null;
+                    var amount = $scope.getFinalTotal();
+
+                    // Step 2: Process payment based on method
+                    return cartService.processPayment(
+                        orderId,
+                        amount,
+                        $scope.paymentMethod,
+                        $scope.paymentData
+                    ).then(function(paymentResult) {
+                        var payStatus = paymentResult ? paymentResult.paymentStatus : 'SUCCESS';
+                        var txRef = paymentResult ? (paymentResult.transactionRef || paymentResult.gatewayTransactionId || '') : '';
+
+                        if (payStatus === 'FAILED') {
+                            $scope.$emit('showToast', {
+                                title: '⚠️ Payment Failed',
+                                message: 'Order was placed but payment failed. Please retry from your orders page.',
+                                type: 'error'
+                            });
+                        } else if ($scope.paymentMethod === 'cod') {
+                            $scope.$emit('showToast', {
+                                title: '🎉 Order Placed!',
+                                message: 'Order #' + (orderId || '') + ' placed with Cash on Delivery. Transaction ID will be assigned on delivery.',
+                                type: 'success'
+                            });
+                        } else {
+                            $scope.$emit('showToast', {
+                                title: '🎉 Order Placed Successfully!',
+                                message: 'Order #' + (orderId || '') + ' confirmed. Txn ID: ' + txRef,
+                                type: 'success'
+                            });
+                        }
+                        $scope.isSubmitting = false;
+                        $location.path('/orders');
                     });
-                    $location.path('/orders');
                 })
                 .catch(function(err) {
+                    $scope.isSubmitting = false;
                     $scope.$emit('showToast', {
                         title: 'Checkout Failed',
-                        message: err.data ? err.data.message : 'Please check your inputs and try again.',
+                        message: err && err.data ? err.data.message : (err && err.message ? err.message : 'Please check your inputs and try again.'),
                         type: 'error'
                     });
                 });

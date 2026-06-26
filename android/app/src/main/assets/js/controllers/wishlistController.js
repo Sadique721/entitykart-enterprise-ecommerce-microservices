@@ -41,7 +41,7 @@ app.controller('wishlistController', [
         };
 
         $scope.addToCart = function(product) {
-            cartService.addToCart(product.productId, product.productName, 1, product.price)
+            cartService.addToCart(product.productId, product.productName, 1, product.price, product.mainImageURL)
                 .then(function() {
                     $scope.$emit('showToast', {
                         title: 'Added to Cart',
@@ -68,7 +68,7 @@ app.controller('wishlistController', [
         $scope.addAllToCart = function() {
             if ($scope.wishlistItems.length === 0) return;
             var promises = $scope.wishlistItems.map(function(product) {
-                return cartService.addToCart(product.productId, product.productName, 1, product.price)
+                return cartService.addToCart(product.productId, product.productName, 1, product.price, product.mainImageURL)
                     .then(function() {
                         return wishlistService.removeFromWishlist(product.productId);
                     });

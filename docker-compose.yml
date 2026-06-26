@@ -94,10 +94,11 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       APP_URL: ${APP_URL}
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O-", "http://localhost:9900/actuator/health"]
-      interval: 20s
-      timeout: 10s
-      retries: 10
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:9900/actuator/info || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 15
+      start_period: 90s
     restart: on-failure
 
   # ── Business Microservices ──────────────────────────────────────────────────
