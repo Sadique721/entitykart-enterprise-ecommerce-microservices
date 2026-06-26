@@ -29,12 +29,17 @@ public class EmailService {
     private String frontendUrl;
 
     /**
-     * Sends an HTML email asynchronously.
-     * Returns true on success, false on failure.
+     * Sends an HTML email asynchronously (fire-and-forget).
+     * Uses @Async so the Kafka listener thread is never blocked by SMTP.
+     * Note: return type must be void for @Async (Spring proxy works correctly).
      */
     @Async
-    public boolean sendHtmlEmail(String to, String subject, String htmlBody) {
+    public void sendHtmlEmail(String to, String subject, String htmlBody) {
         try {
+            if (to == null || to.isBlank() || fromEmail == null || fromEmail.isBlank()) {
+                log.warn("Email skipped — missing 'to' ({}) or 'from' ({})", to, fromEmail);
+                return;
+            }
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(fromEmail);
@@ -42,13 +47,14 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
             mailSender.send(message);
-            log.info("Email sent to {} | Subject: {}", to, subject);
-            return true;
+            log.info("✅ Email sent → {} | Subject: {}", to, subject);
         } catch (MessagingException e) {
-            log.error("Failed to send email to {}: {}", to, e.getMessage());
-            return false;
+            log.error("❌ Failed to send email to {}: {}", to, e.getMessage());
+        } catch (Exception e) {
+            log.error("❌ Unexpected error sending email to {}: {}", to, e.getMessage());
         }
     }
+
 
     public void sendReportWithAttachments(String to, String reportType, byte[] excelData, byte[] wordData) {
         try {

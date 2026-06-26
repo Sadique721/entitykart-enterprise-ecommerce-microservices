@@ -101,11 +101,7 @@ app.service('authService', ['apiService', '$rootScope', function(apiService, $ro
                 } else {
                     // Backend is down and this email is not in the mock database
                     // Give a context-aware error depending on deployment mode
-                    var isRender = (typeof RENDER_PRODUCTION_URL !== 'undefined') || (localStorage.getItem('RENDER_DEPLOY') === 'true');
-                    var hint = isRender
-                        ? 'The Render service may still be starting up (cold start). Please wait 30–60 seconds and try again.'
-                        : 'Check that your microservices are running via docker-compose and the gateway is up on port 9900.';
-                    throw { data: { message: 'Connection Error: Cannot reach the API Gateway. ' + hint } };
+                    throw { data: { message: 'Cannot connect to server. Make sure:\n1. Docker is running on your PC (docker-compose up)\n2. Your phone and PC are on the same WiFi\n3. Firewall allows port 9900' } };
                 }
             });
     };

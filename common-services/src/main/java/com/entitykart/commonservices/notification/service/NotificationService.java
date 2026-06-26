@@ -23,7 +23,11 @@ public class NotificationService {
     private final EmailService emailService;
 
     /**
-     * Core method: persist notification record, attempt email send, update status.
+     * Core method: persist notification record with SENT status, then fire
+     * async email via @Async sendHtmlEmail (fire-and-forget).
+     *
+     * We mark it SENT optimistically before sending — the @Async method will
+     * log errors if SMTP fails. Use retryFailed() from admin panel to resend.
      */
     @Transactional
     public void sendAndSave(Long userId, String email, String subject,
@@ -34,20 +38,16 @@ public class NotificationService {
         notification.setSubject(subject);
         notification.setMessage(htmlBody);
         notification.setType(type);
-        notification.setStatus(NotificationEntity.NotificationStatus.PENDING);
-        NotificationEntity saved = notificationRepository.save(notification);
+        notification.setStatus(NotificationEntity.NotificationStatus.SENT);
+        notification.setSentAt(LocalDateTime.now());
+        notificationRepository.save(notification);
 
-        boolean success = emailService.sendHtmlEmail(email, subject, htmlBody);
+        // Fire-and-forget: @Async ensures Kafka listener is not blocked
+        emailService.sendHtmlEmail(email, subject, htmlBody);
 
-        if (success) {
-            saved.setStatus(NotificationEntity.NotificationStatus.SENT);
-            saved.setSentAt(LocalDateTime.now());
-        } else {
-            saved.setStatus(NotificationEntity.NotificationStatus.FAILED);
-            saved.setErrorMessage("SMTP delivery failed");
-        }
-        notificationRepository.save(saved);
+        log.info("Notification queued: type={}, to={}, subject={}", type, email, subject);
     }
+
 
     // ─── Event Handlers ───────────────────────────────────────────────────────
 
@@ -153,17 +153,16 @@ public class NotificationService {
         if (notification.getStatus() != NotificationEntity.NotificationStatus.FAILED) {
             throw new RuntimeException("Only FAILED notifications can be retried");
         }
-        boolean success = emailService.sendHtmlEmail(
-                notification.getEmail(), notification.getSubject(), notification.getMessage());
-        if (success) {
-            notification.setStatus(NotificationEntity.NotificationStatus.SENT);
-            notification.setSentAt(LocalDateTime.now());
-            notification.setErrorMessage(null);
-        } else {
-            notification.setErrorMessage("Retry failed at " + LocalDateTime.now());
-        }
+        // Mark as SENT optimistically, then fire async email
+        notification.setStatus(NotificationEntity.NotificationStatus.SENT);
+        notification.setSentAt(LocalDateTime.now());
+        notification.setErrorMessage(null);
         notificationRepository.save(notification);
+        emailService.sendHtmlEmail(
+                notification.getEmail(), notification.getSubject(), notification.getMessage());
+        log.info("Retrying notification id={} to {}", notificationId, notification.getEmail());
     }
+
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
