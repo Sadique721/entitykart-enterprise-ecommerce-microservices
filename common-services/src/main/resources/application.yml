@@ -1,0 +1,158 @@
+# ============================================================
+#  Common Services — Merged: API-Gateway + Discovery-Server
+#                            + Common-Service + Notification-Service
+#  Port Layout:
+#    9900 → Eureka Discovery Server (main HTTP port)
+#    The gateway & notification REST run inside the same process
+#    on port 9900 via Spring MVC (non-reactive paths) or 9901
+#    if overridden. Set SERVER_PORT=9900 in env.
+# ============================================================
+server:
+  port: ${SERVER_PORT:9900}
+
+spring:
+  application:
+    name: common-services
+
+  # ── Multipart (for gateway file-upload passthrough) ──────────────────────
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  # ── Database (Notification entity persistence) ───────────────────────────
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:defaultdb}?useSSL=true&requireSSL=true&trustServerCertificate=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:0721}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  # ── Kafka (Notification consumers) ──────────────────────────────────────
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: common-services-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: >
+          com.entitykart.orderservice.dto,
+          com.entitykart.paymentservice.dto,
+          com.entitykart.returnservice.dto,
+          com.entitykart.commonservices.notification.dto
+        spring.json.use.type.headers: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+  # ── Email / SMTP ─────────────────────────────────────────────────────────
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        connectiontimeout: 5000
+        timeout: 3000
+        writetimeout: 5000
+
+  # ── Spring Cloud Gateway Routes ──────────────────────────────────────────
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+        - id: product-service-products
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+        - id: product-service-categories
+          uri: lb://product-service
+          predicates:
+            - Path=/api/categories/**
+        - id: cart-service
+          uri: lb://cart-service
+          predicates:
+            - Path=/api/cart/**
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+        - id: wishlist-service
+          uri: lb://wishlist-service
+          predicates:
+            - Path=/api/wishlist/**
+        - id: review-service
+          uri: lb://review-service
+          predicates:
+            - Path=/api/reviews/**,/api/admin/reviews/**
+        - id: return-service
+          uri: lb://return-service
+          predicates:
+            - Path=/api/returns/**,/api/admin/returns/**
+
+# ── Eureka Server (self – Discovery) ────────────────────────────────────────
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:localhost}
+    prefer-ip-address: true
+  client:
+    # This service IS the Eureka server – do not register with itself
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${SERVER_PORT:9900}/eureka/
+  server:
+    wait-time-in-ms-when-sync-empty: 0
+    response-cache-update-interval-ms: 5000
+
+# ── JWT (used by the embedded Gateway filter) ────────────────────────────────
+jwt:
+  secret: ${JWT_SECRET:your-super-secret-jwt-key-change-this-in-production}
+
+# ── App meta (Notification service helpers) ──────────────────────────────────
+app:
+  admin-email: ${ADMIN_EMAIL:admin@entitykart.com}
+  frontend-url: ${APP_URL:http://localhost:9901}
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.entitykart: DEBUG
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.springframework.mail: DEBUG
