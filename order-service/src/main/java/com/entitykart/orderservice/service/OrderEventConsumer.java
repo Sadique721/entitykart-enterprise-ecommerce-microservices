@@ -74,8 +74,12 @@ public class OrderEventConsumer {
                 event.getCvv(),
                 event.getUpiId()
         );
-        kafkaTemplate.send(ORDER_EVENTS_TOPIC, placedEvent);
-
-        log.info("Order placed event published for orderId: {}", savedOrder.getOrderId());
+        try {
+            kafkaTemplate.send(ORDER_EVENTS_TOPIC, placedEvent);
+            log.info("Order placed event published for orderId: {}", savedOrder.getOrderId());
+        } catch (Exception e) {
+            log.error("Failed to publish order-events for orderId={}: {}", savedOrder.getOrderId(), e.getMessage());
+        }
     }
 }
+

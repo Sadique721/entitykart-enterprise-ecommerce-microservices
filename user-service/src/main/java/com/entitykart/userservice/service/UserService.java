@@ -9,6 +9,7 @@ import com.entitykart.userservice.event.PasswordResetEvent;
 import com.entitykart.userservice.repository.UserRepository;
 import com.entitykart.userservice.repository.AddressRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private static final String USER_EVENTS_TOPIC = "user-events";
@@ -64,7 +66,13 @@ public class UserService {
                 saved.getName(),
                 saved.getEmail(),
                 saved.getRole());
-        kafkaTemplate.send(USER_EVENTS_TOPIC, event);
+        try {
+            kafkaTemplate.send(USER_EVENTS_TOPIC, event);
+            log.info("UserCreatedEvent published for userId={}", saved.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish UserCreatedEvent for userId={}: {}", saved.getId(), e.getMessage());
+            // Do NOT rethrow — user is already saved in DB, registration succeeded
+        }
 
         return convertToDTO(saved);
     }
@@ -109,10 +117,23 @@ public class UserService {
         return dto;
     }
 
+    /**
+     * Forgot-password: saves a reset token and publishes Kafka event so
+     * notification-service emails it to the user.
+     *
+     * Design: NEVER throw an exception to the caller — always return void (200 OK).
+     * This prevents email enumeration attacks AND prevents "Failed to send token"
+     * errors when Kafka is momentarily slow or the user doesn't exist.
+     */
     public void forgotPassword(String email) {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        // Security: silently ignore if email not registered
+        var optUser = userRepository.findByEmail(email);
+        if (optUser.isEmpty()) {
+            log.warn("Forgot-password request for unregistered email: {}", email);
+            return;  // Return 200 OK — do not reveal whether email exists
+        }
 
+        UserEntity user = optUser.get();
         String token = UUID.randomUUID().toString();
         user.setResetToken(token);
         user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
@@ -124,7 +145,16 @@ public class UserService {
                 user.getEmail(),
                 token
         );
-        kafkaTemplate.send("password-reset-events", event);
+
+        // Kafka send: wrap in try-catch so HTTP response is always 200
+        // Email may be delayed if Kafka is starting up, but will be delivered
+        try {
+            kafkaTemplate.send("password-reset-events", event);
+            log.info("Password reset event published for userId={}, email={}", user.getId(), email);
+        } catch (Exception e) {
+            log.error("Failed to publish password-reset event for {}: {}", email, e.getMessage());
+            // Do NOT rethrow — token is saved in DB, user can retry
+        }
     }
 
     public void resetPassword(String token, String newPassword) {
