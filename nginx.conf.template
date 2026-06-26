@@ -20,9 +20,9 @@ http {
     gzip_proxied any;
     gzip_vary on;
 
-    # ── Upstream API Gateway ──────────────────────────────────────────────────
+    # ── Upstream common-services (Gateway + Eureka + Notification, merged on 9900) ──
     upstream api_gateway {
-        server 127.0.0.1:9901;
+        server 127.0.0.1:9900;
         keepalive 8;
     }
 
@@ -82,13 +82,13 @@ http {
         location = /actuator/health {
             add_header Content-Type "application/json" always;
             add_header Access-Control-Allow-Origin "*" always;
-            return 200 '{"status":"UP","components":{"discovery":{"status":"UP"}}}';
+            return 200 '{"status":"UP","components":{"commonServices":{"status":"UP"},"eureka":{"status":"UP"}}}';
         }
 
         location = /api/health {
             add_header Content-Type "application/json" always;
             add_header Access-Control-Allow-Origin "*" always;
-            return 200 '{"status":"UP"}';
+            return 200 '{"status":"UP","service":"common-services"}';
         }
 
         # ── Actuator / health endpoints ───────────────────────────────────────
@@ -102,7 +102,7 @@ http {
             proxy_read_timeout 120s;
         }
 
-        # ── Eureka Discovery Server Dashboard ─────────────────────────────────
+        # ── Eureka Discovery / Common-Services Dashboard ─────────────────────
         location /discovery/ {
             proxy_pass http://127.0.0.1:9900/;
             proxy_set_header Host $host;

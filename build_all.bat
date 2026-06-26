@@ -1,5 +1,7 @@
 @echo off
-set services=discovery-server api-gateway user-service product-service cart-service order-service payment-service wishlist-service review-service return-service notification-service
+REM EntityKart – Build All Services
+REM Updated 2026-06-26: common-services replaces api-gateway + discovery-server + notification-service
+set services=common-services user-service product-service cart-service order-service payment-service wishlist-service review-service return-service
 
 for %%s in (%services%) do (
     echo ===================================================

@@ -1,10 +1,10 @@
-name: User Service CI/CD
+name: Common Services CI/CD
 
 on:
   push:
     paths:
-      - 'user-service/**'
-      - '.github/workflows/user-service-ci.yml'
+      - 'common-services/**'
+      - '.github/workflows/common-services-ci.yml'
     branches: [ main ]
 
 jobs:
@@ -26,9 +26,9 @@ jobs:
         with:
           gradle-version: 8.5
 
-      - name: Build user-service
-        working-directory: user-service
-        run: gradle build
+      - name: Build common-services (merged gateway + eureka + notification)
+        working-directory: common-services
+        run: gradle bootJar
 
       - name: Docker login
         uses: docker/login-action@v3
@@ -39,6 +39,6 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./user-service
+          context: ./common-services
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/user-service:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/common-services:latest

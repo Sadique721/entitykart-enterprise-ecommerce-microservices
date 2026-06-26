@@ -3,7 +3,7 @@
     "name": "EntityKart",
     "displayName": "EntityKart – Enterprise E-commerce Microservices Platform",
     "description": "A cloud-native, microservices-based e-commerce platform built with Java 17, Spring Boot 3, Spring Cloud, Apache Kafka, and Docker. Features a responsive AngularJS SPA frontend with flash sales, price filters, coupon codes, image gallery, cancel orders, invoice download, mobile-responsive hamburger menu, and native Android + Flutter WebView clients with settings screen and bottom nav bar.",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "license": "MIT",
     "repository": "https://github.com/Sadique721/entitykart-enterprise-ecommerce-microservices",
     "homepage": "https://github.com/Sadique721/entitykart-enterprise-ecommerce-microservices#readme"
@@ -15,7 +15,7 @@
     "linkedin": "https://www.linkedin.com/in/md-sadique-amin-b6a948198/"
   },
   "build": {
-    "lastBuildDate": "2026-06-18T10:24:00Z",
+    "lastBuildDate": "2026-06-26T10:30:00Z",
     "javaVersion": "17",
     "springBootVersion": "3.3.4",
     "springCloudVersion": "2023.0.3",
@@ -29,9 +29,8 @@
     "dockerComposeVersion": "3.8"
   },
   "architecture": {
-    "type": "Microservices",
-    "serviceDiscovery": "Netflix Eureka",
-    "apiGateway": "Spring Cloud Gateway",
+    "apiGateway": "Spring Cloud Gateway (embedded in common-services)",
+    "serviceDiscovery": "Netflix Eureka (embedded in common-services)",
     "messaging": "Apache Kafka (with Zookeeper)",
     "database": "MySQL 8 (Local / Aiven Cloud)",
     "orm": "Spring Data JPA / Hibernate",
@@ -44,100 +43,22 @@
   },
   "microservices": [
     {
-      "name": "discovery-server",
-      "description": "Netflix Eureka Service Registry",
+      "name": "common-services",
+      "description": "Merged monolith: Spring Cloud Gateway (JWT routing) + Netflix Eureka Server + shared common library + Kafka notification listener + async email via Gmail SMTP + admin export (Excel/Word)",
       "localPort": 9900,
-      "dockerHostPort": 9876,
-      "dockerContainerPort": 8761,
-      "database": null
+      "dockerHostPort": 9900,
+      "dockerContainerPort": 9900,
+      "database": "notification_service",
+      "mergedFrom": ["api-gateway", "discovery-server", "common-service", "notification-service"]
     },
-    {
-      "name": "api-gateway",
-      "description": "Spring Cloud Gateway with JWT validation and route filtering",
-      "localPort": 9901,
-      "dockerHostPort": 9080,
-      "dockerContainerPort": 8080,
-      "database": null
-    },
-    {
-      "name": "user-service",
-      "description": "User registration, authentication, JWT token generation, profile management, active/inactive toggle, soft delete",
-      "localPort": 9902,
-      "dockerHostPort": 9081,
-      "dockerContainerPort": 8081,
-      "database": "user_service"
-    },
-    {
-      "name": "product-service",
-      "description": "Product catalog, categories, sub-categories, inventory, GraphQL, Cloudinary image upload, update & delete operations",
-      "localPort": 9903,
-      "dockerHostPort": 9082,
-      "dockerContainerPort": 8082,
-      "database": "product_service"
-    },
-    {
-      "name": "cart-service",
-      "description": "Shopping cart operations, quantity management, checkout event publishing",
-      "localPort": 9904,
-      "dockerHostPort": 9083,
-      "dockerContainerPort": 8083,
-      "database": "cart_service"
-    },
-    {
-      "name": "order-service",
-      "description": "Order creation, status tracking, cancellation, order history",
-      "localPort": 9905,
-      "dockerHostPort": 9084,
-      "dockerContainerPort": 8084,
-      "database": "order_service"
-    },
-    {
-      "name": "payment-service",
-      "description": "Authorize.Net payment processing, COD, UPI, refund management",
-      "localPort": 9906,
-      "dockerHostPort": 9085,
-      "dockerContainerPort": 8085,
-      "database": "payment_service"
-    },
-    {
-      "name": "wishlist-service",
-      "description": "Wishlist CRUD operations with product service integration",
-      "localPort": 9907,
-      "dockerHostPort": 9086,
-      "dockerContainerPort": 9086,
-      "database": "wishlist_service"
-    },
-    {
-      "name": "review-service",
-      "description": "Product reviews and ratings, statistics, admin report exports (Excel & Word)",
-      "localPort": 9908,
-      "dockerHostPort": 9087,
-      "dockerContainerPort": 8087,
-      "database": "review_service"
-    },
-    {
-      "name": "return-service",
-      "description": "Return requests, admin approval workflow, automated refund processing",
-      "localPort": 9909,
-      "dockerHostPort": 9088,
-      "dockerContainerPort": 8088,
-      "database": "return_service"
-    },
-    {
-      "name": "notification-service",
-      "description": "Kafka consumer for async email notifications via Gmail SMTP, admin report dispatch",
-      "localPort": 9910,
-      "dockerHostPort": 9089,
-      "dockerContainerPort": 8089,
-      "database": "notification_service"
-    }
   ],
   "kafkaTopics": [
-    { "topic": "user-events", "producer": "user-service", "consumers": ["notification-service"] },
+    { "topic": "user-events", "producer": "user-service", "consumers": ["common-services"] },
     { "topic": "cart-checkout-events", "producer": "cart-service", "consumers": ["order-service"] },
-    { "topic": "order-events", "producer": "order-service", "consumers": ["payment-service", "notification-service"] },
-    { "topic": "payment-events", "producer": "payment-service", "consumers": ["notification-service"] },
-    { "topic": "return-events", "producer": "return-service", "consumers": ["notification-service"] }
+    { "topic": "order-events", "producer": "order-service", "consumers": ["payment-service", "common-services"] },
+    { "topic": "payment-events", "producer": "payment-service", "consumers": ["common-services"] },
+    { "topic": "return-events", "producer": "return-service", "consumers": ["common-services"] },
+    { "topic": "password-reset-events", "producer": "user-service", "consumers": ["common-services"] }
   ],
   "feignClientMap": [
     { "consumer": "cart-service", "provider": "product-service", "purpose": "Validate product price/stock before adding to cart" },

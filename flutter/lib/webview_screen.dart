@@ -94,7 +94,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
         // Override localStorage key used by app.js for API Base URL
         if ("${_backendApiBase}".length > 0) {
           try {
-            localStorage.setItem('ekApiPort', '${_backendApiBase.contains("9080") ? "9080" : "9901"}');
+            localStorage.setItem('ekApiPort', '${_backendApiBase.contains("9080") ? "9080" : "9900"}');
             console.log('[Bridge] Backend API set to: ' + window.AndroidConfig.apiBase);
           } catch(e) {}
         }

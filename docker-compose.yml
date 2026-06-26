@@ -1,257 +1,21 @@
-#version: '3.8'
-#
-# Updated 2026-06-22: Configured separate DB schemas (user_service, product_service, etc.) for each microservice instead of sharing defaultdb.
 # ─────────────────────────────────────────────────────────────────────────────
-## EntityKart – Docker Compose
-## Uses Aiven Cloud MySQL (single DB host for all services via defaultdb).
-## All secrets are injected via .env file – never hardcode credentials here.
-## ─────────────────────────────────────────────────────────────────────────────
-#
-#x-common-env: &common-env
-#  DB_HOST: ${DB_HOST}
-#  DB_PORT: ${DB_PORT}
-#  DB_USERNAME: ${DB_USERNAME}
-#  DB_PASSWORD: ${DB_PASSWORD}
-#  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-#  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-#
-#services:
-#
-#  # ── Infrastructure ──────────────────────────────────────────────────────────
-#
-#  zookeeper:
-#    image: confluentinc/cp-zookeeper:7.5.0
-#    container_name: zookeeper
-#    environment:
-#      ZOOKEEPER_CLIENT_PORT: 2181
-#      ZOOKEEPER_TICK_TIME: 2000
-#    ports:
-#      - "2181:2181"
-#    healthcheck:
-#      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#
-#  kafka:
-#    image: confluentinc/cp-kafka:7.5.0
-#    container_name: kafka
-#    depends_on:
-#      zookeeper:
-#        condition: service_healthy
-#    environment:
-#      KAFKA_BROKER_ID: 1
-#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-#      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-#      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-#    ports:
-#      - "9092:9092"
-#      - "29092:29092"
-#    healthcheck:
-#      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
-#      interval: 15s
-#      timeout: 10s
-#      retries: 10
-#
-#  # ── Discovery Server ────────────────────────────────────────────────────────
-#
-#  discovery-server:
-#    build: ./discovery-server
-#    container_name: discovery-server
-#    ports:
-#      - "8761:8761"
-#    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 10
-#
-#  # ── API Gateway ─────────────────────────────────────────────────────────────
-#
-#  api-gateway:
-#    build: ./api-gateway
-#    container_name: api-gateway
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      discovery-server:
-#        condition: service_healthy
-#    environment:
-#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-#      JWT_SECRET: ${JWT_SECRET}
-#      APP_URL: ${APP_URL}
-#
-#  # ── Microservices ───────────────────────────────────────────────────────────
-#
-#  user-service:
-#    build: ./user-service
-#    container_name: user-service
-#    ports:
-#      - "8081:8081"
-#    depends_on:
-#      kafka:
-#        condition: service_healthy
-#      discovery-server:
-#        condition: service_healthy
-#    environment:
-#      <<: *common-env
-#      DB_NAME: ${DB_NAME}
-#      SERVER_PORT: 8081
-#      JWT_SECRET: ${JWT_SECRET}
-#      MAIL_USERNAME: ${MAIL_USERNAME}
-#      MAIL_PASSWORD: ${MAIL_PASSWORD}
-#      ADMIN_EMAIL: ${ADMIN_EMAIL}
-#      APP_URL: ${APP_URL}
-#      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-#      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-#      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-#    restart: on-failure
-#
-#  product-service:
-#    build: ./product-service
-#    container_name: product-service
-#    ports:
-#      - "8082:8082"
-#    depends_on:
-#      kafka:
-#        condition: service_healthy
-#      discovery-server:
-#        condition: service_healthy
-#    environment:
-#      <<: *common-env
-#      DB_NAME: ${DB_NAME}
-#      SERVER_PORT: 8082
-#      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-#      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-#      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-#    restart: on-failure
-#
-#  cart-service:
-#    build: ./cart-service
-#    container_name: cart-service
-#    ports:
-#      - "8083:8083"
-#    depends_on:
-#      kafka:
-#        condition: service_healthy
-#      discovery-server:
-#        condition: service_healthy
-#    environment:
-#      <<: *common-env
-#      DB_NAME: ${DB_NAME}
-#      SERVER_PORT: 8083
-#    restart: on-failure
-#
-#  order-service:
-#    build: ./order-service
-#    container_name: order-service
-#    ports:
-#      - "8084:8084"
-#    depends_on:
-#      kafka:
-#        condition: service_healthy
-#      discovery-server:
-#        condition: service_healthy
-#    environment:
-#      <<: *common-env
-#      DB_NAME: ${DB_NAME}
-#      SERVER_PORT: 8084
-#    restart: on-failure
-#
-#  payment-service:
-#    build: ./payment-service
-#    container_name: payment-service
-#    ports:
-#      - "8085:8085"
-#    depends_on:
-#      kafka:
-#        condition: service_healthy
-#      discovery-server:
-#        condition: service_healthy
-#      order-service:
-#        condition: service_started
-#    environment:
-#      <<: *common-env
-#      DB_NAME: ${DB_NAME}
-#      SERVER_PORT: 8085
-#      AUTHORIZE_NET_API_LOGIN_ID: ${AUTHORIZE_NET_API_LOGIN_ID}
-#      AUTHORIZE_NET_TRANSACTION_KEY: ${AUTHORIZE_NET_TRANSACTION_KEY}
-#      AUTHORIZE_NET_ENVIRONMENT: ${AUTHORIZE_NET_ENVIRONMENT}
-#    restart: on-failure
-#
-#  wishlist-service:
-#    build: ./wishlist-service
-#    container_name: wishlist-service
-#    ports:
-#      - "8086:8086"
-#    depends_on:
-#      discovery-server:
-#        condition: service_healthy
-#    environment:
-#      <<: *common-env
-#      DB_NAME: ${DB_NAME}
-#      SERVER_PORT: 8086
-#    restart: on-failure
-#
-#  review-service:
-#    build: ./review-service
-#    container_name: review-service
-#    ports:
-#      - "8087:8087"
-#    depends_on:
-#      discovery-server:
-#        condition: service_healthy
-#    environment:
-#      <<: *common-env
-#      DB_NAME: ${DB_NAME}
-#      SERVER_PORT: 8087
-#    restart: on-failure
-#
-#  return-service:
-#    build: ./return-service
-#    container_name: return-service
-#    ports:
-#      - "8088:8088"
-#    depends_on:
-#      kafka:
-#        condition: service_healthy
-#      discovery-server:
-#        condition: service_healthy
-#      order-service:
-#        condition: service_started
-#      payment-service:
-#        condition: service_started
-#    environment:
-#      <<: *common-env
-#      DB_NAME: ${DB_NAME}
-#      SERVER_PORT: 8088
-#    restart: on-failure
-#
-#  notification-service:
-#    build: ./notification-service
-#    container_name: notification-service
-#    ports:
-#      - "8089:8089"
-#    depends_on:
-#      kafka:
-#        condition: service_healthy
-#      discovery-server:
-#        condition: service_healthy
-#    environment:
-#      <<: *common-env
-#      DB_NAME: ${DB_NAME}
-#      SERVER_PORT: 8089
-#      MAIL_USERNAME: ${MAIL_USERNAME}
-#      MAIL_PASSWORD: ${MAIL_PASSWORD}
-#      ADMIN_EMAIL: ${ADMIN_EMAIL}
-#      APP_URL: ${APP_URL}
-#    restart: on-failure
-
+# EntityKart – Docker Compose
+# Updated 2026-06-26: Merged api-gateway + discovery-server + common-service
+#                      + notification-service → single "common-services" container
 # ─────────────────────────────────────────────────────────────────────────────
-# EntityKart – Docker Compose (Ports shifted to 9000+ range)
+#
+# Service Port Map (host → container):
+#   common-services  : 9900 → 9900  (Eureka dashboard + Gateway + Notification)
+#   user-service     : 9081 → 8081
+#   product-service  : 9082 → 8082
+#   cart-service     : 9083 → 8083
+#   order-service    : 9084 → 8084
+#   payment-service  : 9085 → 8085
+#   wishlist-service : 9086 → 8086
+#   review-service   : 9087 → 8087
+#   return-service   : 9088 → 8088
+#   zookeeper        : 19090 → 2181
+#   kafka            : 19092 → 9092
 # ─────────────────────────────────────────────────────────────────────────────
 
 x-common-env: &common-env
@@ -261,9 +25,12 @@ x-common-env: &common-env
   DB_PASSWORD: ${DB_PASSWORD}
   SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 2
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+  # All microservices now register with common-services (Eureka Server)
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://common-services:9900/eureka/
 
 services:
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -272,7 +39,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - "19090:2181"     # Zookeeper: host 19090 → container 2181 (9080 was taken)
+      - "19090:2181"
     healthcheck:
       test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
       interval: 10s
@@ -294,53 +61,57 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     ports:
-      - "19092:9092"     # Kafka: host 19092 → container 9092 (9092 was taken by existing Kafka)
-      - "19290:29092"    # Kafka external: host 19290 → container 29092
+      - "19092:9092"
+      - "19290:29092"
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 15s
       timeout: 10s
       retries: 10
 
-  discovery-server:
-    build: ./discovery-server
-    container_name: discovery-server_entitykart
-    ports:
-      - "9876:8761"      # Host 9876 -> Container 8761
-    environment:
-      SERVER_PORT: 8761
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O-", "http://localhost:8761/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
+  # ── Common Services (Merged: api-gateway + discovery-server + ───────────────
+  # ──                          common-service + notification-service)  ─────────
 
-  api-gateway:
-    build: ./api-gateway
-    container_name: api-gateway_entitykart
+  common-services:
+    build: ./common-services
+    container_name: common-services_entitykart
     ports:
-      - "9080:8080"       # Host 9080 -> Container 8080
+      - "9900:9900"   # Eureka Dashboard + Gateway + Notification REST
     depends_on:
-      discovery-server:
+      kafka:
         condition: service_healthy
     environment:
-      SERVER_PORT: 8080
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SERVER_PORT: 9900
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: notification_service
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       JWT_SECRET: ${JWT_SECRET}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
       APP_URL: ${APP_URL}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:9900/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+    restart: on-failure
+
+  # ── Business Microservices ──────────────────────────────────────────────────
 
   user-service:
     build: ./user-service
     container_name: user-service_entitykart
     ports:
-      - "9081:8081"       # 8081 → 9081
+      - "9081:8081"
     depends_on:
       kafka:
         condition: service_healthy
-      discovery-server:
+      common-services:
         condition: service_healthy
-      api-gateway:
-        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: user_service
@@ -359,14 +130,12 @@ services:
     build: ./product-service
     container_name: product-service_entitykart
     ports:
-      - "9082:8082"       # 8082 → 9082
+      - "9082:8082"
     depends_on:
       kafka:
         condition: service_healthy
-      discovery-server:
+      common-services:
         condition: service_healthy
-      api-gateway:
-        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: product_service
@@ -380,14 +149,12 @@ services:
     build: ./cart-service
     container_name: cart-service_entitykart
     ports:
-      - "9083:8083"       # 8083 → 9083
+      - "9083:8083"
     depends_on:
       kafka:
         condition: service_healthy
-      discovery-server:
+      common-services:
         condition: service_healthy
-      api-gateway:
-        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: cart_service
@@ -398,14 +165,12 @@ services:
     build: ./order-service
     container_name: order-service_entitykart
     ports:
-      - "9084:8084"       # 8084 → 9084
+      - "9084:8084"
     depends_on:
       kafka:
         condition: service_healthy
-      discovery-server:
+      common-services:
         condition: service_healthy
-      api-gateway:
-        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: order_service
@@ -416,14 +181,12 @@ services:
     build: ./payment-service
     container_name: payment-service_entitykart
     ports:
-      - "9085:8085"       # 8085 → 9085
+      - "9085:8085"
     depends_on:
       kafka:
         condition: service_healthy
-      discovery-server:
+      common-services:
         condition: service_healthy
-      api-gateway:
-        condition: service_started
       order-service:
         condition: service_started
     environment:
@@ -439,12 +202,10 @@ services:
     build: ./wishlist-service
     container_name: wishlist-service_entitykart
     ports:
-      - "9086:9086"       # 8086 → 9086
+      - "9086:8086"
     depends_on:
-      discovery-server:
+      common-services:
         condition: service_healthy
-      api-gateway:
-        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: wishlist_service
@@ -455,12 +216,10 @@ services:
     build: ./review-service
     container_name: review-service_entitykart
     ports:
-      - "9087:8087"       # 8087 → 9087
+      - "9087:8087"
     depends_on:
-      discovery-server:
+      common-services:
         condition: service_healthy
-      api-gateway:
-        condition: service_started
     environment:
       <<: *common-env
       DB_NAME: review_service
@@ -471,14 +230,12 @@ services:
     build: ./return-service
     container_name: return-service_entitykart
     ports:
-      - "9088:8088"       # 8088 → 9088
+      - "9088:8088"
     depends_on:
       kafka:
         condition: service_healthy
-      discovery-server:
+      common-services:
         condition: service_healthy
-      api-gateway:
-        condition: service_started
       order-service:
         condition: service_started
       payment-service:
@@ -487,24 +244,4 @@ services:
       <<: *common-env
       DB_NAME: return_service
       SERVER_PORT: 8088
-    restart: on-failure
-
-  notification-service:
-    build: ./notification-service
-    container_name: notification-service_entitykart
-    ports:
-      - "9089:8089"       # 8089 → 9089
-    depends_on:
-      kafka:
-        condition: service_healthy
-      discovery-server:
-        condition: service_healthy
-    environment:
-      <<: *common-env
-      DB_NAME: notification_service
-      SERVER_PORT: 8089
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      APP_URL: ${APP_URL}
     restart: on-failure

@@ -16,7 +16,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _ipController = TextEditingController();
-  final _portController = TextEditingController(text: '9080');
+  final _portController = TextEditingController(text: '9900');
   bool _saved = false;
   String _currentTarget = '';
 
@@ -71,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.remove('backend_port');
     setState(() {
       _ipController.clear();
-      _portController.text = '9080';
+      _portController.text = '9900';
       _currentTarget = 'https://entitykart-enterprise-ecommerce.onrender.com (Render Cloud)';
       _saved = false;
     });
@@ -192,16 +192,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               controller: _portController,
               style: const TextStyle(color: Colors.white),
               keyboardType: TextInputType.number,
-              decoration: _inputDecoration('e.g. 9080 (Docker) or 9901 (Local)'),
+              decoration: _inputDecoration('e.g. 9900 (Local) or 9080 (Docker)'),
             ),
 
             const SizedBox(height: 10),
             // Quick port presets
             Row(
               children: [
-                _portChip('9080', 'Docker'),
+                _portChip('9900', 'Local Dev'),
                 const SizedBox(width: 8),
-                _portChip('9901', 'Local Dev'),
+                _portChip('9080', 'Docker'),
               ],
             ),
 
@@ -266,7 +266,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 10),
                   _helpStep('Windows', 'Open CMD → type ipconfig → look for IPv4 Address'),
                   _helpStep('Mac/Linux', 'Open Terminal → type ifconfig | grep inet'),
-                  _helpStep('Then', 'Enter the IP above, select port 9080 (Docker) or 9901 (Local)'),
+                  _helpStep('Then', 'Enter the IP above, select port 9900 (Local) or 9080 (Docker)'),
                 ],
               ),
             ),
