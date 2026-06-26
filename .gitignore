@@ -1,22 +1,27 @@
-# Environment configurations
+# ─────────────────────────────────────────────────────────────────────────────
+# EntityKart – .gitignore
+# Updated 2026-06-26: Added obsolete service directories + junk files
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Environment configurations ────────────────────────────────────────────────
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Logs
-logs
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Disallow node_modules
+# ── Node.js ───────────────────────────────────────────────────────────────────
 node_modules/
 **/node_modules/
 
-# IDEs and editors
+# ── IDE / Editors ─────────────────────────────────────────────────────────────
 .idea/
 *.iml
 *.iws
@@ -26,8 +31,9 @@ node_modules/
 *.njsproj
 *.sln
 *.sw?
+out/
 
-# Gradle / Java / Maven
+# ── Gradle / Java / Maven build artifacts ─────────────────────────────────────
 .gradle/
 **/build/
 target/
@@ -37,14 +43,38 @@ target/
 .settings/
 build/
 bin/
+gradle.properties
 
-# Flutter / Dart
+# ── Flutter / Dart ────────────────────────────────────────────────────────────
 .dart_tool/
 .packages
 .pub-cache/
 .pub/
 
-# Operating System files
+# ── Android ───────────────────────────────────────────────────────────────────
+*.idsig
+local.properties
+android/.gradle/
+android/app/build/
+
+# ── Obsolete / Merged service directories ─────────────────────────────────────
+# These 4 services were merged into common-services/ on 2026-06-26
+api-gateway/
+discovery-server/
+notification-service/
+common-service/
+
+# ── Debug / Test scripts (local only, never commit) ───────────────────────────
+brute_force_aiven.py
+test_db.py
+test_user_service.ps1
+poll.bat
+poll_api.bat
+poll_logs.bat
+poll_new_deploy.bat
+test_extract/
+
+# ── OS files ──────────────────────────────────────────────────────────────────
 Thumbs.db
 Ehthumbs.db
 Desktop.ini
