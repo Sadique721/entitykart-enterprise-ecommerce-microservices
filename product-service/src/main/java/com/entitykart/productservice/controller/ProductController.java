@@ -61,6 +61,7 @@ public class ProductController {
     @GetMapping
     public Page<ProductDTO> getProducts(
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long subCategoryId,
             @RequestParam(required = false) Long sellerId,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) java.math.BigDecimal minPrice,
@@ -69,7 +70,7 @@ public class ProductController {
         if (sellerId != null) {
             return productService.getProductsBySeller(sellerId, pageable);
         }
-        return productService.getProductsFiltered(categoryId, search, minPrice, maxPrice, pageable);
+        return productService.getProductsFiltered(categoryId, subCategoryId, search, minPrice, maxPrice, pageable);
     }
 
     @GetMapping("/all")

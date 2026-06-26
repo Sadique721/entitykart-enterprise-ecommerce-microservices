@@ -137,12 +137,13 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductDTO> getProductsFiltered(
             Long categoryId,
+            Long subCategoryId,
             String search,
             java.math.BigDecimal minPrice,
             java.math.BigDecimal maxPrice,
             Pageable pageable) {
         Pageable sanitized = sanitizePageable(pageable);
-        return productRepository.filterProducts(categoryId, search, minPrice, maxPrice, sanitized)
+        return productRepository.filterProducts(categoryId, subCategoryId, search, minPrice, maxPrice, sanitized)
                 .map(this::convertToDTO);
     }
 

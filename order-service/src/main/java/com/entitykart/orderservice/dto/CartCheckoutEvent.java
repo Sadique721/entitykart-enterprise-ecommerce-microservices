@@ -12,6 +12,11 @@ public class CartCheckoutEvent {
     private Long addressId;
     private List<CartItemDTO> items;
     private Double totalAmount;
+    private String paymentMode;
+    private String cardNumber;
+    private String expiry;
+    private String cvv;
+    private String upiId;
 
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)

@@ -34,7 +34,7 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
-    /** Used by payment-service FeignClient (PUT) */
+    /** Used by admin frontend to update order status (PLACED → CONFIRMED → SHIPPED → DELIVERED → CANCELLED) */
     @PutMapping("/{orderId}/status")
     public void updateStatus(@PathVariable Long orderId, @RequestParam String status) {
         orderService.updateOrderStatus(orderId, status);
@@ -44,5 +44,11 @@ public class OrderController {
     @PatchMapping("/{orderId}/status")
     public void patchStatus(@PathVariable Long orderId, @RequestParam String status) {
         orderService.updateOrderStatus(orderId, status);
+    }
+
+    /** Used by payment-service FeignClient to update payment status (PAID / UNPAID) */
+    @PutMapping("/{orderId}/payment-status")
+    public void updatePaymentStatus(@PathVariable Long orderId, @RequestParam String status) {
+        orderService.updatePaymentStatus(orderId, status);
     }
 }

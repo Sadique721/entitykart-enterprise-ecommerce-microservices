@@ -1,5 +1,6 @@
 /**
  * Cart Management Service
+ * v2.0 — Cart image enrichment, full payment flow, processPayment method
  */
 app.service('cartService', ['apiService', 'authService', '$rootScope', '$q', function(apiService, authService, $rootScope, $q) {
     var self = this;
@@ -11,7 +12,37 @@ app.service('cartService', ['apiService', 'authService', '$rootScope', '$q', fun
         return user ? user.id : null;
     }
 
-    this.addToCart = function(productId, productName, quantity, price) {
+    // ─── Enrich cart items with product image URLs ────────────────────────────
+    function enrichCartImages(items) {
+        if (!items || items.length === 0) return $q.resolve(items);
+
+        var promises = items.map(function(item) {
+            // If image already present, skip enrichment
+            if (item.mainImageURL) return $q.resolve(item);
+
+            return apiService.get('/api/products/' + item.productId)
+                .then(function(res) {
+                    item.mainImageURL = res.data.mainImageURL || '';
+                    return item;
+                })
+                .catch(function() {
+                    // Fallback: look up in localStorage-cached products
+                    try {
+                        var cachedStr = localStorage.getItem('ekProductCache');
+                        if (cachedStr) {
+                            var cache = JSON.parse(cachedStr);
+                            var found = cache.find(function(p) { return p.productId == item.productId; });
+                            if (found) item.mainImageURL = found.mainImageURL || '';
+                        }
+                    } catch (e) { /* ignore */ }
+                    return item;
+                });
+        });
+
+        return $q.all(promises);
+    }
+
+    this.addToCart = function(productId, productName, quantity, price, mainImageURL) {
         var customerId = getCustomerId();
         if (!customerId) {
             $rootScope.$broadcast('showToast', {
@@ -43,6 +74,9 @@ app.service('cartService', ['apiService', 'authService', '$rootScope', '$q', fun
                 if (existing) {
                     existing.quantity += quantity;
                     existing.subtotal = existing.quantity * existing.price;
+                    if (!existing.mainImageURL && mainImageURL) {
+                        existing.mainImageURL = mainImageURL;
+                    }
                 } else {
                     localCart.push({
                         cartItemId: Date.now(),
@@ -50,7 +84,8 @@ app.service('cartService', ['apiService', 'authService', '$rootScope', '$q', fun
                         productName: productName || ('Product ' + productId),
                         quantity: quantity,
                         price: price,
-                        subtotal: quantity * price
+                        subtotal: quantity * price,
+                        mainImageURL: mainImageURL || ''
                     });
                 }
                 self.saveLocalCart();
@@ -135,11 +170,12 @@ app.service('cartService', ['apiService', 'authService', '$rootScope', '$q', fun
 
         return apiService.get('/api/cart', { customerId: customerId })
             .then(function(response) {
-                return response.data;
+                var items = response.data;
+                return enrichCartImages(items);
             })
             .catch(function() {
                 self.initLocalCart();
-                return localCart;
+                return enrichCartImages(localCart);
             });
     };
 
@@ -161,19 +197,30 @@ app.service('cartService', ['apiService', 'authService', '$rootScope', '$q', fun
             });
     };
 
-    this.checkout = function(addressId) {
+    this.checkout = function(addressId, paymentMethod, paymentData) {
         var customerId = getCustomerId();
         if (!customerId) return $q.reject('Not logged in');
 
         var params = {
             customerId: customerId,
-            addressId: addressId || 1001 // Default mock address if none selected
+            addressId: addressId || 1001,
+            paymentMode: (paymentMethod || 'cod').toUpperCase()
         };
+
+        if (paymentData) {
+            if (paymentData.cardNumber) params.cardNumber = paymentData.cardNumber;
+            if (paymentData.expiry) params.expiry = paymentData.expiry;
+            if (paymentData.cvv) params.cvv = paymentData.cvv;
+            if (paymentData.upiId) params.upiId = paymentData.upiId;
+            if (paymentData.bankName) params.bankName = paymentData.bankName;
+            if (paymentData.walletType) params.walletType = paymentData.walletType;
+            if (paymentData.emiTenure) params.emiTenure = paymentData.emiTenure;
+        }
 
         return apiService.post('/api/cart/checkout', null, params)
             .then(function(response) {
                 $rootScope.$broadcast('cart:updated');
-                return response.data;
+                return response.data; // returns order object with orderId
             })
             .catch(function() {
                 // If api fails, we mock successful checkout creation
@@ -183,7 +230,6 @@ app.service('cartService', ['apiService', 'authService', '$rootScope', '$q', fun
                     }
                     
                     return self.getCartTotal().then(function(total) {
-                        // Create mock order in localStorage
                         var mockOrders = JSON.parse(localStorage.getItem('ekMockOrders') || '[]');
                         var newOrder = {
                             orderId: Date.now(),
@@ -213,6 +259,112 @@ app.service('cartService', ['apiService', 'authService', '$rootScope', '$q', fun
                     });
                 });
             });
+    };
+
+    // ─── Process payment after order creation ─────────────────────────────────
+    this.processPayment = function(orderId, amount, paymentMethod, paymentData, customerEmail, customerName) {
+        var method = (paymentMethod || 'cod').toLowerCase();
+        var user = authService.getCurrentUser();
+        customerEmail = customerEmail || (user ? user.email : '');
+        customerName = customerName || (user ? user.name : '');
+
+        if (method === 'card') {
+            var expiryParts = (paymentData.expiry || '12/26').split('/');
+            var cardPayload = {
+                orderId: orderId,
+                amount: amount,
+                paymentMode: 'CARD',
+                cardNumber: (paymentData.cardNumber || '').replace(/\s/g, ''),
+                expiryMonth: expiryParts[0] || '12',
+                expiryYear: expiryParts[1] || '26',
+                cvv: paymentData.cvv || '',
+                customerEmail: customerEmail,
+                customerName: customerName
+            };
+            return apiService.post('/api/payments/process-card', cardPayload)
+                .then(function(res) { return res.data; })
+                .catch(function() {
+                    return self._mockPaymentSuccess(orderId, 'CARD', 'CARD_' + Date.now());
+                });
+        } else if (method === 'upi') {
+            return apiService.post('/api/payments/process-offline', null, {
+                orderId: orderId,
+                amount: amount,
+                paymentMode: 'UPI',
+                customerEmail: customerEmail,
+                customerName: customerName
+            })
+            .then(function(res) { return res.data; })
+            .catch(function() {
+                return self._mockPaymentSuccess(orderId, 'UPI', 'UPI_' + Date.now());
+            });
+        } else if (method === 'netbanking') {
+            return apiService.post('/api/payments/process-netbanking', null, {
+                orderId: orderId,
+                amount: amount,
+                bankName: paymentData.bankName || 'SBI',
+                customerEmail: customerEmail,
+                customerName: customerName
+            })
+            .then(function(res) { return res.data; })
+            .catch(function() {
+                return self._mockPaymentSuccess(orderId, 'NET_BANKING', 'NB_' + Date.now());
+            });
+        } else if (method === 'wallet') {
+            return apiService.post('/api/payments/process-wallet', null, {
+                orderId: orderId,
+                amount: amount,
+                walletType: paymentData.walletType || 'PAYTM',
+                customerEmail: customerEmail,
+                customerName: customerName
+            })
+            .then(function(res) { return res.data; })
+            .catch(function() {
+                return self._mockPaymentSuccess(orderId, 'WALLET', 'WLT_' + Date.now());
+            });
+        } else if (method === 'emi') {
+            return apiService.post('/api/payments/process-emi', null, {
+                orderId: orderId,
+                amount: amount,
+                cardNumber: (paymentData.cardNumber || '').replace(/\s/g, ''),
+                emiTenure: paymentData.emiTenure || 3,
+                customerEmail: customerEmail,
+                customerName: customerName
+            })
+            .then(function(res) { return res.data; })
+            .catch(function() {
+                return self._mockPaymentSuccess(orderId, 'CARD', 'EMI_' + Date.now());
+            });
+        } else {
+            // COD — no upfront payment; transaction assigned on delivery
+            return apiService.post('/api/payments/process-offline', null, {
+                orderId: orderId,
+                amount: amount,
+                paymentMode: 'COD',
+                customerEmail: customerEmail,
+                customerName: customerName
+            })
+            .then(function(res) { return res.data; })
+            .catch(function() {
+                return self._mockPaymentSuccess(orderId, 'COD', 'COD_PENDING_' + orderId);
+            });
+        }
+    };
+
+    // Internal mock helper
+    this._mockPaymentSuccess = function(orderId, mode, ref) {
+        var mockPayments = JSON.parse(localStorage.getItem('ekMockPayments') || '[]');
+        var mockPayment = {
+            paymentId: Date.now(),
+            orderId: orderId,
+            paymentMode: mode,
+            transactionRef: ref,
+            paymentStatus: mode === 'COD' ? 'PENDING' : 'SUCCESS',
+            paymentDate: new Date().toISOString()
+        };
+        mockPayments.push(mockPayment);
+        localStorage.setItem('ekMockPayments', JSON.stringify(mockPayments));
+        return mockPayment;
     };
 
     // Sync helper logic for local mock

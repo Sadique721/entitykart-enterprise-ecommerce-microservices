@@ -47,8 +47,28 @@ public class PaymentService {
     @Value("${authorize.net.environment:sandbox}")
     private String environment;
 
+    // ─── Card Payment (Authorize.Net sandbox or mock) ─────────────────────────
+
     @Transactional
     public PaymentEntity processCardPayment(PaymentRequest request) {
+        boolean isMockMode = "test".equalsIgnoreCase(environment)
+                || "mock".equalsIgnoreCase(environment)
+                || apiLoginId == null
+                || apiLoginId.contains("dummy")
+                || apiLoginId.contains("your");
+
+        if (isMockMode) {
+            PaymentEntity payment = new PaymentEntity();
+            payment.setOrderId(request.getOrderId());
+            payment.setAmount(request.getAmount());
+            payment.setPaymentMode(PaymentEntity.PaymentMode.CARD);
+            payment.setPaymentStatus(PaymentEntity.PaymentStatus.SUCCESS);
+            payment.setTransactionRef("MOCK_CARD_" + System.currentTimeMillis());
+            payment.setPaymentDate(LocalDateTime.now());
+            payment.setGatewayResponseText("Simulated Approved");
+            return saveAndPublish(payment, request.getCustomerEmail(), request.getCustomerName());
+        }
+
         configureAuthorizeNet();
 
         MerchantAuthenticationType merchantAuth = new MerchantAuthenticationType();
@@ -91,21 +111,122 @@ public class PaymentService {
             log.error("Payment FAILED for order: {}", request.getOrderId());
         }
 
-        return saveAndPublish(payment);
+        return saveAndPublish(payment, request.getCustomerEmail(), request.getCustomerName());
     }
+
+    // ─── UPI / COD — Offline / generic payment ────────────────────────────────
 
     @Transactional
     public PaymentEntity processOfflinePayment(Long orderId, Double amount, String paymentMode) {
+        return processOfflinePayment(orderId, amount, paymentMode, null, null);
+    }
+
+    @Transactional
+    public PaymentEntity processOfflinePayment(Long orderId, Double amount, String paymentMode,
+                                                String customerEmail, String customerName) {
         PaymentEntity payment = new PaymentEntity();
         payment.setOrderId(orderId);
         payment.setAmount(amount);
         payment.setPaymentMode(PaymentEntity.PaymentMode.valueOf(paymentMode));
-        payment.setTransactionRef("OFFLINE_" + System.currentTimeMillis());
+
+        String prefix;
+        switch (paymentMode.toUpperCase()) {
+            case "UPI":         prefix = "UPI_";  break;
+            case "NET_BANKING": prefix = "NB_";   break;
+            case "WALLET":      prefix = "WLT_";  break;
+            case "EMI":         prefix = "EMI_";  break;
+            case "COD":         prefix = "COD_PENDING_" + orderId + "_"; break;
+            default:            prefix = "OFFLINE_"; break;
+        }
+        payment.setTransactionRef(prefix + System.currentTimeMillis());
+
+        if ("COD".equals(paymentMode.toUpperCase())) {
+            // COD stays PENDING until order is DELIVERED
+            payment.setPaymentStatus(PaymentEntity.PaymentStatus.PENDING);
+        } else {
+            payment.setPaymentStatus(PaymentEntity.PaymentStatus.SUCCESS);
+            payment.setPaymentDate(LocalDateTime.now());
+        }
+
+        return saveAndPublish(payment, customerEmail, customerName);
+    }
+
+    // ─── Net Banking ──────────────────────────────────────────────────────────
+
+    @Transactional
+    public PaymentEntity processNetBankingPayment(Long orderId, Double amount, String bankName,
+                                                   String customerEmail, String customerName) {
+        PaymentEntity payment = new PaymentEntity();
+        payment.setOrderId(orderId);
+        payment.setAmount(amount);
+        payment.setPaymentMode(PaymentEntity.PaymentMode.NET_BANKING);
+        payment.setTransactionRef("NB_" + (bankName != null ? bankName.toUpperCase() : "BANK") + "_" + System.currentTimeMillis());
         payment.setPaymentStatus(PaymentEntity.PaymentStatus.SUCCESS);
         payment.setPaymentDate(LocalDateTime.now());
-
-        return saveAndPublish(payment);
+        payment.setGatewayResponseText("Net Banking via " + bankName + " — Simulated Success");
+        log.info("Net Banking payment for order {} via bank {}", orderId, bankName);
+        return saveAndPublish(payment, customerEmail, customerName);
     }
+
+    // ─── Wallet ───────────────────────────────────────────────────────────────
+
+    @Transactional
+    public PaymentEntity processWalletPayment(Long orderId, Double amount, String walletType,
+                                               String customerEmail, String customerName) {
+        PaymentEntity payment = new PaymentEntity();
+        payment.setOrderId(orderId);
+        payment.setAmount(amount);
+        payment.setPaymentMode(PaymentEntity.PaymentMode.WALLET);
+        payment.setTransactionRef("WLT_" + (walletType != null ? walletType.toUpperCase() : "WALLET") + "_" + System.currentTimeMillis());
+        payment.setPaymentStatus(PaymentEntity.PaymentStatus.SUCCESS);
+        payment.setPaymentDate(LocalDateTime.now());
+        payment.setGatewayResponseText("Wallet payment via " + walletType + " — Simulated Success");
+        log.info("Wallet payment for order {} via {}", orderId, walletType);
+        return saveAndPublish(payment, customerEmail, customerName);
+    }
+
+    // ─── EMI ─────────────────────────────────────────────────────────────────
+
+    @Transactional
+    public PaymentEntity processEmiPayment(Long orderId, Double amount, String cardNumber,
+                                            Integer emiTenure, String customerEmail, String customerName) {
+        PaymentEntity payment = new PaymentEntity();
+        payment.setOrderId(orderId);
+        payment.setAmount(amount);
+        payment.setPaymentMode(PaymentEntity.PaymentMode.EMI);
+        payment.setTransactionRef("EMI_" + emiTenure + "M_" + System.currentTimeMillis());
+        payment.setPaymentStatus(PaymentEntity.PaymentStatus.SUCCESS);
+        payment.setPaymentDate(LocalDateTime.now());
+        payment.setGatewayResponseText("EMI payment — " + emiTenure + " months — Simulated Success");
+        log.info("EMI payment for order {} with {} month tenure", orderId, emiTenure);
+        return saveAndPublish(payment, customerEmail, customerName);
+    }
+
+    // ─── COD Transaction Assignment (called when order status = DELIVERED) ───
+
+    @Transactional
+    public PaymentEntity assignCodTransaction(Long orderId) {
+        PaymentEntity payment = paymentRepository.findByOrderId(orderId)
+                .orElseGet(() -> {
+                    PaymentEntity p = new PaymentEntity();
+                    p.setOrderId(orderId);
+                    p.setPaymentMode(PaymentEntity.PaymentMode.COD);
+                    return p;
+                });
+
+        payment.setTransactionRef("COD_DELIVERED_" + orderId + "_" + System.currentTimeMillis());
+        payment.setPaymentStatus(PaymentEntity.PaymentStatus.SUCCESS);
+        payment.setPaymentDate(LocalDateTime.now());
+        payment.setGatewayResponseText("COD collected on delivery");
+
+        PaymentEntity saved = paymentRepository.save(payment);
+        // Update order payment status to PAID
+        orderServiceClient.updateOrderPaymentStatus(orderId, "PAID");
+        log.info("COD transaction assigned for delivered order: {}", orderId);
+        return saved;
+    }
+
+    // ─── Read operations ──────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public PaymentEntity getPaymentByOrderId(Long orderId) {
@@ -113,19 +234,32 @@ public class PaymentService {
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
     }
 
-    private PaymentEntity saveAndPublish(PaymentEntity payment) {
+    @Transactional(readOnly = true)
+    public List<PaymentEntity> getAllPayments() {
+        return paymentRepository.findAll();
+    }
+
+    // ─── Internal helpers ─────────────────────────────────────────────────────
+
+    private PaymentEntity saveAndPublish(PaymentEntity payment, String customerEmail, String customerName) {
         PaymentEntity saved = paymentRepository.save(payment);
+
+        PaymentProcessedEvent event = new PaymentProcessedEvent();
+        event.setOrderId(saved.getOrderId());
+        event.setStatus(saved.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS ? "SUCCESS" : "FAILED");
+        event.setTransactionRef(saved.getTransactionRef());
+        event.setCustomerEmail(customerEmail);
+        event.setCustomerName(customerName);
+        event.setAmount(saved.getAmount());
 
         if (saved.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS) {
             orderServiceClient.updateOrderPaymentStatus(saved.getOrderId(), "PAID");
-            kafkaTemplate.send(
-                    PAYMENT_EVENTS_TOPIC,
-                    new PaymentProcessedEvent(saved.getOrderId(), "SUCCESS", saved.getTransactionRef()));
-        } else {
+        } else if (saved.getPaymentStatus() == PaymentEntity.PaymentStatus.FAILED) {
             orderServiceClient.updateOrderPaymentStatus(saved.getOrderId(), "UNPAID");
-            kafkaTemplate.send(PAYMENT_EVENTS_TOPIC, new PaymentProcessedEvent(saved.getOrderId(), "FAILED", null));
         }
+        // PENDING (COD) — don't update order status until delivery
 
+        kafkaTemplate.send(PAYMENT_EVENTS_TOPIC, event);
         return saved;
     }
 
@@ -164,10 +298,5 @@ public class PaymentService {
         String month = expiryMonth.length() == 1 ? "0" + expiryMonth : expiryMonth;
         String year = expiryYear.length() == 2 ? "20" + expiryYear : expiryYear;
         return year + "-" + month;
-    }
-
-    @Transactional(readOnly = true)
-    public List<PaymentEntity> getAllPayments() {
-        return paymentRepository.findAll();
     }
 }

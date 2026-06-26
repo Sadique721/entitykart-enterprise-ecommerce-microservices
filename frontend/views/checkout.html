@@ -100,13 +100,22 @@
                 <div class="card-glass checkout-section">
                     <h3><i class="fa fa-credit-card text-accent"></i> Payment Information</h3>
 
-                    <!-- Payment Method Tabs -->
-                    <div class="payment-tabs">
+                    <!-- Payment Method Tabs — 6 options -->
+                    <div class="payment-tabs" style="flex-wrap: wrap; gap: 0.5rem;">
                         <button type="button" class="payment-tab" ng-class="{active: paymentMethod === 'card'}" ng-click="paymentMethod = 'card'">
                             <i class="fa fa-credit-card"></i> Credit/Debit Card
                         </button>
                         <button type="button" class="payment-tab" ng-class="{active: paymentMethod === 'upi'}" ng-click="paymentMethod = 'upi'">
                             <i class="fa fa-mobile-screen-button"></i> UPI
+                        </button>
+                        <button type="button" class="payment-tab" ng-class="{active: paymentMethod === 'netbanking'}" ng-click="paymentMethod = 'netbanking'">
+                            <i class="fa fa-building-columns"></i> Net Banking
+                        </button>
+                        <button type="button" class="payment-tab" ng-class="{active: paymentMethod === 'wallet'}" ng-click="paymentMethod = 'wallet'">
+                            <i class="fa fa-wallet"></i> Wallet
+                        </button>
+                        <button type="button" class="payment-tab" ng-class="{active: paymentMethod === 'emi'}" ng-click="paymentMethod = 'emi'">
+                            <i class="fa fa-calendar-days"></i> EMI
                         </button>
                         <button type="button" class="payment-tab" ng-class="{active: paymentMethod === 'cod'}" ng-click="paymentMethod = 'cod'">
                             <i class="fa fa-money-bill"></i> Cash on Delivery
@@ -115,6 +124,9 @@
 
                     <!-- Card Payment -->
                     <div ng-if="paymentMethod === 'card'" class="payment-form">
+                        <div class="alert alert-info" style="margin-bottom: 1rem; padding: 0.6rem 1rem; font-size: 0.85rem;">
+                            <i class="fa fa-circle-info"></i> Test card: <strong>4111 1111 1111 1111</strong> · Expiry: <strong>12/26</strong> · CVV: <strong>999</strong>
+                        </div>
                         <div class="form-group">
                             <label>Cardholder Name</label>
                             <input type="text" class="form-control" ng-model="paymentData.cardName" placeholder="As on card" required>
@@ -123,7 +135,7 @@
                             <label>Card Number</label>
                             <div style="position: relative;">
                                 <input type="text" class="form-control" ng-model="paymentData.cardNumber"
-                                       placeholder="1234 5678 9012 3456" maxlength="19" required>
+                                       placeholder="4111 1111 1111 1111" maxlength="19" required>
                                 <div class="card-brand-icons">
                                     <i class="fa-brands fa-cc-visa"></i>
                                     <i class="fa-brands fa-cc-mastercard"></i>
@@ -160,6 +172,95 @@
                                 Paytm
                             </div>
                         </div>
+                        <p class="text-secondary" style="font-size:0.82rem; margin-top:0.8rem;">
+                            <i class="fa fa-circle-info"></i> A synthetic transaction ID will be generated for UPI payments.
+                        </p>
+                    </div>
+
+                    <!-- Net Banking -->
+                    <div ng-if="paymentMethod === 'netbanking'" class="payment-form">
+                        <div class="form-group">
+                            <label>Select Your Bank</label>
+                            <select class="form-control" ng-model="paymentData.bankName" required>
+                                <option value="">-- Choose Bank --</option>
+                                <option value="SBI">State Bank of India (SBI)</option>
+                                <option value="HDFC">HDFC Bank</option>
+                                <option value="ICICI">ICICI Bank</option>
+                                <option value="AXIS">Axis Bank</option>
+                                <option value="KOTAK">Kotak Mahindra Bank</option>
+                                <option value="PNB">Punjab National Bank</option>
+                                <option value="BOB">Bank of Baroda</option>
+                                <option value="CANARA">Canara Bank</option>
+                                <option value="YES">Yes Bank</option>
+                                <option value="INDUSIND">IndusInd Bank</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-info" style="margin: 0; font-size: 0.85rem;">
+                            <i class="fa fa-circle-info"></i> You will be redirected to your bank's secure net banking portal to complete the payment. A transaction reference (NB_XXXXXXXX) will be generated.
+                        </div>
+                    </div>
+
+                    <!-- Wallet -->
+                    <div ng-if="paymentMethod === 'wallet'" class="payment-form">
+                        <div class="form-group">
+                            <label>Select Wallet</label>
+                            <div class="upi-apps" style="margin-top: 0.5rem;">
+                                <div class="upi-app-btn" ng-class="{active: paymentData.walletType === 'PAYTM'}"
+                                     ng-click="paymentData.walletType = 'PAYTM'" style="padding: 0.8rem 1.2rem;">
+                                    <i class="fa fa-wallet"></i> Paytm
+                                </div>
+                                <div class="upi-app-btn" ng-class="{active: paymentData.walletType === 'PHONEPE'}"
+                                     ng-click="paymentData.walletType = 'PHONEPE'" style="padding: 0.8rem 1.2rem;">
+                                    PhonePe Wallet
+                                </div>
+                                <div class="upi-app-btn" ng-class="{active: paymentData.walletType === 'AMAZON'}"
+                                     ng-click="paymentData.walletType = 'AMAZON'" style="padding: 0.8rem 1.2rem;">
+                                    Amazon Pay
+                                </div>
+                                <div class="upi-app-btn" ng-class="{active: paymentData.walletType === 'MOBIKWIK'}"
+                                     ng-click="paymentData.walletType = 'MOBIKWIK'" style="padding: 0.8rem 1.2rem;">
+                                    MobiKwik
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-secondary" style="font-size:0.82rem; margin-top:0.8rem;">
+                            <i class="fa fa-circle-info"></i> Selected wallet: <strong>{{ paymentData.walletType }}</strong>. A transaction reference (WLT_XXXXXXXX) will be generated automatically.
+                        </p>
+                    </div>
+
+                    <!-- EMI -->
+                    <div ng-if="paymentMethod === 'emi'" class="payment-form">
+                        <div class="alert alert-info" style="margin-bottom: 1rem; padding: 0.6rem 1rem; font-size: 0.85rem;">
+                            <i class="fa fa-circle-info"></i> Test EMI card: <strong>4111 1111 1111 1111</strong> · Expiry: <strong>12/26</strong> · CVV: <strong>999</strong>
+                        </div>
+                        <div class="form-group">
+                            <label>Card Number (EMI eligible)</label>
+                            <input type="text" class="form-control" ng-model="paymentData.cardNumber"
+                                   placeholder="4111 1111 1111 1111" maxlength="19" required>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Expiry Date</label>
+                                <input type="text" class="form-control" ng-model="paymentData.expiry" placeholder="MM/YY" maxlength="5" required>
+                            </div>
+                            <div class="form-group">
+                                <label>CVV</label>
+                                <input type="password" class="form-control" ng-model="paymentData.cvv" placeholder="•••" maxlength="4" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>EMI Tenure</label>
+                            <select class="form-control" ng-model="paymentData.emiTenure">
+                                <option value="3">3 Months (0% interest)</option>
+                                <option value="6">6 Months (1.5% per month)</option>
+                                <option value="9">9 Months (1.5% per month)</option>
+                                <option value="12">12 Months (1.5% per month)</option>
+                                <option value="24">24 Months (1.75% per month)</option>
+                            </select>
+                        </div>
+                        <p class="text-secondary" style="font-size:0.82rem;">
+                            <i class="fa fa-calendar-days"></i> Monthly installment: ~₹{{ (getFinalTotal() / paymentData.emiTenure) | number:2 }} × {{ paymentData.emiTenure }} months
+                        </p>
                     </div>
 
                     <!-- COD -->
@@ -168,16 +269,16 @@
                             <i class="fa fa-circle-info"></i>
                             <div>
                                 <strong>Cash on Delivery</strong>
-                                <p style="margin: 0.3rem 0 0;">Please keep exact change ready at the time of delivery. An additional ₹49 COD fee applies.</p>
+                                <p style="margin: 0.3rem 0 0;">Please keep exact change ready at the time of delivery. An additional ₹49 COD fee applies. Transaction ID will be assigned when your order is delivered.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div style="margin-top: 2rem;">
-                    <button type="submit" class="btn btn-primary-gradient btn-block btn-lg">
-                        <i class="fa fa-shield-halved"></i>
-                        Place Order Securely · ₹{{ (cartTotal * 1.18) | number:2 }}
+                    <button type="submit" class="btn btn-primary-gradient btn-block btn-lg" ng-disabled="isSubmitting">
+                        <i class="fa" ng-class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-shield-halved'"></i>
+                        {{ isSubmitting ? 'Processing...' : 'Place Order Securely · ₹' + (getFinalTotal() | number:2) }}
                     </button>
                     <p class="text-secondary" style="text-align: center; margin-top: 1rem; font-size: 0.85rem;">
                         <i class="fa fa-lock"></i> Your payment info is encrypted and secure
@@ -195,7 +296,12 @@
                     <div class="checkout-item-row" ng-repeat="item in cartItems">
                         <div class="checkout-item-img">
                             <img ng-src="{{ item.mainImageURL }}" alt="{{ item.productName }}"
-                                 onerror="this.style.display='none'">
+                                 ng-if="item.mainImageURL"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; background:var(--glass-bg); border-radius:6px;"
+                                 ng-if="!item.mainImageURL">
+                                <i class="fa fa-box-open text-secondary"></i>
+                            </div>
                         </div>
                         <div style="flex: 1;">
                             <span class="checkout-item-name">{{ item.productName }}</span>
@@ -217,10 +323,14 @@
                     <span class="text-secondary">GST (18%)</span>
                     <span>₹{{ (cartTotal * 0.18) | number:2 }}</span>
                 </div>
+                <div class="summary-row" ng-if="couponApplied">
+                    <span class="text-accent"><i class="fa fa-tag"></i> Coupon ({{ couponApplied.code }})</span>
+                    <span class="text-accent font-semibold">−₹{{ couponDiscount | number:2 }}</span>
+                </div>
                 <hr class="summary-divider">
                 <div class="summary-row total">
                     <span>Grand Total</span>
-                    <span class="price-now">₹{{ (cartTotal * 1.18) | number:2 }}</span>
+                    <span class="price-now">₹{{ getFinalTotal() | number:2 }}</span>
                 </div>
 
                 <div class="trust-badges" style="margin-top: 1.5rem;">

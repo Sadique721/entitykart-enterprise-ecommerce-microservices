@@ -57,7 +57,14 @@ public class CartController {
     }
 
     @PostMapping("/checkout")
-    public void checkout(@RequestParam Long customerId, @RequestParam Long addressId) {
-        cartService.checkout(customerId, addressId);
+    public void checkout(
+            @RequestParam Long customerId,
+            @RequestParam Long addressId,
+            @RequestParam(required = false) String paymentMode,
+            @RequestParam(required = false) String cardNumber,
+            @RequestParam(required = false) String expiry,
+            @RequestParam(required = false) String cvv,
+            @RequestParam(required = false) String upiId) {
+        cartService.checkout(customerId, addressId, paymentMode, cardNumber, expiry, cvv, upiId);
     }
 }

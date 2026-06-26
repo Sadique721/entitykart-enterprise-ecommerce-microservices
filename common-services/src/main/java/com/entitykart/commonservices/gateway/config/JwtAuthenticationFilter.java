@@ -3,31 +3,29 @@ package com.entitykart.commonservices.gateway.config;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.List;
+import java.util.*;
 
 /**
- * JWT Authentication Global Filter (originally from api-gateway).
+ * JWT Authentication Servlet Filter (originally from api-gateway, adapted for Gateway MVC).
  *
- * Intercepts all incoming requests through the Spring Cloud Gateway,
- * validates JWT tokens, and injects X-Customer-Id / X-User-Email /
- * X-User-Role headers for downstream microservices.
+ * Intercepts all incoming requests, validates JWT tokens, and injects
+ * X-Customer-Id / X-User-Email / X-User-Role headers for downstream microservices.
  */
 @Component
-public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -41,18 +39,25 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     );
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        ServerHttpRequest request = exchange.getRequest();
-        String path = request.getURI().getPath();
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        String path = request.getRequestURI();
 
         // 1. Check if it is a public endpoint
         boolean isPublic = PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith);
         // GET on reviews is also public
-        if (path.startsWith("/api/reviews") && request.getMethod().name().equalsIgnoreCase("GET")) {
+        if (path.startsWith("/api/reviews") && request.getMethod().equalsIgnoreCase("GET")) {
             isPublic = true;
         }
 
-        String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        // Eureka server requests should not require JWT check
+        if (path.startsWith("/eureka") || path.contains("/eureka/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
@@ -79,41 +84,77 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
                 if (userId != null) {
                     // Inject headers for downstream microservices
-                    ServerHttpRequest mutatedRequest = request.mutate()
-                            .header("X-Customer-Id", String.valueOf(userId))
-                            .header("X-User-Email", email)
-                            .header("X-User-Role", role)
-                            .build();
+                    HeaderMutatingRequestWrapper wrappedRequest = new HeaderMutatingRequestWrapper(request);
+                    wrappedRequest.addHeader("X-Customer-Id", String.valueOf(userId));
+                    wrappedRequest.addHeader("X-User-Email", email);
+                    wrappedRequest.addHeader("X-User-Role", role);
 
                     // Admin-only paths require ADMIN role
                     if (path.contains("/api/admin/") && !"ADMIN".equalsIgnoreCase(role)) {
-                        return onError(exchange, HttpStatus.FORBIDDEN);
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
+                        return;
                     }
 
-                    return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                    filterChain.doFilter(wrappedRequest, response);
+                    return;
                 }
             } catch (Exception e) {
                 if (!isPublic) {
-                    return onError(exchange, HttpStatus.UNAUTHORIZED);
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");
+                    return;
                 }
             }
         } else {
             if (!isPublic) {
-                return onError(exchange, HttpStatus.UNAUTHORIZED);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Token");
+                return;
             }
         }
 
-        return chain.filter(exchange);
+        filterChain.doFilter(request, response);
     }
 
-    private Mono<Void> onError(ServerWebExchange exchange, HttpStatus status) {
-        ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(status);
-        return response.setComplete();
-    }
+    /**
+     * Helper request wrapper class to mutate request headers in servlet environment.
+     */
+    private static class HeaderMutatingRequestWrapper extends HttpServletRequestWrapper {
+        private final Map<String, String> customHeaders = new HashMap<>();
 
-    @Override
-    public int getOrder() {
-        return -1; // Run before all other filters
+        public HeaderMutatingRequestWrapper(HttpServletRequest request) {
+            super(request);
+        }
+
+        public void addHeader(String name, String value) {
+            customHeaders.put(name, value);
+        }
+
+        @Override
+        public String getHeader(String name) {
+            String value = customHeaders.get(name);
+            if (value != null) {
+                return value;
+            }
+            return super.getHeader(name);
+        }
+
+        @Override
+        public Enumeration<String> getHeaderNames() {
+            Set<String> names = new HashSet<>(customHeaders.keySet());
+            Enumeration<String> superNames = super.getHeaderNames();
+            while (superNames.hasMoreElements()) {
+                names.add(superNames.nextElement());
+            }
+            return Collections.enumeration(names);
+        }
+
+        @Override
+        public Enumeration<String> getHeaders(String name) {
+            String value = customHeaders.get(name);
+            if (value != null) {
+                return Collections.enumeration(Collections.singletonList(value));
+            }
+            return super.getHeaders(name);
+        }
     }
 }
+

@@ -61,6 +61,21 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+    /** Called by payment-service via FeignClient to update payment status ONLY (PAID / UNPAID / PENDING) */
+    @Transactional
+    public void updatePaymentStatus(Long orderId, String paymentStatus) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+        OrderEntity.PaymentStatus ps = OrderEntity.PaymentStatus.valueOf(paymentStatus.toUpperCase());
+        order.setPaymentStatus(ps);
+        // Auto-advance to PLACED if payment just completed and order is in PENDING_PAYMENT
+        if (ps == OrderEntity.PaymentStatus.PAID
+                && order.getOrderStatus() == OrderEntity.OrderStatus.PENDING_PAYMENT) {
+            order.setOrderStatus(OrderEntity.OrderStatus.PLACED);
+        }
+        orderRepository.save(order);
+    }
+
     private boolean isPaymentStatus(String status) {
         try {
             OrderEntity.PaymentStatus.valueOf(status);

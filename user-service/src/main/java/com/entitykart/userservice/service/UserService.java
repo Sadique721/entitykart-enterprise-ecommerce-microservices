@@ -101,7 +101,7 @@ public class UserService {
         dto.setName(entity.getName());
         dto.setEmail(entity.getEmail());
         dto.setRole(entity.getRole());
-        dto.setActive(entity.isActive());
+        dto.setActive(entity.isActive());  // Convert primitive to Boolean
         dto.setGender(entity.getGender());
         dto.setContactNum(entity.getContactNum());
         dto.setProfilePicURL(entity.getProfilePicURL());
@@ -167,7 +167,12 @@ public class UserService {
         if (dto.getRole() != null) {
             user.setRole(dto.getRole());
         }
-        user.setActive(dto.isActive());
+        // Preserve active status: only change if explicitly provided in payload
+        // Boolean null means field was not sent → keep existing active value
+        if (dto.getActive() != null) {
+            user.setActive(dto.getActive());
+        }
+        // If null → keep user.active unchanged (prevents accidental deactivation)
         user.setGender(dto.getGender());
         user.setContactNum(dto.getContactNum());
         user.setProfilePicURL(dto.getProfilePicURL());

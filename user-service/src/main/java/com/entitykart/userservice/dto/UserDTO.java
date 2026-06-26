@@ -22,7 +22,7 @@ public class UserDTO {
     private String password;
 
     private String role;
-    private boolean active;
+    private Boolean active;  // Boxed Boolean: null means "not sent in payload" — preserve existing value
     
     private String gender;
     private String contactNum;

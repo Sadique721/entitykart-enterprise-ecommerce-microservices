@@ -24,11 +24,12 @@ public class OrderEventConsumer {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final com.entitykart.orderservice.client.UserServiceClient userServiceClient;
 
     @KafkaListener(topics = "cart-checkout-events", groupId = "order-service-group")
     @Transactional
     public void handleCheckout(CartCheckoutEvent event) {
-        log.info("Received checkout event for customer: {}", event.getCustomerId());
+        log.info("Received checkout event for customer: {} with paymentMode: {}", event.getCustomerId(), event.getPaymentMode());
 
         OrderEntity order = new OrderEntity();
         order.setCustomerId(event.getCustomerId());
@@ -47,11 +48,32 @@ public class OrderEventConsumer {
             orderItemRepository.save(orderItem);
         }
 
+        String email = "customer@example.com";
+        String name = "Customer";
+        try {
+            com.entitykart.orderservice.client.UserServiceClient.UserInfo userInfo = userServiceClient.getUser(event.getCustomerId());
+            if (userInfo != null) {
+                email = userInfo.getEmail();
+                name = userInfo.getName();
+            }
+        } catch (Exception e) {
+            log.warn("Could not retrieve customer details from user-service for customerId {}: {}", event.getCustomerId(), e.getMessage());
+        }
+
         OrderPlacedEvent placedEvent = new OrderPlacedEvent(
                 savedOrder.getOrderId(),
                 savedOrder.getCustomerId(),
                 savedOrder.getTotalAmount(),
-                LocalDateTime.now());
+                LocalDateTime.now(),
+                email,
+                name,
+                savedOrder.getOrderStatus().name(),
+                event.getPaymentMode(),
+                event.getCardNumber(),
+                event.getExpiry(),
+                event.getCvv(),
+                event.getUpiId()
+        );
         kafkaTemplate.send(ORDER_EVENTS_TOPIC, placedEvent);
 
         log.info("Order placed event published for orderId: {}", savedOrder.getOrderId());

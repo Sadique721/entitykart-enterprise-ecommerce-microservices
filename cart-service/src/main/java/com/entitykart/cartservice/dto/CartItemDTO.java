@@ -8,6 +8,7 @@ public class CartItemDTO {
     private Long cartItemId;
     private Long productId;
     private String productName;
+    private String mainImageURL;
     private Integer quantity;
     private Double price;
     private Double subtotal;

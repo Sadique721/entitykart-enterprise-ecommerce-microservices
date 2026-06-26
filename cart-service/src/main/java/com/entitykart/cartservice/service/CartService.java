@@ -94,18 +94,18 @@ public class CartService {
     }
 
     @Transactional
-    public void checkout(Long customerId, Long addressId) {
+    public void checkout(Long customerId, Long addressId, String paymentMode, String cardNumber, String expiry, String cvv, String upiId) {
         List<CartItemDTO> items = getCartItems(customerId);
         if (items.isEmpty()) {
             throw new RuntimeException("Cart is empty");
         }
 
         Double total = getCartTotal(customerId);
-        CartCheckoutEvent event = new CartCheckoutEvent(customerId, addressId, items, total);
+        CartCheckoutEvent event = new CartCheckoutEvent(customerId, addressId, items, total, paymentMode, cardNumber, expiry, cvv, upiId);
         cartCheckoutPublisher.publish(event);
         clearCart(customerId);
 
-        log.info("Checkout event sent for customer {}", customerId);
+        log.info("Checkout event sent for customer {} with paymentMode {}", customerId, paymentMode);
     }
 
     private CartItemDTO convertToDTO(CartItemEntity entity) {
@@ -115,6 +115,18 @@ public class CartService {
         dto.setQuantity(entity.getQuantity());
         dto.setPrice(entity.getPrice());
         dto.setSubtotal(entity.getQuantity() * entity.getPrice());
+
+        try {
+            com.entitykart.cartservice.client.ProductServiceClient.ProductInfo info = productServiceClient.getProduct(entity.getProductId());
+            if (info != null) {
+                dto.setProductName(info.getProductName());
+                dto.setMainImageURL(info.getMainImageURL());
+            }
+        } catch (Exception e) {
+            log.warn("Could not load product details for id {}: {}", entity.getProductId(), e.getMessage());
+            dto.setProductName("Product " + entity.getProductId());
+        }
+
         return dto;
     }
 

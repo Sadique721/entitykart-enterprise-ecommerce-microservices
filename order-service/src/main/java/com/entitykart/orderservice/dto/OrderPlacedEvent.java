@@ -14,4 +14,12 @@ public class OrderPlacedEvent {
     private Long customerId;
     private Double totalAmount;
     private LocalDateTime timestamp;
+    private String customerEmail;
+    private String customerName;
+    private String orderStatus;
+    private String paymentMode;
+    private String cardNumber;
+    private String expiry;
+    private String cvv;
+    private String upiId;
 }

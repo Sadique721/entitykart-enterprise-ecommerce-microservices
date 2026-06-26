@@ -13,6 +13,8 @@ server:
 spring:
   application:
     name: common-services
+  main:
+    web-application-type: servlet
 
   # ── Multipart (for gateway file-upload passthrough) ──────────────────────
   servlet:
@@ -75,55 +77,44 @@ spring:
   # ── Spring Cloud Gateway Routes ──────────────────────────────────────────
   cloud:
     gateway:
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - PATCH
-              - OPTIONS
-            allowedHeaders: "*"
-      routes:
-        - id: user-service
-          uri: lb://user-service
-          predicates:
-            - Path=/api/users/**
-        - id: product-service-products
-          uri: lb://product-service
-          predicates:
-            - Path=/api/products/**
-        - id: product-service-categories
-          uri: lb://product-service
-          predicates:
-            - Path=/api/categories/**
-        - id: cart-service
-          uri: lb://cart-service
-          predicates:
-            - Path=/api/cart/**
-        - id: order-service
-          uri: lb://order-service
-          predicates:
-            - Path=/api/orders/**
-        - id: payment-service
-          uri: lb://payment-service
-          predicates:
-            - Path=/api/payments/**
-        - id: wishlist-service
-          uri: lb://wishlist-service
-          predicates:
-            - Path=/api/wishlist/**
-        - id: review-service
-          uri: lb://review-service
-          predicates:
-            - Path=/api/reviews/**,/api/admin/reviews/**
-        - id: return-service
-          uri: lb://return-service
-          predicates:
-            - Path=/api/returns/**,/api/admin/returns/**
+      mvc:
+        routes:
+          - id: user-service
+            uri: lb://user-service
+            predicates:
+              - Path=/api/users,/api/users/**
+          - id: product-service-products
+            uri: lb://product-service
+            predicates:
+              - Path=/api/products,/api/products/**
+          - id: product-service-categories
+            uri: lb://product-service
+            predicates:
+              - Path=/api/categories,/api/categories/**
+          - id: cart-service
+            uri: lb://cart-service
+            predicates:
+              - Path=/api/cart,/api/cart/**
+          - id: order-service
+            uri: lb://order-service
+            predicates:
+              - Path=/api/orders,/api/orders/**
+          - id: payment-service
+            uri: lb://payment-service
+            predicates:
+              - Path=/api/payments,/api/payments/**
+          - id: wishlist-service
+            uri: lb://wishlist-service
+            predicates:
+              - Path=/api/wishlist,/api/wishlist/**
+          - id: review-service
+            uri: lb://review-service
+            predicates:
+              - Path=/api/reviews,/api/reviews/**,/api/admin/reviews,/api/admin/reviews/**
+          - id: return-service
+            uri: lb://return-service
+            predicates:
+              - Path=/api/returns,/api/returns/**,/api/admin/returns,/api/admin/returns/**
 
 # ── Eureka Server (self – Discovery) ────────────────────────────────────────
 eureka:
@@ -133,7 +124,7 @@ eureka:
   client:
     # This service IS the Eureka server – do not register with itself
     register-with-eureka: false
-    fetch-registry: false
+    fetch-registry: true
     service-url:
       defaultZone: http://${eureka.instance.hostname}:${SERVER_PORT:9900}/eureka/
   server:
@@ -156,3 +147,10 @@ logging:
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
     org.springframework.mail: DEBUG
+
+# ── Management / Actuator ───────────────────────────────────────────────────
+management:
+  health:
+    mail:
+      enabled: false
+

@@ -41,7 +41,9 @@ public class PaymentEntity {
         CARD,
         COD,
         UPI,
-        NET_BANKING
+        NET_BANKING,
+        WALLET,
+        EMI
     }
 
     public enum PaymentStatus {

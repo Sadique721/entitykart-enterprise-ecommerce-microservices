@@ -16,6 +16,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
 
     @Query("SELECT p FROM ProductEntity p WHERE " +
            "(:categoryId IS NULL OR p.categoryId = :categoryId) AND " +
+           "(:subCategoryId IS NULL OR p.subCategoryId = :subCategoryId) AND " +
            "(:search IS NULL OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
@@ -23,6 +24,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
            "(:maxPrice IS NULL OR p.price <= :maxPrice)")
     Page<ProductEntity> filterProducts(
             @Param("categoryId") Long categoryId,
+            @Param("subCategoryId") Long subCategoryId,
             @Param("search") String search,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,

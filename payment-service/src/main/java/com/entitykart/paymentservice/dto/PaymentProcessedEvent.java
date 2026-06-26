@@ -12,4 +12,7 @@ public class PaymentProcessedEvent {
     private Long orderId;
     private String status;
     private String transactionRef;
+    private String customerEmail;
+    private String customerName;
+    private Double amount;
 }
