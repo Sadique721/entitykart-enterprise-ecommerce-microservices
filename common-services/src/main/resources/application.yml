@@ -46,10 +46,16 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: >
+          com.entitykart.*,
+          com.entitykart.commonservices.notification.dto,
+          com.entitykart.userservice.event,
           com.entitykart.orderservice.dto,
+          com.entitykart.orderservice.event,
           com.entitykart.paymentservice.dto,
+          com.entitykart.paymentservice.event,
           com.entitykart.returnservice.dto,
-          com.entitykart.commonservices.notification.dto
+          com.entitykart.returnservice.event,
+          com.entitykart.cartservice.dto
         spring.json.use.type.headers: false
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer

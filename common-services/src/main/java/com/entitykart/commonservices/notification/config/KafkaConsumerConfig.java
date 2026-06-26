@@ -42,10 +42,18 @@ public class KafkaConsumerConfig {
         props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
         props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
         props.put(JsonDeserializer.TRUSTED_PACKAGES,
+                // All packages from all microservices that publish Kafka events
+                "com.entitykart.*," +
+                "com.entitykart.commonservices.notification.dto," +
+                "com.entitykart.userservice.event," +
                 "com.entitykart.orderservice.dto," +
+                "com.entitykart.orderservice.event," +
                 "com.entitykart.paymentservice.dto," +
+                "com.entitykart.paymentservice.event," +
                 "com.entitykart.returnservice.dto," +
-                "com.entitykart.commonservices.notification.dto");
+                "com.entitykart.returnservice.event," +
+                "com.entitykart.cartservice.dto," +
+                "com.entitykart.cartservice.event");
         props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         return new DefaultKafkaConsumerFactory<>(props);
     }

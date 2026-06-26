@@ -1,12 +1,15 @@
 /**
- * Entitykart AngularJS Application Config
+ * EntityKart AngularJS Application Config
+ * v3.0.0 — Local Network Only (no Render/cloud fallback)
+ *
+ * APK: MainActivity discovers gateway IP on local WiFi and injects it.
+ *      The app waits on a loading screen until gateway is found.
+ * Browser: Uses localhost:9900 (docker-compose gateway).
  */
 var app = angular.module('entitykartApp', ['ngRoute']);
 
-// Base URL for the API Gateway – dynamically detected from current host
-// Port 9900 = new merged common-services (Eureka + Gateway + Notification)
-var RENDER_PRODUCTION_URL = 'https://entitykart-enterprise-ecommerce.onrender.com';
-var LOCAL_GATEWAY_PORT    = '9900';
+// Gateway port — same across local + docker environments
+var LOCAL_GATEWAY_PORT = '9900';
 
 app.constant('API_BASE', (function () {
     if (typeof window !== 'undefined') {
@@ -14,13 +17,14 @@ app.constant('API_BASE', (function () {
         var host     = window.location.hostname;
 
         // ── Mobile WebView / APK Context ──────────────────────────────────────
-        // Priority: AndroidBridge (dynamic discovery) → AndroidConfig → window global
-        //           → localStorage (set by MainActivity on each load) → Render fallback
+        // MainActivity shows a loading screen, discovers the LAN gateway,
+        // then injects the URL via AndroidBridge and loads this page.
+        // By the time this runs, AndroidBridge.getApiBase() should return the URL.
         if (protocol === 'file:' ||
             (window.AndroidConfig && window.AndroidConfig.apiBase) ||
             (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function')) {
 
-            // 1. AndroidBridge — returns the dynamically discovered LAN URL (or Render)
+            // 1. AndroidBridge — set by MainActivity after LAN discovery
             if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
                 var bridgeUrl = window.AndroidBridge.getApiBase();
                 if (bridgeUrl && bridgeUrl.trim().length > 0) { return bridgeUrl; }
@@ -29,33 +33,35 @@ app.constant('API_BASE', (function () {
             if (window.AndroidConfig && window.AndroidConfig.apiBase) {
                 return window.AndroidConfig.apiBase;
             }
-            // 3. Window global injected by onPageFinished
+            // 3. Window global injected by WebViewClient.onPageFinished
             if (window.ENTITYKART_API_BASE && window.ENTITYKART_API_BASE.trim().length > 0) {
                 return window.ENTITYKART_API_BASE;
             }
-            // 4. localStorage (set by MainActivity.injectApiBase on every page load)
+            // 4. localStorage — persisted from last successful session by MainActivity
             try {
                 var savedIp   = localStorage.getItem('API_IP');
                 var savedPort = localStorage.getItem('API_PORT') || LOCAL_GATEWAY_PORT;
                 if (savedIp && savedIp.trim().length > 0) {
                     return 'http://' + savedIp + ':' + savedPort;
                 }
-            } catch (e) { /* ignore storage errors */ }
-            // 5. Render fallback
-            return RENDER_PRODUCTION_URL;
+            } catch (e) { /* ignore storage errors in restricted contexts */ }
+
+            // 5. Gateway not yet found — MainActivity is still scanning
+            //    Return an obvious placeholder; will be overridden by injectApiBase()
+            return 'http://0.0.0.0:' + LOCAL_GATEWAY_PORT;
         }
 
-        // ── Web Browser Mode ──────────────────────────────────────────────────
+        // ── Web Browser Mode (Development) ───────────────────────────────────
         if (host === 'localhost' || host === '127.0.0.1') {
-            // Port 9900 = common-services gateway (new merged service)
+            // docker-compose gateway always runs on 9900
             var activePort = localStorage.getItem('API_PORT') || LOCAL_GATEWAY_PORT;
             return protocol + '//' + host + ':' + activePort;
         }
 
-        // Production deployment (Render): same-origin via Nginx
+        // ── Production (deployed behind Nginx) ────────────────────────────────
         return protocol + '//' + window.location.host;
     }
-    return 'http://localhost:' + '9900';
+    return 'http://localhost:' + LOCAL_GATEWAY_PORT;
 })());
 
 // Route Configurations
@@ -128,9 +134,7 @@ app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpPr
 
 // Global app initialization
 app.run(['$rootScope', '$location', 'authService', function ($rootScope, $location, authService) {
-    // IMPORTANT: Restore auth state from localStorage BEFORE any route guard fires.
-    // This prevents the edge-case where a refreshed page sees the user as logged out
-    // for a brief moment and incorrectly redirects login/register pages.
+    // Restore auth state from localStorage BEFORE any route guard fires.
     authService.init();
 
     // Pages that are always publicly accessible — never redirect these
@@ -147,7 +151,7 @@ app.run(['$rootScope', '$location', 'authService', function ($rootScope, $locati
             return path === page || path.indexOf(page) === 0;
         });
         if (isPublic) {
-            return; // Always allow public pages through, no redirect
+            return;
         }
 
         // --- Guard: Restricted pages need authentication ---
@@ -178,4 +182,3 @@ app.run(['$rootScope', '$location', 'authService', function ($rootScope, $locati
         }
     });
 }]);
-
