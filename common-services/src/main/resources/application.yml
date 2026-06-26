@@ -79,42 +79,66 @@ spring:
     gateway:
       mvc:
         routes:
+          # ── User Service ───────────────────────────────────────────────────
           - id: user-service
             uri: lb://user-service
             predicates:
               - Path=/api/users,/api/users/**
+
+          # ── Product Service ────────────────────────────────────────────────
           - id: product-service-products
             uri: lb://product-service
             predicates:
               - Path=/api/products,/api/products/**
+
+          # ── Category Service (part of product-service) ─────────────────────
           - id: product-service-categories
             uri: lb://product-service
             predicates:
               - Path=/api/categories,/api/categories/**
+
+          # ── Cart Service ───────────────────────────────────────────────────
           - id: cart-service
             uri: lb://cart-service
             predicates:
               - Path=/api/cart,/api/cart/**
+
+          # ── Order Service ──────────────────────────────────────────────────
           - id: order-service
             uri: lb://order-service
             predicates:
               - Path=/api/orders,/api/orders/**
+
+          # ── Payment Service ────────────────────────────────────────────────
           - id: payment-service
             uri: lb://payment-service
             predicates:
               - Path=/api/payments,/api/payments/**
+
+          # ── Wishlist Service ───────────────────────────────────────────────
           - id: wishlist-service
             uri: lb://wishlist-service
             predicates:
               - Path=/api/wishlist,/api/wishlist/**
+
+          # ── Review Service (public GET + admin) ───────────────────────────
           - id: review-service
             uri: lb://review-service
             predicates:
               - Path=/api/reviews,/api/reviews/**,/api/admin/reviews,/api/admin/reviews/**
+
+          # ── Return Service ─────────────────────────────────────────────────
           - id: return-service
             uri: lb://return-service
             predicates:
               - Path=/api/returns,/api/returns/**,/api/admin/returns,/api/admin/returns/**
+
+          # ── Admin Notifications & Export — served locally (no lb routing) ──
+          # These endpoints live inside common-services itself; no forwarding needed.
+          # Spring MVC will handle /api/admin/notifications/** and /api/admin/export/**
+          # directly via NotificationController and AdminExportController.
+          # DO NOT add lb routes for them — they will loop.
+
 
 # ── Eureka Server (self – Discovery) ────────────────────────────────────────
 eureka:

@@ -34,27 +34,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/api/users/login",
             "/api/users/register",
+            "/api/users/forgot-password",
+            "/api/users/reset-password",
             "/api/products",
-            "/api/categories"
+            "/api/categories",
+            "/actuator"
     );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+        String path   = request.getRequestURI();
+        String method = request.getMethod();
 
-        // 1. Check if it is a public endpoint
-        boolean isPublic = PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith);
-        // GET on reviews is also public
-        if (path.startsWith("/api/reviews") && request.getMethod().equalsIgnoreCase("GET")) {
-            isPublic = true;
-        }
-
-        // Eureka server requests should not require JWT check
-        if (path.startsWith("/eureka") || path.contains("/eureka/")) {
+        // 0. Always pass CORS preflight (OPTIONS) — must be first
+        if ("OPTIONS".equalsIgnoreCase(method)) {
             filterChain.doFilter(request, response);
             return;
+        }
+
+        // 1. Eureka dashboard and health/info endpoints — fully public
+        if (path.startsWith("/eureka") || path.contains("/eureka/")
+                || path.startsWith("/actuator")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 2. Check if it is a public endpoint
+        boolean isPublic = PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith);
+        // GET on reviews is also public
+        if (path.startsWith("/api/reviews") && method.equalsIgnoreCase("GET")) {
+            isPublic = true;
         }
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);

@@ -4,51 +4,62 @@
 var app = angular.module('entitykartApp', ['ngRoute']);
 
 // Base URL for the API Gateway – dynamically detected from current host
-// Production Render URL (used by APK when no custom LAN IP is saved)
+// Port 9900 = new merged common-services (Eureka + Gateway + Notification)
 var RENDER_PRODUCTION_URL = 'https://entitykart-enterprise-ecommerce.onrender.com';
+var LOCAL_GATEWAY_PORT    = '9900';
 
-app.constant('API_BASE', (function() {
+app.constant('API_BASE', (function () {
     if (typeof window !== 'undefined') {
         var protocol = window.location.protocol;
-        var host = window.location.hostname;
+        var host     = window.location.hostname;
 
-        // ── Mobile WebView / APK Context (file:// protocol or AndroidConfig / AndroidBridge) ──
-        if (protocol === 'file:' || 
-            (window.AndroidConfig && window.AndroidConfig.apiBase) || 
+        // ── Mobile WebView / APK Context ──────────────────────────────────────
+        // Priority: AndroidBridge (dynamic discovery) → AndroidConfig → window global
+        //           → localStorage (set by MainActivity on each load) → Render fallback
+        if (protocol === 'file:' ||
+            (window.AndroidConfig && window.AndroidConfig.apiBase) ||
             (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function')) {
-            
-            var bridgeUrl = '';
+
+            // 1. AndroidBridge — returns the dynamically discovered LAN URL (or Render)
+            if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
+                var bridgeUrl = window.AndroidBridge.getApiBase();
+                if (bridgeUrl && bridgeUrl.trim().length > 0) { return bridgeUrl; }
+            }
+            // 2. AndroidConfig (legacy)
             if (window.AndroidConfig && window.AndroidConfig.apiBase) {
-                bridgeUrl = window.AndroidConfig.apiBase;
-            } else if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
-                bridgeUrl = window.AndroidBridge.getApiBase();
-            } else if (window.ENTITYKART_API_BASE) {
-                bridgeUrl = window.ENTITYKART_API_BASE;
+                return window.AndroidConfig.apiBase;
             }
-            
-            if (bridgeUrl && bridgeUrl.trim().length > 0) {
-                return bridgeUrl;
+            // 3. Window global injected by onPageFinished
+            if (window.ENTITYKART_API_BASE && window.ENTITYKART_API_BASE.trim().length > 0) {
+                return window.ENTITYKART_API_BASE;
             }
-            
-            // Hardlock to Render Cloud for all APK/WebView clients to prevent local IP connection failures
+            // 4. localStorage (set by MainActivity.injectApiBase on every page load)
+            try {
+                var savedIp   = localStorage.getItem('API_IP');
+                var savedPort = localStorage.getItem('API_PORT') || LOCAL_GATEWAY_PORT;
+                if (savedIp && savedIp.trim().length > 0) {
+                    return 'http://' + savedIp + ':' + savedPort;
+                }
+            } catch (e) { /* ignore storage errors */ }
+            // 5. Render fallback
             return RENDER_PRODUCTION_URL;
         }
 
         // ── Web Browser Mode ──────────────────────────────────────────────────
-        // Local development on localhost/127.0.0.1
         if (host === 'localhost' || host === '127.0.0.1') {
-            var activePort = localStorage.getItem('API_PORT') || '9080';
-            return window.location.protocol + '//' + host + ':' + activePort;
+            // Port 9900 = common-services gateway (new merged service)
+            var activePort = localStorage.getItem('API_PORT') || LOCAL_GATEWAY_PORT;
+            return protocol + '//' + host + ':' + activePort;
         }
 
-        // Production deployment (Render): API gateway is same-origin (proxied by Nginx)
-        return window.location.protocol + '//' + window.location.host;
+        // Production deployment (Render): same-origin via Nginx
+        return protocol + '//' + window.location.host;
     }
-    return 'http://localhost:9080';
+    return 'http://localhost:' + '9900';
 })());
 
 // Route Configurations
-app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpProvider) {
+app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
     $routeProvider
         .when('/', {
@@ -116,7 +127,7 @@ app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpPro
 }]);
 
 // Global app initialization
-app.run(['$rootScope', '$location', 'authService', function($rootScope, $location, authService) {
+app.run(['$rootScope', '$location', 'authService', function ($rootScope, $location, authService) {
     // IMPORTANT: Restore auth state from localStorage BEFORE any route guard fires.
     // This prevents the edge-case where a refreshed page sees the user as logged out
     // for a brief moment and incorrectly redirects login/register pages.
@@ -128,11 +139,11 @@ app.run(['$rootScope', '$location', 'authService', function($rootScope, $locatio
     // Pages that require a logged-in user
     var restrictedPages = ['/checkout', '/orders', '/returns', '/wishlist', '/admin', '/profile'];
 
-    $rootScope.$on('$routeChangeStart', function(event, next, current) {
+    $rootScope.$on('$routeChangeStart', function (event, next, current) {
         var path = $location.path();
 
         // --- Guard: Never block access to public pages ---
-        var isPublic = publicPages.some(function(page) {
+        var isPublic = publicPages.some(function (page) {
             return path === page || path.indexOf(page) === 0;
         });
         if (isPublic) {
@@ -140,7 +151,7 @@ app.run(['$rootScope', '$location', 'authService', function($rootScope, $locatio
         }
 
         // --- Guard: Restricted pages need authentication ---
-        var isRestricted = restrictedPages.some(function(page) {
+        var isRestricted = restrictedPages.some(function (page) {
             return path.indexOf(page) === 0;
         });
 

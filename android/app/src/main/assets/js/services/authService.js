@@ -104,7 +104,7 @@ app.service('authService', ['apiService', '$rootScope', function(apiService, $ro
                     var isRender = (typeof RENDER_PRODUCTION_URL !== 'undefined') || (localStorage.getItem('RENDER_DEPLOY') === 'true');
                     var hint = isRender
                         ? 'The Render service may still be starting up (cold start). Please wait 30–60 seconds and try again.'
-                        : 'Check that your microservices are running and the correct API Environment is selected (Docker API on port 9080 vs Local API on port 9901).';
+                        : 'Check that your microservices are running via docker-compose and the gateway is up on port 9900.';
                     throw { data: { message: 'Connection Error: Cannot reach the API Gateway. ' + hint } };
                 }
             });

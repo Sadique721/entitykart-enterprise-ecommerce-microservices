@@ -13,127 +13,206 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.InetAddress
+import java.net.NetworkInterface
+import java.net.URL
 
 /**
- * EntityKart Android App — v1.5.0
+ * EntityKart Android App — v2.0.0
  *
- * WebView-based wrapper that loads the AngularJS frontend from local assets.
- * The backend API base URL is injected via JavascriptInterface so the JS layer
- * can call the correct Render cloud gateway without hardcoding any LAN IP.
+ * DYNAMIC NETWORK DETECTION:
+ * - Same Wi-Fi as PC  →  auto-detects local LAN IP on port 9900 (Docker gateway)
+ * - Different network →  falls back to Render cloud automatically
  *
- * Production:   https://entitykart-enterprise-ecommerce.onrender.com
- * Local Dev:    Uncomment the http://192.168.1.x line below and rebuild
- * AVD Emulator: Use http://10.0.2.2:9080 for host machine localhost
+ * No hardcoded IP required. The app scans the phone's subnet at launch.
  */
 class MainActivity : ComponentActivity() {
 
-    // ── Production Render Cloud Deployment ────────────────────────────────────
-    private val BACKEND_API_BASE = "https://entitykart-enterprise-ecommerce.onrender.com"
-    // ── Local Dev (uncomment for local Wi-Fi testing, rebuild APK after): ─────
-    // private val BACKEND_API_BASE = "http://192.168.1.6:9080"
-    // ── Android Emulator (AVD): ───────────────────────────────────────────────
-    // private val BACKEND_API_BASE = "http://10.0.2.2:9080"
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /** JavascriptInterface exposed to the web layer as `window.AndroidBridge` */
-    inner class EntityKartBridge {
-        @JavascriptInterface
-        fun getApiBase(): String = BACKEND_API_BASE
-
-        @JavascriptInterface
-        fun getAppVersion(): String = "1.5.0"
-
-        @JavascriptInterface
-        fun isRenderDeploy(): Boolean = BACKEND_API_BASE.contains("onrender.com")
+    companion object {
+        const val RENDER_URL      = "https://entitykart-enterprise-ecommerce.onrender.com"
+        const val GATEWAY_PORT    = 9900
+        const val PROBE_TIMEOUT   = 350        // ms per host probe
+        const val PROBE_PATH      = "/actuator/info"
     }
 
+    // Holds the resolved backend URL — updated after subnet scan completes
+    @Volatile
+    private var resolvedBase: String = ""
+
+    /** Bridge exposed as window.AndroidBridge in JavaScript */
+    inner class EntityKartBridge {
+        @JavascriptInterface
+        fun getApiBase(): String = if (resolvedBase.isEmpty()) RENDER_URL else resolvedBase
+
+        @JavascriptInterface
+        fun getAppVersion(): String = "2.0.0"
+
+        @JavascriptInterface
+        fun isLocalNetwork(): Boolean = resolvedBase.startsWith("http://")
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         enableEdgeToEdge()
+
+        val activity = this   // explicit ref so lambdas below can access Activity members
+
         setContent {
             AndroidView(
-                factory = { context ->
-                    WebView(context).apply {
-                        // ── Hardened WebView Settings ────────────────────────
-                        settings.apply {
-                            javaScriptEnabled = true          // Required for AngularJS SPA
-                            domStorageEnabled = true          // Required for localStorage (JWT tokens)
-                            allowFileAccess = false           // Prevent local filesystem access
-                            allowContentAccess = false        // Prevent content provider access
-                            @Suppress("DEPRECATION")
-                            databaseEnabled = false           // Web SQL deprecated & insecure
-                            // Allow HTTPS pages to load mixed content (needed for Render + CDN assets)
-                            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-                            setSupportZoom(false)
-                            builtInZoomControls = false
-                            displayZoomControls = false
-                            cacheMode = WebSettings.LOAD_DEFAULT
-                            // Responsive design: honour <meta name="viewport"> tags
-                            useWideViewPort = true
-                            loadWithOverviewMode = true
-                            // App-specific user agent for API/CDN debugging
-                            userAgentString = "${userAgentString} EntityKartApp/1.5.0"
-                        }
+                modifier = Modifier.fillMaxSize(),
+                factory = { ctx ->
+                    val webView = WebView(ctx)
 
-                        // ── Expose native bridge to JavaScript ────────────────
-                        // Accessible in JS as: window.AndroidBridge.getApiBase()
-                        addJavascriptInterface(EntityKartBridge(), "AndroidBridge")
-
-                        // ── Navigation guard and API injection ────────────────
-                        webViewClient = object : WebViewClient() {
-                            override fun shouldOverrideUrlLoading(
-                                view: WebView,
-                                request: WebResourceRequest
-                            ): Boolean {
-                                val url = request.url.toString()
-                                // Whitelist: local assets, Render HTTPS backend, public CDNs
-                                val allowedPrefixes = listOf(
-                                    "file:///android_asset/",
-                                    "https://entitykart-enterprise-ecommerce.onrender.com",
-                                    "https://fonts.googleapis.com",
-                                    "https://fonts.gstatic.com",
-                                    "https://cdnjs.cloudflare.com",
-                                    "https://ajax.googleapis.com",
-                                    "https://cdn.jsdelivr.net",
-                                    "https://res.cloudinary.com"
-                                )
-                                val isAllowed = allowedPrefixes.any { url.startsWith(it) }
-                                return !isAllowed // true = block navigation, false = allow
-                            }
-
-                            override fun onPageFinished(view: WebView, url: String) {
-                                super.onPageFinished(view, url)
-                                // Inject Render API base into window scope AND clear any stale
-                                // locally-saved LAN IP so AngularJS routes to the cloud backend
-                                view.evaluateJavascript(
-                                    """
-                                    (function() {
-                                        window.ENTITYKART_API_BASE = '${BACKEND_API_BASE}';
-                                        try {
-                                            localStorage.setItem('RENDER_DEPLOY', 'true');
-                                            // Clear stale local LAN IPs so app.js picks up Render URL
-                                            var savedIp = localStorage.getItem('API_IP');
-                                            if (!savedIp || savedIp === '192.168.1.6' ||
-                                                savedIp === 'localhost' || savedIp === '127.0.0.1' ||
-                                                savedIp === '10.0.2.2') {
-                                                localStorage.removeItem('API_IP');
-                                                localStorage.removeItem('API_PORT');
-                                            }
-                                        } catch(e) {}
-                                    })();
-                                    """.trimIndent(),
-                                    null
-                                )
-                            }
-                        }
-
-                        loadUrl("file:///android_asset/index.html")
+                    // ── WebView settings ──────────────────────────────────────
+                    webView.settings.apply {
+                        javaScriptEnabled          = true
+                        domStorageEnabled           = true
+                        allowFileAccess             = false
+                        allowContentAccess          = false
+                        mixedContentMode            = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                        setSupportZoom(false)
+                        builtInZoomControls         = false
+                        displayZoomControls         = false
+                        cacheMode                   = WebSettings.LOAD_DEFAULT
+                        useWideViewPort             = true
+                        loadWithOverviewMode        = true
+                        userAgentString             = "${userAgentString} EntityKartApp/2.0.0"
                     }
-                },
-                modifier = Modifier.fillMaxSize()
+
+                    // ── Expose bridge to JS as window.AndroidBridge ───────────
+                    webView.addJavascriptInterface(activity.EntityKartBridge(), "AndroidBridge")
+
+                    // ── Navigation guard ──────────────────────────────────────
+                    webView.webViewClient = object : WebViewClient() {
+                        override fun shouldOverrideUrlLoading(
+                            view: WebView,
+                            request: WebResourceRequest
+                        ): Boolean = false  // allow all; cleartext controlled by network_security_config
+
+                        override fun onPageFinished(view: WebView, url: String) {
+                            super.onPageFinished(view, url)
+                            activity.injectApiBase(view)
+                        }
+                    }
+
+                    // ── Load assets immediately (before discovery completes) ──
+                    webView.loadUrl("file:///android_asset/index.html")
+
+                    // ── Discover backend in background ────────────────────────
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val found = activity.discoverBackend()
+                        activity.resolvedBase = found
+                        withContext(Dispatchers.Main) {
+                            activity.injectApiBase(webView)
+                        }
+                    }
+
+                    webView
+                }
             )
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Inject the resolved base URL into the running WebView page
+    // ─────────────────────────────────────────────────────────────────────────
+    private fun injectApiBase(view: WebView) {
+        val base    = if (resolvedBase.isEmpty()) RENDER_URL else resolvedBase
+        val isLocal = base.startsWith("http://")
+        val js = """
+            (function() {
+                window.ENTITYKART_API_BASE = '$base';
+                try {
+                    if ($isLocal) {
+                        localStorage.removeItem('RENDER_DEPLOY');
+                        var parts = '$base'.replace('http://','').split(':');
+                        localStorage.setItem('API_IP',   parts[0]);
+                        localStorage.setItem('API_PORT', parts[1] || '9900');
+                    } else {
+                        localStorage.setItem('RENDER_DEPLOY', 'true');
+                        localStorage.removeItem('API_IP');
+                        localStorage.removeItem('API_PORT');
+                    }
+                } catch(e) {}
+                console.log('[EntityKart] API_BASE = $base');
+            })();
+        """.trimIndent()
+        view.evaluateJavascript(js, null)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Scan phone's subnet for the gateway; return first working URL or Render
+    // ─────────────────────────────────────────────────────────────────────────
+    private suspend fun discoverBackend(): String = withContext(Dispatchers.IO) {
+        val subnets = getLocalSubnets()
+        if (subnets.isEmpty()) return@withContext RENDER_URL
+
+        // Probe the most common host-PC IP suffixes first for speed
+        val priorities = listOf(1,2,3,4,5,10,20,21,22,23,24,25,30,
+            50,100,101,102,103,104,105,150,200,210,220,230,240,250)
+
+        for (subnet in subnets) {
+            for (host in priorities) {
+                val ip = "$subnet.$host"
+                if (probeGateway(ip)) {
+                    return@withContext "http://$ip:$GATEWAY_PORT"
+                }
+            }
+        }
+        return@withContext RENDER_URL
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Returns /24 subnet prefixes for all active non-loopback network interfaces
+    // Example: ["192.168.1", "10.0.0"]   Excludes Docker/WSL (172.x) ranges
+    // ─────────────────────────────────────────────────────────────────────────
+    private fun getLocalSubnets(): List<String> {
+        val result = mutableListOf<String>()
+        try {
+            val ifaces = NetworkInterface.getNetworkInterfaces()?.toList() ?: return result
+            for (iface in ifaces) {
+                if (!iface.isUp || iface.isLoopback) continue
+                for (addr in iface.interfaceAddresses) {
+                    val rawIp = addr.address ?: continue
+                    if (rawIp.isLoopbackAddress) continue
+                    val ip = rawIp.hostAddress ?: continue
+                    if (!ip.contains('.')) continue          // skip IPv6
+                    val parts = ip.split('.')
+                    if (parts.size != 4) continue
+                    val prefix = "${parts[0]}.${parts[1]}.${parts[2]}"
+                    // Exclude Docker/WSL bridge (172.x) and link-local (169.254.x)
+                    if (prefix.startsWith("172.") || prefix.startsWith("169.254")) continue
+                    result.add(prefix)
+                }
+            }
+        } catch (_: Exception) {}
+        return result.distinct()
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Probe whether the EntityKart gateway responds on http://{ip}:9900
+    // Accepts HTTP 200, 401 (JWT filter), or 403 as "service is up" signals
+    // ─────────────────────────────────────────────────────────────────────────
+    private fun probeGateway(ip: String): Boolean {
+        return try {
+            val url  = URL("http://$ip:$GATEWAY_PORT$PROBE_PATH")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = PROBE_TIMEOUT
+            conn.readTimeout    = PROBE_TIMEOUT
+            conn.requestMethod  = "GET"
+            conn.connect()
+            val code = conn.responseCode
+            conn.disconnect()
+            code in 200..403
+        } catch (_: Exception) {
+            false
         }
     }
 }

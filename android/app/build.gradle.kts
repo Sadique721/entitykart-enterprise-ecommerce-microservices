@@ -89,6 +89,8 @@ dependencies {
   // Local tests: jUnit, coroutines, Android runner
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  // Coroutines runtime — required for dynamic backend discovery in MainActivity
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)
