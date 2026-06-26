@@ -19,7 +19,7 @@ public class KafkaNotificationListener {
 
     private final NotificationService notificationService;
 
-    /** Listens to order-events topic — order placement and status changes. */
+    /** Listens to order-events topic — order placement AND all status changes. */
     @KafkaListener(topics = "order-events", groupId = "common-services-group",
                    containerFactory = "kafkaListenerContainerFactory")
     public void onOrderEvent(OrderPlacedEvent event) {
@@ -29,17 +29,61 @@ public class KafkaNotificationListener {
                 log.warn("Order event missing customerEmail, skipping for orderId={}", event.getOrderId());
                 return;
             }
-            notificationService.handleOrderPlaced(
-                    event.getOrderId(),
-                    event.getCustomerId(),
-                    event.getCustomerEmail(),
-                    event.getCustomerName() != null ? event.getCustomerName() : "Customer",
-                    event.getTotalAmount()
-            );
+            String status = event.getOrderStatus() != null ? event.getOrderStatus().toUpperCase() : "";
+            switch (status) {
+                case "PLACED":
+                case "PENDING_PAYMENT":
+                    notificationService.handleOrderPlaced(
+                            event.getOrderId(),
+                            event.getCustomerId(),
+                            event.getCustomerEmail(),
+                            event.getCustomerName() != null ? event.getCustomerName() : "Customer",
+                            event.getTotalAmount()
+                    );
+                    break;
+                case "CONFIRMED":
+                    notificationService.handleOrderConfirmed(
+                            event.getOrderId(), event.getCustomerId(),
+                            event.getCustomerEmail(),
+                            event.getCustomerName() != null ? event.getCustomerName() : "Customer",
+                            event.getTotalAmount());
+                    break;
+                case "SHIPPED":
+                    notificationService.handleOrderShipped(
+                            event.getOrderId(), event.getCustomerId(),
+                            event.getCustomerEmail(),
+                            event.getCustomerName() != null ? event.getCustomerName() : "Customer",
+                            event.getTotalAmount());
+                    break;
+                case "DELIVERED":
+                    notificationService.handleOrderDelivered(
+                            event.getOrderId(), event.getCustomerId(),
+                            event.getCustomerEmail(),
+                            event.getCustomerName() != null ? event.getCustomerName() : "Customer",
+                            event.getTotalAmount());
+                    break;
+                case "CANCELLED":
+                    notificationService.handleOrderCancelled(
+                            event.getOrderId(), event.getCustomerId(),
+                            event.getCustomerEmail(),
+                            event.getCustomerName() != null ? event.getCustomerName() : "Customer",
+                            event.getTotalAmount());
+                    break;
+                case "RETURNED":
+                    notificationService.handleOrderReturned(
+                            event.getOrderId(), event.getCustomerId(),
+                            event.getCustomerEmail(),
+                            event.getCustomerName() != null ? event.getCustomerName() : "Customer",
+                            event.getTotalAmount());
+                    break;
+                default:
+                    log.info("No notification configured for order status: {}", status);
+            }
         } catch (Exception e) {
             log.error("Failed to process order event for orderId={}: {}", event.getOrderId(), e.getMessage());
         }
     }
+
 
     /** Listens to payment-events topic — payment success and failure. */
     @KafkaListener(topics = "payment-events", groupId = "common-services-group",

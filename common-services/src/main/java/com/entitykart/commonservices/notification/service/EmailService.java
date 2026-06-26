@@ -84,12 +84,94 @@ public class EmailService {
              + "<p>Hi <strong>" + customerName + "</strong>,</p>"
              + "<p>Your order <strong>#" + orderId + "</strong> has been placed successfully.</p>"
              + "<p><strong>Total Amount:</strong> ₹" + String.format("%.2f", total) + "</p>"
-             + "<p>We'll notify you when your order is shipped.</p>"
+             + "<p>We'll notify you when your order is confirmed and shipped.</p>"
              + "<a href='" + frontendUrl + "/#/orders' style='background:#4f46e5;color:#fff;padding:10px 20px;"
              + "border-radius:6px;text-decoration:none;display:inline-block;margin-top:10px;'>View Order</a>"
              + "<hr style='margin-top:30px;'/><p style='color:#9ca3af;font-size:12px;'>EntityKart – Your trusted shopping destination</p>"
              + "</div>";
     }
+
+    public String buildOrderConfirmedEmail(String customerName, Long orderId, Double total) {
+        return "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;'>"
+             + "<div style='background:#4f46e5;padding:20px;border-radius:12px 12px 0 0;text-align:center;'>"
+             + "<h1 style='color:#fff;margin:0;'>✅ Order Confirmed</h1></div>"
+             + "<div style='background:#f8fafc;padding:20px;border-radius:0 0 12px 12px;border:1px solid #e2e8f0;'>"
+             + "<p>Hi <strong>" + customerName + "</strong>,</p>"
+             + "<p>Great news! Your order <strong>#" + orderId + "</strong> has been <strong>confirmed</strong> and is being prepared for shipment.</p>"
+             + "<table style='width:100%;border-collapse:collapse;margin:15px 0;'>"
+             + "<tr><td style='padding:8px;color:#6b7280;'>Order ID</td><td style='padding:8px;font-weight:bold;'>#" + orderId + "</td></tr>"
+             + "<tr style='background:#f1f5f9;'><td style='padding:8px;color:#6b7280;'>Amount</td><td style='padding:8px;font-weight:bold;'>₹" + String.format("%.2f", total) + "</td></tr>"
+             + "<tr><td style='padding:8px;color:#6b7280;'>Status</td><td style='padding:8px;'><span style='background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;'>CONFIRMED</span></td></tr>"
+             + "</table>"
+             + "<a href='" + frontendUrl + "/#/orders' style='background:#4f46e5;color:#fff;padding:12px 24px;"
+             + "border-radius:6px;text-decoration:none;display:inline-block;margin-top:10px;'>Track Order</a>"
+             + "<hr style='margin-top:25px;'/><p style='color:#9ca3af;font-size:12px;'>EntityKart</p></div></div>";
+    }
+
+    public String buildOrderShippedEmail(String customerName, Long orderId, Double total) {
+        return "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;'>"
+             + "<div style='background:linear-gradient(135deg,#0ea5e9,#6366f1);padding:20px;border-radius:12px 12px 0 0;text-align:center;'>"
+             + "<h1 style='color:#fff;margin:0;'>🚚 Your Order is On the Way!</h1></div>"
+             + "<div style='background:#f8fafc;padding:20px;border-radius:0 0 12px 12px;border:1px solid #e2e8f0;'>"
+             + "<p>Hi <strong>" + customerName + "</strong>,</p>"
+             + "<p>Exciting news! Your order <strong>#" + orderId + "</strong> has been <strong>shipped</strong> and is on its way to you.</p>"
+             + "<table style='width:100%;border-collapse:collapse;margin:15px 0;'>"
+             + "<tr><td style='padding:8px;color:#6b7280;'>Order ID</td><td style='padding:8px;font-weight:bold;'>#" + orderId + "</td></tr>"
+             + "<tr style='background:#f1f5f9;'><td style='padding:8px;color:#6b7280;'>Amount</td><td style='padding:8px;font-weight:bold;'>₹" + String.format("%.2f", total) + "</td></tr>"
+             + "<tr><td style='padding:8px;color:#6b7280;'>Status</td><td style='padding:8px;'><span style='background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:20px;'>SHIPPED</span></td></tr>"
+             + "</table>"
+             + "<p style='color:#4b5563;'>Please keep your phone handy — the delivery agent may contact you.</p>"
+             + "<a href='" + frontendUrl + "/#/orders' style='background:#0ea5e9;color:#fff;padding:12px 24px;"
+             + "border-radius:6px;text-decoration:none;display:inline-block;margin-top:10px;'>Track Shipment</a>"
+             + "<hr style='margin-top:25px;'/><p style='color:#9ca3af;font-size:12px;'>EntityKart</p></div></div>";
+    }
+
+    public String buildOrderDeliveredEmail(String customerName, Long orderId, Double total) {
+        return "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;'>"
+             + "<div style='background:linear-gradient(135deg,#16a34a,#4f46e5);padding:20px;border-radius:12px 12px 0 0;text-align:center;'>"
+             + "<h1 style='color:#fff;margin:0;'>🎉 Order Delivered!</h1></div>"
+             + "<div style='background:#f8fafc;padding:20px;border-radius:0 0 12px 12px;border:1px solid #e2e8f0;'>"
+             + "<p>Hi <strong>" + customerName + "</strong>,</p>"
+             + "<p>Your order <strong>#" + orderId + "</strong> has been <strong>delivered successfully</strong>! We hope you love your purchase. 😊</p>"
+             + "<table style='width:100%;border-collapse:collapse;margin:15px 0;'>"
+             + "<tr><td style='padding:8px;color:#6b7280;'>Order ID</td><td style='padding:8px;font-weight:bold;'>#" + orderId + "</td></tr>"
+             + "<tr style='background:#f1f5f9;'><td style='padding:8px;color:#6b7280;'>Amount Paid</td><td style='padding:8px;font-weight:bold;'>₹" + String.format("%.2f", total) + "</td></tr>"
+             + "<tr><td style='padding:8px;color:#6b7280;'>Status</td><td style='padding:8px;'><span style='background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;'>DELIVERED ✓</span></td></tr>"
+             + "</table>"
+             + "<p style='color:#4b5563;'>Had a great experience? Leave a review and help others make informed decisions!</p>"
+             + "<a href='" + frontendUrl + "/#/orders' style='background:#16a34a;color:#fff;padding:12px 24px;"
+             + "border-radius:6px;text-decoration:none;display:inline-block;margin-top:10px;'>Write a Review</a>"
+             + "<hr style='margin-top:25px;'/><p style='color:#9ca3af;font-size:12px;'>EntityKart – Thank you for shopping with us!</p></div></div>";
+    }
+
+    public String buildOrderCancelledEmail(String customerName, Long orderId, Double total) {
+        return "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;'>"
+             + "<div style='background:#dc2626;padding:20px;border-radius:12px 12px 0 0;text-align:center;'>"
+             + "<h1 style='color:#fff;margin:0;'>❌ Order Cancelled</h1></div>"
+             + "<div style='background:#f8fafc;padding:20px;border-radius:0 0 12px 12px;border:1px solid #e2e8f0;'>"
+             + "<p>Hi <strong>" + customerName + "</strong>,</p>"
+             + "<p>Your order <strong>#" + orderId + "</strong> has been <strong>cancelled</strong>.</p>"
+             + "<p>If payment was made, a refund of <strong>₹" + String.format("%.2f", total) + "</strong> will be processed within 5–7 business days.</p>"
+             + "<p>If you did not request this cancellation, please contact our support team immediately.</p>"
+             + "<a href='" + frontendUrl + "/#/products' style='background:#4f46e5;color:#fff;padding:12px 24px;"
+             + "border-radius:6px;text-decoration:none;display:inline-block;margin-top:10px;'>Shop Again</a>"
+             + "<hr style='margin-top:25px;'/><p style='color:#9ca3af;font-size:12px;'>EntityKart</p></div></div>";
+    }
+
+    public String buildOrderReturnedEmail(String customerName, Long orderId, Double total) {
+        return "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;'>"
+             + "<div style='background:#f59e0b;padding:20px;border-radius:12px 12px 0 0;text-align:center;'>"
+             + "<h1 style='color:#fff;margin:0;'>📦 Return Initiated</h1></div>"
+             + "<div style='background:#f8fafc;padding:20px;border-radius:0 0 12px 12px;border:1px solid #e2e8f0;'>"
+             + "<p>Hi <strong>" + customerName + "</strong>,</p>"
+             + "<p>Your order <strong>#" + orderId + "</strong> has been marked as <strong>RETURNED</strong>.</p>"
+             + "<p>The refund of <strong>₹" + String.format("%.2f", total) + "</strong> will be processed once the returned item is received and inspected (typically 5–7 business days).</p>"
+             + "<a href='" + frontendUrl + "/#/returns' style='background:#f59e0b;color:#fff;padding:12px 24px;"
+             + "border-radius:6px;text-decoration:none;display:inline-block;margin-top:10px;'>View Return Status</a>"
+             + "<hr style='margin-top:25px;'/><p style='color:#9ca3af;font-size:12px;'>EntityKart</p></div></div>";
+    }
+
+
 
     public String buildPaymentSuccessEmail(String customerName, Long orderId, String txnRef, Double amount) {
         return "<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;'>"

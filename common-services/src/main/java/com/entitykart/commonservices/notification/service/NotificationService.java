@@ -58,6 +58,43 @@ public class NotificationService {
         sendAndSave(customerId, email, subject, body, NotificationEntity.NotificationType.ORDER_PLACED);
     }
 
+    public void handleOrderConfirmed(Long orderId, Long customerId, String email,
+                                     String name, Double total) {
+        String subject = "📦 Order #" + orderId + " has been Confirmed – EntityKart";
+        String body = emailService.buildOrderConfirmedEmail(name, orderId, total);
+        sendAndSave(customerId, email, subject, body, NotificationEntity.NotificationType.ORDER_CONFIRMED);
+    }
+
+    public void handleOrderShipped(Long orderId, Long customerId, String email,
+                                   String name, Double total) {
+        String subject = "🚚 Order #" + orderId + " Shipped! It's on its way – EntityKart";
+        String body = emailService.buildOrderShippedEmail(name, orderId, total);
+        sendAndSave(customerId, email, subject, body, NotificationEntity.NotificationType.ORDER_SHIPPED);
+    }
+
+    public void handleOrderDelivered(Long orderId, Long customerId, String email,
+                                     String name, Double total) {
+        String subject = "🎉 Order #" + orderId + " Delivered Successfully – EntityKart";
+        String body = emailService.buildOrderDeliveredEmail(name, orderId, total);
+        sendAndSave(customerId, email, subject, body, NotificationEntity.NotificationType.ORDER_DELIVERED);
+    }
+
+    public void handleOrderCancelled(Long orderId, Long customerId, String email,
+                                     String name, Double total) {
+        String subject = "❌ Order #" + orderId + " Cancelled – EntityKart";
+        String body = emailService.buildOrderCancelledEmail(name, orderId, total);
+        sendAndSave(customerId, email, subject, body, NotificationEntity.NotificationType.ORDER_CANCELLED);
+    }
+
+    public void handleOrderReturned(Long orderId, Long customerId, String email,
+                                    String name, Double total) {
+        String subject = "📦 Return for Order #" + orderId + " Initiated – EntityKart";
+        String body = emailService.buildOrderReturnedEmail(name, orderId, total);
+        sendAndSave(customerId, email, subject, body, NotificationEntity.NotificationType.RETURN_REQUESTED);
+    }
+
+
+
     public void handlePaymentSuccess(Long orderId, Long customerId, String email,
                                       String name, String txnRef, Double amount) {
         String subject = "💳 Payment Confirmed for Order #" + orderId + " – EntityKart";
