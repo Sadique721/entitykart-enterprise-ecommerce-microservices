@@ -36,12 +36,46 @@ app.controller('orderController', [
             }
         }
 
-        function processOrdersList(data) {
+        function processOrdersList(data, addresses) {
             var sortedOrders = data.sort(function(a, b) {
                 return new Date(b.orderDate) - new Date(a.orderDate);
             });
 
             sortedOrders.forEach(function(order) {
+                // Find matching shipping address
+                if (order.addressId && addresses.length > 0) {
+                    order.shippingAddress = addresses.find(function(addr) {
+                        return addr.id == order.addressId;
+                    });
+                }
+                
+                if (!order.shippingAddress) {
+                    order.shippingAddress = {
+                        fullName: 'Default Shipping Address',
+                        phone: 'N/A',
+                        streetAddress: 'Order Address ID #' + (order.addressId || ''),
+                        city: 'N/A',
+                        state: 'N/A',
+                        zipCode: 'N/A'
+                    };
+                }
+
+                // Fetch payment details
+                order.paymentDetails = { paymentMode: 'COD', transactionRef: 'N/A' };
+                apiService.get('/api/payments/order/' + order.orderId).then(function(pmtRes) {
+                    if (pmtRes.data) {
+                        order.paymentDetails = pmtRes.data;
+                    }
+                    $scope.$applyAsync();
+                }).catch(function() {
+                    // Fallback payment info
+                    order.paymentDetails = {
+                        paymentMode: order.paymentStatus === 'PENDING' ? 'COD' : 'UNKNOWN',
+                        transactionRef: 'N/A'
+                    };
+                    $scope.$applyAsync();
+                });
+
                 if (order.items) {
                     order.items.forEach(function(item) {
                         var cached = getProductFromCache(item.productId);
@@ -68,17 +102,24 @@ app.controller('orderController', [
         }
 
         $scope.loadOrders = function() {
-            orderService.getCustomerOrders().then(function(data) {
-                if (data.length === 0) {
-                    setTimeout(function() {
-                        orderService.getCustomerOrders().then(function(retryData) {
-                            if (retryData.length > 0) {
-                                processOrdersList(retryData);
-                            }
-                        });
-                    }, 2000);
-                }
-                processOrdersList(data);
+            apiService.get('/api/users/addresses').then(function(res) {
+                var addresses = res.data || [];
+                orderService.getCustomerOrders().then(function(data) {
+                    if (data.length === 0) {
+                        setTimeout(function() {
+                            orderService.getCustomerOrders().then(function(retryData) {
+                                if (retryData.length > 0) {
+                                    processOrdersList(retryData, addresses);
+                                }
+                            });
+                        }, 2000);
+                    }
+                    processOrdersList(data, addresses);
+                });
+            }).catch(function() {
+                orderService.getCustomerOrders().then(function(data) {
+                    processOrdersList(data, []);
+                });
             });
         };
 

@@ -513,6 +513,7 @@ jobs:
 - **Glassmorphic Tabbed Dashboard**: Built a modern, 4-tab dashboard inside the profile view dividing Profile Info, Security & Credentials, Address Book, and Danger Zone.
 - **Product Detail in Orders & Invoices**: Enriched order item lists and printed HTML invoices with product name and image thumbnails instead of raw database product IDs.
 - **Soft Deactivation**: Added a secure account deactivation endpoint `/api/users/deactivate` to soft-delete user records.
+- **Detailed Order Shipping & Payment Previews**: Enabled real-time loading and rendering of complete shipping addresses and payment transaction info (mode, status, txn references) inside expanded order cards and admin dashboard detail modals.
 
 ### [2026-06-20] v1.6.0 — APK Render Connectivity, Mobile Responsiveness & API Error Handling
 **🔌 APK / Mobile Fixes:**

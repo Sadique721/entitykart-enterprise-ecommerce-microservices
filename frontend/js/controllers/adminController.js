@@ -948,6 +948,53 @@ app.controller('adminController', [
             $scope.viewingOrder = order;
             $scope.showOrderDetailModal = true;
 
+            // Fetch the shipping address using the customer ID header
+            if (order.addressId && order.customerId) {
+                apiService.get('/api/users/addresses', null, { 'X-Customer-Id': order.customerId }).then(function(res) {
+                    var addresses = res.data || [];
+                    var matchedAddress = addresses.find(function(addr) {
+                        return addr.id == order.addressId;
+                    });
+                    if (matchedAddress) {
+                        order.shippingAddress = matchedAddress;
+                    } else {
+                        order.shippingAddress = {
+                            fullName: 'Default Shipping Address',
+                            phone: 'N/A',
+                            streetAddress: 'Order Address ID #' + order.addressId,
+                            city: 'N/A',
+                            state: 'N/A',
+                            zipCode: 'N/A'
+                        };
+                    }
+                    $scope.$applyAsync();
+                }).catch(function() {
+                    order.shippingAddress = {
+                        fullName: 'Default Shipping Address',
+                        phone: 'N/A',
+                        streetAddress: 'Order Address ID #' + order.addressId,
+                        city: 'N/A',
+                        state: 'N/A',
+                        zipCode: 'N/A'
+                    };
+                    $scope.$applyAsync();
+                });
+            }
+
+            // Fetch payment details
+            apiService.get('/api/payments/order/' + order.orderId).then(function(pmtRes) {
+                if (pmtRes.data) {
+                    order.paymentDetails = pmtRes.data;
+                }
+                $scope.$applyAsync();
+            }).catch(function() {
+                order.paymentDetails = {
+                    paymentMode: order.paymentMode || 'UNKNOWN',
+                    transactionRef: 'N/A'
+                };
+                $scope.$applyAsync();
+            });
+
             if (order.orderItems) {
                 order.orderItems.forEach(function(item) {
                     var cached = getProductFromCache(item.productId);

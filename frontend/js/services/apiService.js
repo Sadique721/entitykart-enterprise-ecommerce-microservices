@@ -122,11 +122,12 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
 
 app.service('apiService', ['$http', 'API_BASE', function($http, API_BASE) {
 
-    this.get = function(url, params) {
+    this.get = function(url, params, headers) {
         return $http({
             method: 'GET',
             url: API_BASE + url,
-            params: params
+            params: params,
+            headers: headers
         });
     };
 

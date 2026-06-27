@@ -1356,13 +1356,25 @@
                     </div>
                 </div>
 
-                <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Shipping Address</h4>
-                <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.4; margin-bottom: 1.5rem;">
-                    {{ viewingOrder.shippingAddress.addressLine1 }}<br>
-                    <span ng-if="viewingOrder.shippingAddress.addressLine2">{{ viewingOrder.shippingAddress.addressLine2 }}<br></span>
-                    {{ viewingOrder.shippingAddress.city }}, {{ viewingOrder.shippingAddress.state }} - {{ viewingOrder.shippingAddress.zipCode }}<br>
-                    <strong>Country:</strong> {{ viewingOrder.shippingAddress.country }}
-                </p>
+                <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem; flex-wrap: wrap;" ng-if="viewingOrder.shippingAddress">
+                    <div style="flex: 1; min-width: 200px;">
+                        <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Shipping Address</h4>
+                        <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 0;">
+                            <strong style="color: var(--text-primary);">{{ viewingOrder.shippingAddress.fullName || 'Customer' }}</strong><br>
+                            {{ viewingOrder.shippingAddress.streetAddress }}<br>
+                            {{ viewingOrder.shippingAddress.city }}, {{ viewingOrder.shippingAddress.state }} - {{ viewingOrder.shippingAddress.zipCode }}<br>
+                            <strong>Phone:</strong> {{ viewingOrder.shippingAddress.phone || 'N/A' }}
+                        </p>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;" ng-if="viewingOrder.paymentDetails">
+                        <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Payment Details</h4>
+                        <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 0;">
+                            <strong>Method:</strong> {{ (viewingOrder.paymentDetails.paymentMode || 'COD') | uppercase }}<br>
+                            <strong>Ref/Txn ID:</strong> {{ viewingOrder.paymentDetails.transactionRef || 'N/A' }}<br>
+                            <strong>Date:</strong> {{ viewingOrder.paymentDetails.paymentDate | date:'medium' || 'N/A' }}
+                        </p>
+                    </div>
+                </div>
 
                 <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Order Items</h4>
                 <div class="table-responsive" style="margin-bottom: 1.5rem;">
