@@ -38,9 +38,18 @@
             <!-- Order Header Row -->
             <div class="order-header-row" ng-click="viewOrderDetails(order)" style="cursor: pointer;">
                 <div class="order-meta-info">
-                    <div class="order-meta-item">
-                        <span class="meta-label">Order ID</span>
-                        <span class="meta-value">#{{ order.orderId }}</span>
+                    <div class="order-meta-item" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <div>
+                            <span class="meta-label">Order ID</span>
+                            <span class="meta-value">#{{ order.orderId }}</span>
+                        </div>
+                        <!-- Product image thumbnails strip in order header -->
+                        <div style="display: flex; gap: 6px; margin-left: 0.8rem; align-items: center;" ng-if="order.items && order.items.length > 0">
+                            <div ng-repeat="item in order.items | limitTo: 3" style="width: 32px; height: 32px; border-radius: 4px; overflow: hidden; border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; background: white;">
+                                <img ng-src="{{ item.productImage || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60' }}" style="width: 100%; height: 100%; object-fit: cover;" title="{{ item.productName || 'Product' }}">
+                            </div>
+                            <span ng-if="order.items.length > 3" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">+{{ order.items.length - 3 }}</span>
+                        </div>
                     </div>
                     <div class="order-meta-item">
                         <span class="meta-label">Order Date</span>
