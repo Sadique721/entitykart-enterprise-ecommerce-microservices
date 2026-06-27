@@ -13,7 +13,7 @@ import java.util.Map;
  * Converts RuntimeExceptions to a proper JSON response with HTTP 400/500
  * so the Angular frontend can read err.data.message and show the correct error.
  */
-@RestControllerAdvice
+@RestControllerAdvice(name = "userServiceGlobalExceptionHandler")
 @Slf4j
 public class GlobalExceptionHandler {
 

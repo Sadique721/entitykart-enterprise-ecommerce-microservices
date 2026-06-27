@@ -44,7 +44,8 @@ app.service('authService', ['apiService', '$rootScope', function(apiService, $ro
                     id: response.data.userId,
                     name: response.data.name,
                     email: response.data.email,
-                    role: response.data.role
+                    role: response.data.role,
+                    profilePicURL: response.data.profilePicURL
                 };
                 localStorage.setItem('ekToken', token);
                 localStorage.setItem('ekUser', JSON.stringify(currentUser));

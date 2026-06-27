@@ -499,6 +499,19 @@ jobs:
 
 ## 📋 Changelog
 
+### [2026-06-27] v1.7.0 — Profile Settings Tab, Address Book CRUD, E-commerce Order Product Detail & Email Reset Flow Fixes
+**🔧 Bug Fixes & Architecture Enhancements:**
+- **Kafka Deserializer Resolved**: Converted the message value deserializer delegate inside `KafkaConsumerConfig` to use `StringDeserializer.class`.
+- **Duplicate Exception Handler Removal**: Resolved bean name conflicts (`globalExceptionHandler`) across the API Gateway and `user-service` context scanner by specifying a unique RestControllerAdvice name.
+- **Robust SMTP Mail Flow**: Prevented local Windows shell environments from overriding the Docker Compose mail parameters, securing the welcome and password reset email dispatch functionality.
+- **User Validation Guard**: Enforced path variable check matches against authenticated headers in the profile updates and account deletions.
+
+**✨ Feature Additions:**
+- **Extended Address Book CRUD**: Integrated full shipping addresses CRUD (add, update, delete, set default) into the profile dashboard.
+- **Glassmorphic Tabbed Dashboard**: Built a modern, 4-tab dashboard inside the profile view dividing Profile Info, Security & Credentials, Address Book, and Danger Zone.
+- **Product Detail in Orders & Invoices**: Enriched order item lists and printed HTML invoices with product name and image thumbnails instead of raw database product IDs.
+- **Soft Deactivation**: Added a secure account deactivation endpoint `/api/users/deactivate` to soft-delete user records.
+
 ### [2026-06-20] v1.6.0 — APK Render Connectivity, Mobile Responsiveness & API Error Handling
 **🔌 APK / Mobile Fixes:**
 - **APK Now Connects to Render Deployment**: `MainActivity.kt` `BACKEND_API_BASE` updated from hardcoded LAN IP (`192.168.1.6`) to production Render URL. APK works on any network without Wi-Fi configuration.

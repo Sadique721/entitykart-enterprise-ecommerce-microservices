@@ -100,7 +100,7 @@ public class UserService {
                 .signWith(key, io.jsonwebtoken.SignatureAlgorithm.HS256)
                 .compact();
 
-        return new LoginResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole(), jwtExpiration);
+        return new LoginResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getProfilePicURL(), jwtExpiration);
     }
 
     private UserDTO convertToDTO(UserEntity entity) {
@@ -189,6 +189,11 @@ public class UserService {
     public UserDTO updateUser(Long id, UserDTO dto) {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        if (!user.getEmail().equalsIgnoreCase(dto.getEmail()) && userRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Email already in use: " + dto.getEmail());
+        }
+
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {

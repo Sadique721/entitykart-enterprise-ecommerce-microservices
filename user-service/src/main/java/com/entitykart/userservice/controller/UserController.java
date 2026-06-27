@@ -54,13 +54,29 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public UserDTO updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+    public UserDTO updateUser(@PathVariable Long id,
+                              @RequestHeader(value = "X-Customer-Id", required = false) Long loggedInUserId,
+                              @RequestHeader(value = "X-User-Role", required = false) String loggedInUserRole,
+                              @RequestBody UserDTO userDTO) {
+        if (loggedInUserId != null && !id.equals(loggedInUserId) && !"ADMIN".equalsIgnoreCase(loggedInUserRole)) {
+            throw new RuntimeException("Unauthorized to update this profile");
+        }
         return userService.updateUser(id, userDTO);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
+    public void deleteUser(@PathVariable Long id,
+                           @RequestHeader(value = "X-Customer-Id", required = false) Long loggedInUserId,
+                           @RequestHeader(value = "X-User-Role", required = false) String loggedInUserRole) {
+        if (loggedInUserId != null && !id.equals(loggedInUserId) && !"ADMIN".equalsIgnoreCase(loggedInUserRole)) {
+            throw new RuntimeException("Unauthorized to delete this account");
+        }
         userService.deleteUser(id);
+    }
+
+    @PostMapping("/deactivate")
+    public void deactivateAccount(@RequestHeader("X-Customer-Id") Long userId) {
+        userService.deleteUser(userId);
     }
 
     @PatchMapping("/{id}/toggle-status")

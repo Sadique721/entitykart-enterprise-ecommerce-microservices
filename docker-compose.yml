@@ -89,8 +89,8 @@ services:
       DB_NAME: notification_service
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       JWT_SECRET: ${JWT_SECRET}
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_USERNAME: mdsadiqueamin721786@gmail.com
+      MAIL_PASSWORD: pocnnqlcudavlwhi
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       APP_URL: ${APP_URL}
     healthcheck:

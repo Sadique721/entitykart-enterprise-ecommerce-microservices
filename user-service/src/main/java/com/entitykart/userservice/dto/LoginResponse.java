@@ -14,15 +14,17 @@ public class LoginResponse {
     private String name;
     private String email;
     private String role;
+    private String profilePicURL;
     private long expiresIn; // ms
 
-    public LoginResponse(String token, Long userId, String name, String email, String role, long expiresIn) {
+    public LoginResponse(String token, Long userId, String name, String email, String role, String profilePicURL, long expiresIn) {
         this.token = token;
         this.tokenType = "Bearer";
         this.userId = userId;
         this.name = name;
         this.email = email;
         this.role = role;
+        this.profilePicURL = profilePicURL;
         this.expiresIn = expiresIn;
     }
 }
