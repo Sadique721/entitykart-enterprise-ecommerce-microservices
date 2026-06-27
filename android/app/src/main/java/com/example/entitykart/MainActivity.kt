@@ -22,6 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,7 +55,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val GATEWAY_PORT  = 9900
         const val PROBE_TIMEOUT = 500      // ms per host — generous for LAN
-        const val PROBE_PATH    = "/actuator/info"
+        const val PROBE_PATH    = "/"
         const val RETRY_DELAY   = 10_000L  // ms between full scans
     }
 
@@ -78,14 +82,35 @@ class MainActivity : ComponentActivity() {
 
         val activity = this
 
+        val prefs = getSharedPreferences("EntityKartPrefs", MODE_PRIVATE)
+        val savedBaseUrl = prefs.getString("LAST_CONNECTED_IP", "") ?: ""
+
         setContent {
             // State: true = still scanning, false = gateway found, load app
             var isScanning by remember { mutableStateOf(true) }
             var statusMsg  by remember { mutableStateOf("Connecting to local server…") }
+            var manualIpVal by remember { mutableStateOf("") }
+            var isConnectingManually by remember { mutableStateOf(false) }
+            var connectionError by remember { mutableStateOf("") }
+            val scope = rememberCoroutineScope()
 
             // Start background scan
             LaunchedEffect(Unit) {
                 launch(Dispatchers.IO) {
+                    // 1. Try saved IP first
+                    if (savedBaseUrl.isNotEmpty()) {
+                        val savedIp = savedBaseUrl.removePrefix("http://").split(":").firstOrNull() ?: ""
+                        if (savedIp.isNotEmpty() && activity.probeGateway(savedIp)) {
+                            activity.resolvedBase = savedBaseUrl
+                            withContext(Dispatchers.Main) {
+                                isScanning = false
+                                webViewRef?.let { activity.injectApiBase(it) }
+                            }
+                            return@launch
+                        }
+                    }
+
+                    // 2. Fallback to scanning the subnet
                     var attempt = 1
                     while (true) {
                         withContext(Dispatchers.Main) {
@@ -97,6 +122,7 @@ class MainActivity : ComponentActivity() {
                         val found = activity.discoverBackend()
                         if (found.isNotEmpty()) {
                             activity.resolvedBase = found
+                            prefs.edit().putString("LAST_CONNECTED_IP", found).apply()
                             withContext(Dispatchers.Main) {
                                 isScanning = false
                                 // Also inject into already-loaded webview if any
@@ -124,7 +150,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.padding(horizontal = 24.dp)
                     ) {
                         Text(
                             text = "EntityKart",
@@ -134,20 +161,92 @@ class MainActivity : ComponentActivity() {
                         )
                         CircularProgressIndicator(
                             color = Color(0xFFFF6B35),
-                            modifier = Modifier.size(56.dp),
+                            modifier = Modifier.size(48.dp),
                             strokeWidth = 4.dp
                         )
                         Text(
                             text = statusMsg,
                             color = Color(0xFFcccccc),
                             fontSize = 14.sp,
-                            modifier = Modifier.padding(horizontal = 32.dp)
+                            modifier = Modifier.padding(horizontal = 16.dp)
                         )
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        Text(
+                            text = "Or Connect Manually:",
+                            color = Color(0xFFFF6B35),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        
+                        OutlinedTextField(
+                            value = manualIpVal,
+                            onValueChange = { manualIpVal = it },
+                            label = { Text("Server IP", color = Color(0xFF888888)) },
+                            placeholder = { Text("e.g. 192.168.1.15", color = Color(0xFF555555)) },
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFFFF6B35),
+                                unfocusedBorderColor = Color(0xFF444444),
+                                focusedLabelColor = Color(0xFFFF6B35),
+                                unfocusedLabelColor = Color(0xFF888888),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        )
+                        
+                        if (connectionError.isNotEmpty()) {
+                            Text(
+                                text = connectionError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                        
+                        Button(
+                            onClick = {
+                                val targetIp = manualIpVal.trim()
+                                if (targetIp.isNotEmpty()) {
+                                    isConnectingManually = true
+                                    connectionError = ""
+                                    scope.launch(Dispatchers.IO) {
+                                        if (activity.probeGateway(targetIp)) {
+                                            val fullUrl = "http://$targetIp:$GATEWAY_PORT"
+                                            activity.resolvedBase = fullUrl
+                                            prefs.edit().putString("LAST_CONNECTED_IP", fullUrl).apply()
+                                            withContext(Dispatchers.Main) {
+                                                isConnectingManually = false
+                                                isScanning = false
+                                                webViewRef?.let { activity.injectApiBase(it) }
+                                            }
+                                        } else {
+                                            withContext(Dispatchers.Main) {
+                                                isConnectingManually = false
+                                                connectionError = "Failed to connect to $targetIp:$GATEWAY_PORT"
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    connectionError = "Please enter an IP address"
+                                }
+                            },
+                            enabled = !isConnectingManually,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35)),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        ) {
+                            Text(if (isConnectingManually) "Connecting..." else "Connect", color = Color.White)
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
                         Text(
                             text = "Ensure your phone and PC are on\nthe same WiFi network",
                             color = Color(0xFF666666),
                             fontSize = 12.sp,
-                            modifier = Modifier.padding(horizontal = 40.dp)
+                            modifier = Modifier.padding(horizontal = 24.dp)
                         )
                     }
                 }
