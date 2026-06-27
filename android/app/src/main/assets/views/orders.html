@@ -38,9 +38,18 @@
             <!-- Order Header Row -->
             <div class="order-header-row" ng-click="viewOrderDetails(order)" style="cursor: pointer;">
                 <div class="order-meta-info">
-                    <div class="order-meta-item">
-                        <span class="meta-label">Order ID</span>
-                        <span class="meta-value">#{{ order.orderId }}</span>
+                    <div class="order-meta-item" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <div>
+                            <span class="meta-label">Order ID</span>
+                            <span class="meta-value">#{{ order.orderId }}</span>
+                        </div>
+                        <!-- Product image thumbnails strip in order header -->
+                        <div style="display: flex; gap: 6px; margin-left: 0.8rem; align-items: center;" ng-if="order.items && order.items.length > 0">
+                            <div ng-repeat="item in order.items | limitTo: 3" style="width: 32px; height: 32px; border-radius: 4px; overflow: hidden; border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; background: white;">
+                                <img ng-src="{{ item.productImage || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60' }}" style="width: 100%; height: 100%; object-fit: cover;" title="{{ item.productName || 'Product' }}">
+                            </div>
+                            <span ng-if="order.items.length > 3" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">+{{ order.items.length - 3 }}</span>
+                        </div>
                     </div>
                     <div class="order-meta-item">
                         <span class="meta-label">Order Date</span>
@@ -117,7 +126,9 @@
                 <div class="order-items-container">
                     <div class="order-item-row" ng-repeat="item in order.items">
                         <div class="order-item-info">
-                            <div class="order-item-icon"><i class="fa fa-box"></i></div>
+                            <div class="order-item-icon" style="background: none; width: 48px; height: 48px; border-radius: 6px; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px solid var(--glass-border);">
+                                <img ng-src="{{ item.productImage || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
                             <div>
                                 <span class="order-item-name">{{ item.productName || ('Product #' + item.productId) }}</span>
                                 <span class="order-item-qty">Qty: {{ item.quantity }} × ₹{{ item.price | number:2 }}</span>
@@ -135,6 +146,35 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Shipping & Payment Details Grid -->
+                <div class="order-info-grid" style="display: flex; gap: 2rem; margin-top: 1.5rem; border-top: 1px solid var(--glass-border); padding-top: 1.5rem; flex-wrap: wrap;" ng-if="order.shippingAddress">
+                    <!-- Shipping Address Info -->
+                    <div style="flex: 1; min-width: 250px;">
+                        <h4 style="margin: 0 0 0.8rem; font-size: 0.95rem; color: var(--text-secondary);">
+                            <i class="fa fa-map-marker-alt text-accent"></i> Shipping Address
+                        </h4>
+                        <div style="font-size: 0.88rem; line-height: 1.5; color: var(--text-muted);">
+                            <strong style="color: var(--text-primary);">{{ order.shippingAddress.fullName || 'Customer' }}</strong><br>
+                            {{ order.shippingAddress.streetAddress }}<br>
+                            {{ order.shippingAddress.city }}, {{ order.shippingAddress.state }} - {{ order.shippingAddress.zipCode }}<br>
+                            Phone: {{ order.shippingAddress.phone || 'N/A' }}
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Information -->
+                    <div style="flex: 1; min-width: 250px;">
+                        <h4 style="margin: 0 0 0.8rem; font-size: 0.95rem; color: var(--text-secondary);">
+                            <i class="fa fa-credit-card text-accent"></i> Payment Details
+                        </h4>
+                        <div style="font-size: 0.88rem; line-height: 1.5; color: var(--text-muted);">
+                            Method: <strong style="color: var(--text-primary);">{{ (order.paymentDetails.paymentMode || 'COD') | uppercase }}</strong><br>
+                            Status: <span class="status-badge" ng-class="'pay-' + order.paymentStatus.toLowerCase()" style="font-size: 0.72rem; padding: 2px 6px; display: inline-block; margin: 4px 0;">{{ order.paymentStatus }}</span><br>
+                            Ref/Txn ID: <code style="color: var(--text-primary); font-size: 0.8rem; word-break: break-all;">{{ order.paymentDetails.transactionRef || 'N/A' }}</code>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 

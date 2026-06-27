@@ -935,9 +935,85 @@ app.controller('adminController', [
         };
 
         // --- Enhanced Orders ---
+        function getProductFromCache(productId) {
+            try {
+                var cache = JSON.parse(localStorage.getItem('ekProductCache') || '[]');
+                return cache.find(function(p) { return p.productId == productId; });
+            } catch (e) {
+                return null;
+            }
+        }
+
         $scope.viewOrderDetails = function(order) {
             $scope.viewingOrder = order;
             $scope.showOrderDetailModal = true;
+
+            // Fetch the shipping address using the customer ID header
+            if (order.addressId && order.customerId) {
+                apiService.get('/api/users/addresses', null, { 'X-Customer-Id': order.customerId }).then(function(res) {
+                    var addresses = res.data || [];
+                    var matchedAddress = addresses.find(function(addr) {
+                        return addr.id == order.addressId;
+                    });
+                    if (matchedAddress) {
+                        order.shippingAddress = matchedAddress;
+                    } else {
+                        order.shippingAddress = {
+                            fullName: 'Default Shipping Address',
+                            phone: 'N/A',
+                            streetAddress: 'Order Address ID #' + order.addressId,
+                            city: 'N/A',
+                            state: 'N/A',
+                            zipCode: 'N/A'
+                        };
+                    }
+                    $scope.$applyAsync();
+                }).catch(function() {
+                    order.shippingAddress = {
+                        fullName: 'Default Shipping Address',
+                        phone: 'N/A',
+                        streetAddress: 'Order Address ID #' + order.addressId,
+                        city: 'N/A',
+                        state: 'N/A',
+                        zipCode: 'N/A'
+                    };
+                    $scope.$applyAsync();
+                });
+            }
+
+            // Fetch payment details
+            apiService.get('/api/payments/order/' + order.orderId).then(function(pmtRes) {
+                if (pmtRes.data) {
+                    order.paymentDetails = pmtRes.data;
+                }
+                $scope.$applyAsync();
+            }).catch(function() {
+                order.paymentDetails = {
+                    paymentMode: order.paymentMode || 'UNKNOWN',
+                    transactionRef: 'N/A'
+                };
+                $scope.$applyAsync();
+            });
+
+            if (order.orderItems) {
+                order.orderItems.forEach(function(item) {
+                    var cached = getProductFromCache(item.productId);
+                    if (cached) {
+                        item.productName = cached.productName;
+                        item.productImage = cached.mainImageURL;
+                    } else {
+                        productService.getProduct(item.productId).then(function(prod) {
+                            item.productName = prod.productName;
+                            item.productImage = prod.mainImageURL;
+                            $scope.$applyAsync();
+                        }).catch(function() {
+                            item.productName = 'Product #' + item.productId;
+                            item.productImage = 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60';
+                            $scope.$applyAsync();
+                        });
+                    }
+                });
+            }
         };
 
         $scope.closeOrderDetailModal = function() {
@@ -963,7 +1039,30 @@ app.controller('adminController', [
         $scope.loadAdminReviewsList = function() {
             apiService.get('/api/admin/reviews/all')
                 .then(function(res) {
-                    $scope.adminReviews = res.data;
+                    var reviews = res.data;
+                    var promises = reviews.map(function(rv) {
+                        var cached = getProductFromCache(rv.productId);
+                        if (cached) {
+                            rv.productName = cached.productName;
+                            rv.productImage = cached.mainImageURL;
+                            return $q.resolve(rv);
+                        } else {
+                            return productService.getProduct(rv.productId)
+                                .then(function(p) {
+                                    rv.productName = p.productName;
+                                    rv.productImage = p.mainImageURL;
+                                    return rv;
+                                })
+                                .catch(function() {
+                                    rv.productName = 'Product #' + rv.productId;
+                                    rv.productImage = 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60';
+                                    return rv;
+                                });
+                        }
+                    });
+                    $q.all(promises).then(function(resolved) {
+                        $scope.adminReviews = resolved;
+                    });
                 })
                 .catch(function() {
                     $scope.adminReviews = [

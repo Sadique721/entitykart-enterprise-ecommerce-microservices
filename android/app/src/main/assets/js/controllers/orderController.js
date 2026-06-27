@@ -3,8 +3,8 @@
  * v1.5.0 — Added cancel order, download invoice features
  */
 app.controller('orderController', [
-    '$scope', '$location', 'orderService', 'authService', 'apiService',
-    function($scope, $location, orderService, authService, apiService) {
+    '$scope', '$location', 'orderService', 'authService', 'apiService', 'productService',
+    function($scope, $location, orderService, authService, apiService, productService) {
 
         $scope.orders = [];
         $scope.selectedOrder = null;
@@ -27,10 +27,98 @@ app.controller('orderController', [
             $scope.loadOrders();
         };
 
+        function getProductFromCache(productId) {
+            try {
+                var cache = JSON.parse(localStorage.getItem('ekProductCache') || '[]');
+                return cache.find(function(p) { return p.productId == productId; });
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function processOrdersList(data, addresses) {
+            var sortedOrders = data.sort(function(a, b) {
+                return new Date(b.orderDate) - new Date(a.orderDate);
+            });
+
+            sortedOrders.forEach(function(order) {
+                // Find matching shipping address
+                if (order.addressId && addresses.length > 0) {
+                    order.shippingAddress = addresses.find(function(addr) {
+                        return addr.id == order.addressId;
+                    });
+                }
+                
+                if (!order.shippingAddress) {
+                    order.shippingAddress = {
+                        fullName: 'Default Shipping Address',
+                        phone: 'N/A',
+                        streetAddress: 'Order Address ID #' + (order.addressId || ''),
+                        city: 'N/A',
+                        state: 'N/A',
+                        zipCode: 'N/A'
+                    };
+                }
+
+                // Fetch payment details
+                order.paymentDetails = { paymentMode: 'COD', transactionRef: 'N/A' };
+                apiService.get('/api/payments/order/' + order.orderId).then(function(pmtRes) {
+                    if (pmtRes.data) {
+                        order.paymentDetails = pmtRes.data;
+                    }
+                    $scope.$applyAsync();
+                }).catch(function() {
+                    // Fallback payment info
+                    order.paymentDetails = {
+                        paymentMode: order.paymentStatus === 'PENDING' ? 'COD' : 'UNKNOWN',
+                        transactionRef: 'N/A'
+                    };
+                    $scope.$applyAsync();
+                });
+
+                if (order.items) {
+                    order.items.forEach(function(item) {
+                        var cached = getProductFromCache(item.productId);
+                        if (cached) {
+                            item.productName = cached.productName;
+                            item.productImage = cached.mainImageURL;
+                        } else {
+                            productService.getProduct(item.productId).then(function(prod) {
+                                item.productName = prod.productName;
+                                item.productImage = prod.mainImageURL;
+                                $scope.$applyAsync();
+                            }).catch(function() {
+                                item.productName = 'Product #' + item.productId;
+                                item.productImage = 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60';
+                                $scope.$applyAsync();
+                            });
+                        }
+                    });
+                }
+            });
+
+            $scope.orders = sortedOrders;
+            $scope.$applyAsync();
+        }
+
         $scope.loadOrders = function() {
-            orderService.getCustomerOrders().then(function(data) {
-                $scope.orders = data.sort(function(a, b) {
-                    return new Date(b.orderDate) - new Date(a.orderDate);
+            apiService.get('/api/users/addresses').then(function(res) {
+                var addresses = res.data || [];
+                orderService.getCustomerOrders().then(function(data) {
+                    if (data.length === 0) {
+                        setTimeout(function() {
+                            orderService.getCustomerOrders().then(function(retryData) {
+                                if (retryData.length > 0) {
+                                    processOrdersList(retryData, addresses);
+                                }
+                            });
+                        }, 2000);
+                    }
+                    processOrdersList(data, addresses);
+                });
+            }).catch(function() {
+                orderService.getCustomerOrders().then(function(data) {
+                    processOrdersList(data, []);
                 });
             });
         };
@@ -119,13 +207,15 @@ app.controller('orderController', [
   <div class="meta-box"><label>Order Status</label><br>' + order.orderStatus + '</div>\
 </div>\
 <table>\
-  <thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>\
+  <thead><tr><th>#</th><th>Image</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>\
   <tbody>';
 
             if (order.items && order.items.length > 0) {
                 order.items.forEach(function(item, idx) {
+                    var imgUrl = item.productImage || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60';
                     invoiceHtml += '<tr>\
                       <td>' + (idx + 1) + '</td>\
+                      <td><img src="' + imgUrl + '" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid #e5e7eb;"></td>\
                       <td>' + (item.productName || 'Product #' + item.productId) + '</td>\
                       <td>' + item.quantity + '</td>\
                       <td>₹' + parseFloat(item.price || 0).toFixed(2) + '</td>\
