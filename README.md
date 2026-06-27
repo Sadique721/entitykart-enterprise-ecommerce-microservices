@@ -505,6 +505,8 @@ jobs:
 - **Duplicate Exception Handler Removal**: Resolved bean name conflicts (`globalExceptionHandler`) across the API Gateway and `user-service` context scanner by specifying a unique RestControllerAdvice name.
 - **Robust SMTP Mail Flow**: Prevented local Windows shell environments from overriding the Docker Compose mail parameters, securing the welcome and password reset email dispatch functionality.
 - **User Validation Guard**: Enforced path variable check matches against authenticated headers in the profile updates and account deletions.
+- **Checkout Event-Driven Safeguard**: Prevented the frontend from triggering manual payment REST calls during checkout on the live gateway, which are handled asynchronously by backend Kafka consumers, resolving the HTTP 500 error.
+- **Eventual Consistency Order Retrieval**: Added a 2-second automatic retry poll on the customer orders page to handle asynchronous eventual consistency in order generation.
 
 **✨ Feature Additions:**
 - **Extended Address Book CRUD**: Integrated full shipping addresses CRUD (add, update, delete, set default) into the profile dashboard.

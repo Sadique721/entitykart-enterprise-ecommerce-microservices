@@ -273,7 +273,18 @@ app.controller('cartController', [
             // Step 1: Create order via checkout
             cartService.checkout($scope.selectedAddressId, $scope.paymentMethod, $scope.paymentData)
                 .then(function(order) {
-                    var orderId = order ? order.orderId : null;
+                    if (!order || !order.orderId) {
+                        $scope.$emit('showToast', {
+                            title: '🎉 Checkout Successful!',
+                            message: 'Your order has been placed successfully and is being processed.',
+                            type: 'success'
+                        });
+                        $scope.isSubmitting = false;
+                        $location.path('/orders');
+                        return;
+                    }
+
+                    var orderId = order.orderId;
                     var amount = $scope.getFinalTotal();
 
                     // Step 2: Process payment based on method

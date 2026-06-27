@@ -36,36 +36,49 @@ app.controller('orderController', [
             }
         }
 
+        function processOrdersList(data) {
+            var sortedOrders = data.sort(function(a, b) {
+                return new Date(b.orderDate) - new Date(a.orderDate);
+            });
+
+            sortedOrders.forEach(function(order) {
+                if (order.items) {
+                    order.items.forEach(function(item) {
+                        var cached = getProductFromCache(item.productId);
+                        if (cached) {
+                            item.productName = cached.productName;
+                            item.productImage = cached.mainImageURL;
+                        } else {
+                            productService.getProduct(item.productId).then(function(prod) {
+                                item.productName = prod.productName;
+                                item.productImage = prod.mainImageURL;
+                                $scope.$applyAsync();
+                            }).catch(function() {
+                                item.productName = 'Product #' + item.productId;
+                                item.productImage = 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60';
+                                $scope.$applyAsync();
+                            });
+                        }
+                    });
+                }
+            });
+
+            $scope.orders = sortedOrders;
+            $scope.$applyAsync();
+        }
+
         $scope.loadOrders = function() {
             orderService.getCustomerOrders().then(function(data) {
-                var sortedOrders = data.sort(function(a, b) {
-                    return new Date(b.orderDate) - new Date(a.orderDate);
-                });
-
-                sortedOrders.forEach(function(order) {
-                    if (order.items) {
-                        order.items.forEach(function(item) {
-                            var cached = getProductFromCache(item.productId);
-                            if (cached) {
-                                item.productName = cached.productName;
-                                item.productImage = cached.mainImageURL;
-                            } else {
-                                productService.getProduct(item.productId).then(function(prod) {
-                                    item.productName = prod.productName;
-                                    item.productImage = prod.mainImageURL;
-                                    $scope.$applyAsync();
-                                }).catch(function() {
-                                    item.productName = 'Product #' + item.productId;
-                                    item.productImage = 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60';
-                                    $scope.$applyAsync();
-                                });
+                if (data.length === 0) {
+                    setTimeout(function() {
+                        orderService.getCustomerOrders().then(function(retryData) {
+                            if (retryData.length > 0) {
+                                processOrdersList(retryData);
                             }
                         });
-                    }
-                });
-
-                $scope.orders = sortedOrders;
-                $scope.$applyAsync();
+                    }, 2000);
+                }
+                processOrdersList(data);
             });
         };
 
