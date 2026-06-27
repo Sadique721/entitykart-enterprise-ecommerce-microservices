@@ -1,4 +1,4 @@
-﻿package com.entitykart.reviewservice.controller;
+package com.entitykart.reviewservice.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
