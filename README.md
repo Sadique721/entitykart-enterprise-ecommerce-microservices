@@ -507,6 +507,7 @@ jobs:
 - **User Validation Guard**: Enforced path variable check matches against authenticated headers in the profile updates and account deletions.
 - **Checkout Event-Driven Safeguard**: Prevented the frontend from triggering manual payment REST calls during checkout on the live gateway, which are handled asynchronously by backend Kafka consumers, resolving the HTTP 500 error.
 - **Eventual Consistency Order Retrieval**: Added a 2-second automatic retry poll on the customer orders page to handle asynchronous eventual consistency in order generation.
+- **Docker Gateway Healthcheck Fixed**: Updated the `common-services` health check in `docker-compose.yml` to use `nc -z localhost 9900` instead of a `wget` actuator query (which returned 401 Unauthorized due to JWT filters), enabling downstream microservices to launch successfully.
 
 **✨ Feature Additions:**
 - **Extended Address Book CRUD**: Integrated full shipping addresses CRUD (add, update, delete, set default) into the profile dashboard.
