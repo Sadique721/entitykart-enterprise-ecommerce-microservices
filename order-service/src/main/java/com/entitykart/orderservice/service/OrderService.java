@@ -3,25 +3,23 @@ package com.entitykart.orderservice.service;
 import com.entitykart.orderservice.client.UserServiceClient;
 import com.entitykart.orderservice.dto.OrderDTO;
 import com.entitykart.orderservice.dto.OrderItemDTO;
-import com.entitykart.orderservice.dto.OrderPlacedEvent;
 import com.entitykart.orderservice.entity.OrderEntity;
 import com.entitykart.orderservice.entity.OrderItemEntity;
 import com.entitykart.orderservice.repository.OrderItemRepository;
 import com.entitykart.orderservice.repository.OrderRepository;
+import com.entitykart.shared.dto.CartCheckoutEvent;
+import com.entitykart.shared.dto.OrderPlacedEvent;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Order business logic service.
- * Publishes Kafka events to "order-events" topic on every order status change
- * so that common-services (notification) can send email/SMS to the customer.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -42,72 +40,113 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderDTO> getOrdersByCustomer(Long customerId) {
-        return orderRepository.findByCustomerIdOrderByOrderDateDesc(customerId)
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public Page<OrderDTO> getOrdersByCustomer(Long customerId, Pageable pageable) {
+        return orderRepository.findByCustomerIdOrderByOrderDateDesc(customerId, pageable)
+                .map(this::convertToDTO);
     }
 
     @Transactional(readOnly = true)
-    public List<OrderDTO> getAllOrders() {
-        return orderRepository.findAll()
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public Page<OrderDTO> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable)
+                .map(this::convertToDTO);
     }
 
-    /**
-     * Updates order status and publishes Kafka event so notification-service
-     * sends an email+SMS to the customer for every status change.
-     * Statuses: PLACED → CONFIRMED → SHIPPED → DELIVERED → CANCELLED → RETURNED
-     */
+    @Transactional
+    public OrderDTO createOrder(CartCheckoutEvent event) {
+        log.info("Creating order synchronously for customer: {} with paymentMode: {}", event.getCustomerId(), event.getPaymentMode());
+
+        OrderEntity order = new OrderEntity();
+        order.setCustomerId(event.getCustomerId());
+        order.setAddressId(event.getAddressId());
+        order.setTotalAmount(event.getTotalAmount());
+        order.setOrderStatus(OrderEntity.OrderStatus.PENDING_PAYMENT);
+        order.setPaymentStatus(OrderEntity.PaymentStatus.UNPAID);
+        order.setOrderDate(LocalDateTime.now());
+        OrderEntity savedOrder = orderRepository.save(order);
+
+        List<OrderItemEntity> orderItems = event.getItems().stream().map(item -> {
+            OrderItemEntity orderItem = new OrderItemEntity();
+            orderItem.setOrderId(savedOrder.getOrderId());
+            orderItem.setProductId(item.getProductId());
+            orderItem.setQuantity(item.getQuantity());
+            orderItem.setPrice(item.getPrice());
+            return orderItem;
+        }).collect(Collectors.toList());
+
+        orderItemRepository.saveAll(orderItems);
+
+        String email = "customer@example.com";
+        String name = "Customer";
+        try {
+            UserServiceClient.UserInfo userInfo = userServiceClient.getUser(event.getCustomerId());
+            if (userInfo != null) {
+                if (userInfo.getEmail() != null) email = userInfo.getEmail();
+                if (userInfo.getName() != null) name = userInfo.getName();
+            }
+        } catch (Exception e) {
+            log.warn("Could not retrieve customer details from user-service for customerId {}: {}", event.getCustomerId(), e.getMessage());
+        }
+
+        OrderPlacedEvent placedEvent = new OrderPlacedEvent(
+                savedOrder.getOrderId(),
+                savedOrder.getCustomerId(),
+                savedOrder.getTotalAmount(),
+                LocalDateTime.now(),
+                email,
+                name,
+                savedOrder.getOrderStatus().name(),
+                event.getPaymentMode(),
+                null // upiId is null at creation
+        );
+
+        try {
+            kafkaTemplate.send(ORDER_EVENTS_TOPIC, placedEvent);
+            log.info("Order placed event published for orderId: {}", savedOrder.getOrderId());
+        } catch (Exception e) {
+            log.error("Failed to publish order-events for orderId={}: {}", savedOrder.getOrderId(), e.getMessage());
+        }
+
+        return convertToDTO(savedOrder);
+    }
+
     @Transactional
     public void updateOrderStatus(Long orderId, String status) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         if (isPaymentStatus(status)) {
-            OrderEntity.PaymentStatus paymentStatus = OrderEntity.PaymentStatus.valueOf(status);
+            OrderEntity.PaymentStatus paymentStatus = OrderEntity.PaymentStatus.valueOf(status.toUpperCase());
             order.setPaymentStatus(paymentStatus);
             if (paymentStatus == OrderEntity.PaymentStatus.PAID
                     && order.getOrderStatus() == OrderEntity.OrderStatus.PENDING_PAYMENT) {
                 order.setOrderStatus(OrderEntity.OrderStatus.PLACED);
             }
         } else {
-            order.setOrderStatus(OrderEntity.OrderStatus.valueOf(status));
+            try {
+                order.setOrderStatus(OrderEntity.OrderStatus.valueOf(status.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid order status: " + status);
+            }
         }
 
         orderRepository.save(order);
-
-        // ── Publish order-events so notification service emails the customer ──
         publishOrderStatusEvent(order);
     }
 
-    /**
-     * Called by payment-service via FeignClient to update payment status ONLY (PAID / UNPAID / PENDING).
-     * Also publishes Kafka event when payment is completed.
-     */
     @Transactional
     public void updatePaymentStatus(Long orderId, String paymentStatus) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
         OrderEntity.PaymentStatus ps = OrderEntity.PaymentStatus.valueOf(paymentStatus.toUpperCase());
         order.setPaymentStatus(ps);
-        // Auto-advance to PLACED if payment just completed and order is in PENDING_PAYMENT
         if (ps == OrderEntity.PaymentStatus.PAID
                 && order.getOrderStatus() == OrderEntity.OrderStatus.PENDING_PAYMENT) {
             order.setOrderStatus(OrderEntity.OrderStatus.PLACED);
         }
         orderRepository.save(order);
-
-        // ── Publish event so notification service emails the customer ──
         publishOrderStatusEvent(order);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Publish an order-events Kafka message with customer details and new status
-    // ─────────────────────────────────────────────────────────────────────────
     private void publishOrderStatusEvent(OrderEntity order) {
         String email = "customer@example.com";
         String name  = "Customer";
@@ -130,7 +169,8 @@ public class OrderService {
                 email,
                 name,
                 order.getOrderStatus().name(),
-                null, null, null, null, null  // payment details not needed for status update
+                null,
+                null
         );
 
         try {
@@ -144,7 +184,7 @@ public class OrderService {
 
     private boolean isPaymentStatus(String status) {
         try {
-            OrderEntity.PaymentStatus.valueOf(status);
+            OrderEntity.PaymentStatus.valueOf(status.toUpperCase());
             return true;
         } catch (IllegalArgumentException exception) {
             return false;

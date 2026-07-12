@@ -1,6 +1,8 @@
 package com.entitykart.cartservice.controller;
 
 import com.entitykart.cartservice.dto.CartItemDTO;
+import com.entitykart.cartservice.dto.CheckoutRequest;
+import com.entitykart.cartservice.dto.CouponValidationResponse;
 import com.entitykart.cartservice.service.CartService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import org.springframework.web.bind.annotation.RequestBody;
+import com.entitykart.cartservice.dto.CheckoutRequest;
+import com.entitykart.cartservice.client.OrderServiceClient;
 
 @RestController
 @RequestMapping("/api/cart")
@@ -23,9 +29,8 @@ public class CartController {
     public void addToCart(
             @RequestParam Long customerId,
             @RequestParam Long productId,
-            @RequestParam Integer quantity,
-            @RequestParam Double price) {
-        cartService.addToCart(customerId, productId, quantity, price);
+            @RequestParam Integer quantity) {
+        cartService.addToCart(customerId, productId, quantity, null);
     }
 
     @PutMapping("/update")
@@ -57,14 +62,18 @@ public class CartController {
     }
 
     @PostMapping("/checkout")
-    public void checkout(
-            @RequestParam Long customerId,
-            @RequestParam Long addressId,
-            @RequestParam(required = false) String paymentMode,
-            @RequestParam(required = false) String cardNumber,
-            @RequestParam(required = false) String expiry,
-            @RequestParam(required = false) String cvv,
-            @RequestParam(required = false) String upiId) {
-        cartService.checkout(customerId, addressId, paymentMode, cardNumber, expiry, cvv, upiId);
+    public OrderServiceClient.OrderResponse checkout(@RequestBody CheckoutRequest request) {
+        return cartService.checkout(request);
+    }
+
+    /**
+     * MED-5: Server-side coupon/promo code validation.
+     * Prevents clients from forging discount amounts on checkout.
+     */
+    @PostMapping("/validate-coupon")
+    public CouponValidationResponse validateCoupon(
+            @RequestParam String code,
+            @RequestParam Double cartTotal) {
+        return cartService.validateCoupon(code, cartTotal);
     }
 }

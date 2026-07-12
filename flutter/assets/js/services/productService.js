@@ -163,7 +163,7 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
         { id: 3, name: 'Apparel & Lifestyle', description: 'Timeless watches, backpacks, and accessories.' }
     ];
 
-    this.getProducts = function(categoryId, sellerId, page, size, searchQuery, priceMin, priceMax, sortOption) {
+    this.getProducts = function(categoryId, subCategoryId, page, size, searchQuery, priceMin, priceMax, sortOption, sellerId) {
         var sortParam = null;
         if (sortOption === 'price_asc') sortParam = 'price,asc';
         else if (sortOption === 'price_desc') sortParam = 'price,desc';
@@ -175,6 +175,7 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
             size: size || 10
         };
         if (categoryId) params.categoryId = categoryId;
+        if (subCategoryId) params.subCategoryId = subCategoryId;
         if (sellerId) params.sellerId = sellerId;
         if (searchQuery) params.search = searchQuery;
         if (priceMin) params.minPrice = priceMin;
@@ -200,6 +201,18 @@ app.service('productService', ['apiService', '$q', '$http', 'API_BASE', function
                         content = content.concat(additional);
                     }
                     response.data.content = content;
+                    // Cache products for cart image enrichment fallback
+                    try {
+                        var existing = JSON.parse(localStorage.getItem('ekProductCache') || '[]');
+                        content.forEach(function(p) {
+                            if (!existing.find(function(e) { return e.productId == p.productId; })) {
+                                existing.push(p);
+                            }
+                        });
+                        // Keep cache size manageable (max 200 products)
+                        if (existing.length > 200) existing = existing.slice(-200);
+                        localStorage.setItem('ekProductCache', JSON.stringify(existing));
+                    } catch(e) { /* ignore quota errors */ }
                     return response.data;
                 }
                 

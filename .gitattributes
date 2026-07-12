@@ -1,0 +1,50 @@
+# ─── EntityKart .gitattributes ─────────────────────────────────────────────
+# Enforce LF line endings in the repository for all text files
+# (prevents the constant CRLF warnings on Windows)
+
+* text=auto eol=lf
+
+# Java / Kotlin / SQL source
+*.java text eol=lf
+*.kt text eol=lf
+*.kts text eol=lf
+*.sql text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.properties text eol=lf
+*.json text eol=lf
+
+# Web / Frontend
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Gradle wrapper
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+
+# Markdown / docs
+*.md text eol=lf
+*.txt text eol=lf
+
+# Binary files — do not modify
+*.jar binary
+*.apk binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.gif binary
+*.webp binary
+*.zip binary
+*.gz binary
+*.exe binary
+*.dll binary
+*.pak binary
+*.bin binary
+*.asar binary

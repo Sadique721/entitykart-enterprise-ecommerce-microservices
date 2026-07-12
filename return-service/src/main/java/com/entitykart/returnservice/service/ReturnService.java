@@ -4,12 +4,15 @@ import com.entitykart.returnservice.client.OrderServiceClient;
 import com.entitykart.returnservice.dto.*;
 import com.entitykart.returnservice.entity.ReturnEntity;
 import com.entitykart.returnservice.repository.ReturnRepository;
+import com.entitykart.shared.dto.ReturnApprovedEvent;
+import com.entitykart.shared.dto.ReturnRejectedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,6 +40,14 @@ public class ReturnService {
         }
         if (!"DELIVERED".equalsIgnoreCase(order.getOrderStatus())) {
             throw new RuntimeException("Return can only be requested for delivered orders. Current status: " + order.getOrderStatus());
+        }
+
+        // 30-day return window check
+        if (order.getOrderDate() != null) {
+            LocalDate orderDate = order.getOrderDate().toLocalDate();
+            if (LocalDate.now().isAfter(orderDate.plusDays(30))) {
+                throw new RuntimeException("Return period expired. Returns are only allowed within 30 days of placing the order.");
+            }
         }
 
         // 2. Check duplicate return request (not rejected = already active)
@@ -95,7 +106,10 @@ public class ReturnService {
 
     @Transactional(readOnly = true)
     public List<ReturnResponse> getAllReturns() {
-        return returnRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
+        // Safety cap: admin view limited to 500 most recent returns (HIGH-6c)
+        return returnRepository.findAll(
+                org.springframework.data.domain.PageRequest.of(0, 500))
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -117,21 +131,18 @@ public class ReturnService {
         String dec = decision.getDecision().toUpperCase();
 
         if ("APPROVED".equals(dec)) {
-            // Override refund amount if provided by admin
             if (decision.getRefundAmount() != null && decision.getRefundAmount() > 0) {
                 entity.setRefundAmount(decision.getRefundAmount());
             }
             entity.setStatus(ReturnEntity.ReturnStatus.APPROVED);
             entity.setAdminNote(decision.getAdminNote());
 
-            // Update order status to RETURNED
             try {
                 orderServiceClient.updateOrderStatus(entity.getOrderId(), "RETURNED");
             } catch (Exception e) {
                 log.warn("Could not update order status for orderId={}: {}", entity.getOrderId(), e.getMessage());
             }
 
-            // Trigger refund processing
             refundProcessor.processRefund(entity);
 
         } else if ("REJECTED".equals(dec)) {
@@ -162,16 +173,36 @@ public class ReturnService {
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private void publishReturnEvent(ReturnEntity entity) {
-        ReturnApprovedEvent event = new ReturnApprovedEvent(
-                entity.getReturnId(),
-                entity.getOrderId(),
-                entity.getCustomerId(),
-                entity.getProductId(),
-                entity.getRefundAmount(),
-                entity.getStatus().name()
-        );
-        kafkaTemplate.send(RETURN_EVENTS_TOPIC, event);
-        log.info("Published return event for returnId={}, status={}", entity.getReturnId(), entity.getStatus());
+        Object event;
+        if (entity.getStatus() == ReturnEntity.ReturnStatus.APPROVED) {
+            event = new ReturnApprovedEvent(
+                    entity.getReturnId(),
+                    entity.getOrderId(),
+                    entity.getCustomerId(),
+                    entity.getProductId(),
+                    entity.getRefundAmount(),
+                    entity.getStatus().name()
+            );
+        } else if (entity.getStatus() == ReturnEntity.ReturnStatus.REJECTED) {
+            event = new ReturnRejectedEvent(
+                    entity.getReturnId(),
+                    entity.getOrderId(),
+                    entity.getCustomerId(),
+                    entity.getProductId(),
+                    entity.getRejectionReason(),
+                    entity.getStatus().name()
+            );
+        } else {
+            log.warn("Skipping Kafka return event publication for status: {}", entity.getStatus());
+            return;
+        }
+
+        try {
+            kafkaTemplate.send(RETURN_EVENTS_TOPIC, event);
+            log.info("Published return event successfully for returnId={}, status={}", entity.getReturnId(), entity.getStatus());
+        } catch (Exception e) {
+            log.error("Failed to publish return event to Kafka: {}", e.getMessage());
+        }
     }
 
     private ReturnResponse toResponse(ReturnEntity entity) {

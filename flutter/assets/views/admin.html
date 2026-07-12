@@ -616,7 +616,7 @@
                         <thead>
                             <tr>
                                 <th>Review ID</th>
-                                <th>Product ID</th>
+                                <th>Product</th>
                                 <th>Customer ID</th>
                                 <th>Rating</th>
                                 <th>Comment</th>
@@ -627,7 +627,12 @@
                         <tbody>
                             <tr ng-repeat="rv in getPaginatedItems(adminReviews, 'reviews')">
                                 <td><strong>#{{ rv.reviewId }}</strong></td>
-                                <td class="text-secondary">#{{ rv.productId }}</td>
+                                <td style="display: flex; align-items: center; gap: 0.6rem;">
+                                    <div style="width: 32px; height: 32px; border-radius: 4px; overflow: hidden; border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; background: white; flex-shrink: 0;">
+                                        <img ng-src="{{ rv.productImage || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                    <span style="font-weight: 500;">{{ rv.productName || ('Product #' + rv.productId) }}</span>
+                                </td>
                                 <td class="text-secondary">#{{ rv.customerId }}</td>
                                 <td>
                                     <span style="color: #f59e0b; display: flex; gap: 2px;">
@@ -1351,20 +1356,32 @@
                     </div>
                 </div>
 
-                <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Shipping Address</h4>
-                <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.4; margin-bottom: 1.5rem;">
-                    {{ viewingOrder.shippingAddress.addressLine1 }}<br>
-                    <span ng-if="viewingOrder.shippingAddress.addressLine2">{{ viewingOrder.shippingAddress.addressLine2 }}<br></span>
-                    {{ viewingOrder.shippingAddress.city }}, {{ viewingOrder.shippingAddress.state }} - {{ viewingOrder.shippingAddress.zipCode }}<br>
-                    <strong>Country:</strong> {{ viewingOrder.shippingAddress.country }}
-                </p>
+                <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem; flex-wrap: wrap;" ng-if="viewingOrder.shippingAddress">
+                    <div style="flex: 1; min-width: 200px;">
+                        <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Shipping Address</h4>
+                        <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 0;">
+                            <strong style="color: var(--text-primary);">{{ viewingOrder.shippingAddress.fullName || 'Customer' }}</strong><br>
+                            {{ viewingOrder.shippingAddress.streetAddress }}<br>
+                            {{ viewingOrder.shippingAddress.city }}, {{ viewingOrder.shippingAddress.state }} - {{ viewingOrder.shippingAddress.zipCode }}<br>
+                            <strong>Phone:</strong> {{ viewingOrder.shippingAddress.phone || 'N/A' }}
+                        </p>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;" ng-if="viewingOrder.paymentDetails">
+                        <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Payment Details</h4>
+                        <p class="text-secondary" style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 0;">
+                            <strong>Method:</strong> {{ (viewingOrder.paymentDetails.paymentMode || 'COD') | uppercase }}<br>
+                            <strong>Ref/Txn ID:</strong> {{ viewingOrder.paymentDetails.transactionRef || 'N/A' }}<br>
+                            <strong>Date:</strong> {{ viewingOrder.paymentDetails.paymentDate | date:'medium' || 'N/A' }}
+                        </p>
+                    </div>
+                </div>
 
                 <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.4rem;">Order Items</h4>
                 <div class="table-responsive" style="margin-bottom: 1.5rem;">
                     <table class="data-table" style="font-size: 0.85rem; background: rgba(0,0,0,0.1);">
                         <thead>
                             <tr>
-                                <th>Product ID</th>
+                                <th>Product</th>
                                 <th>Quantity</th>
                                 <th>Unit Price</th>
                                 <th>Subtotal</th>
@@ -1372,7 +1389,12 @@
                         </thead>
                         <tbody>
                             <tr ng-repeat="item in viewingOrder.orderItems">
-                                <td><strong>#{{ item.productId }}</strong></td>
+                                <td style="display: flex; align-items: center; gap: 0.6rem;">
+                                    <div style="width: 36px; height: 36px; border-radius: 4px; overflow: hidden; border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; background: white; flex-shrink: 0;">
+                                        <img ng-src="{{ item.productImage || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                    <span style="font-weight: 500;">{{ item.productName || ('Product #' + item.productId) }}</span>
+                                </td>
                                 <td>{{ item.quantity }}</td>
                                 <td>₹{{ item.unitPrice | number:2 }}</td>
                                 <td>₹{{ (item.unitPrice * item.quantity) | number:2 }}</td>

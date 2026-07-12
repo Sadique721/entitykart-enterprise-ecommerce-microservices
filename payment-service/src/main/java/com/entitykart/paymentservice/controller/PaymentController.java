@@ -1,5 +1,6 @@
 package com.entitykart.paymentservice.controller;
 
+import com.entitykart.paymentservice.dto.EmiPaymentRequest;
 import com.entitykart.paymentservice.dto.PaymentDTO;
 import com.entitykart.paymentservice.dto.PaymentRequest;
 import com.entitykart.paymentservice.entity.PaymentEntity;
@@ -58,15 +59,14 @@ public class PaymentController {
 
     // ─── EMI ──────────────────────────────────────────────────────────────────
     @PostMapping("/process-emi")
-    public PaymentEntity processEmiPayment(
-            @RequestParam Long orderId,
-            @RequestParam Double amount,
-            @RequestParam(required = false) String cardNumber,
-            @RequestParam(required = false, defaultValue = "3") Integer emiTenure,
-            @RequestParam(required = false) String customerEmail,
-            @RequestParam(required = false) String customerName) {
-        return paymentService.processEmiPayment(orderId, amount, cardNumber, emiTenure, customerEmail, customerName);
+    public PaymentEntity processEmiPayment(@RequestBody EmiPaymentRequest req) {
+        // CRIT-3 FIX: Card data received in POST body only — never as URL params
+        return paymentService.processEmiPayment(
+                req.getOrderId(), req.getAmount(), req.getCardNumber(),
+                req.getEmiTenure() != null ? req.getEmiTenure() : 3,
+                req.getCustomerEmail(), req.getCustomerName());
     }
+
 
     // ─── Assign COD transaction when order is DELIVERED ──────────────────────
     @PostMapping("/assign-cod-transaction/{orderId}")

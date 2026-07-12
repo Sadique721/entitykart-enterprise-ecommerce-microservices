@@ -130,6 +130,10 @@ app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpPr
 
     // Add interceptor to pass authentication tokens and handle common response statuses globally
     $httpProvider.interceptors.push('apiInterceptor');
+
+    // Configure default CSRF settings
+    $httpProvider.defaults.xsrfCookieName = 'XSRF-TOKEN';
+    $httpProvider.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
 }]);
 
 // Global app initialization

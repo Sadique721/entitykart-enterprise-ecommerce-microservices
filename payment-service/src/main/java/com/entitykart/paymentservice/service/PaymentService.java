@@ -1,7 +1,7 @@
 package com.entitykart.paymentservice.service;
 
 import com.entitykart.paymentservice.client.OrderServiceClient;
-import com.entitykart.paymentservice.dto.PaymentProcessedEvent;
+import com.entitykart.shared.dto.PaymentProcessedEvent;
 import com.entitykart.paymentservice.dto.PaymentRequest;
 import com.entitykart.paymentservice.entity.PaymentEntity;
 import com.entitykart.paymentservice.repository.PaymentRepository;
@@ -50,23 +50,56 @@ public class PaymentService {
     // ─── Card Payment (Authorize.Net sandbox or mock) ─────────────────────────
 
     @Transactional
+    public PaymentEntity checkAndCreateInitialPayment(PaymentRequest request) {
+        paymentRepository.findByOrderId(request.getOrderId())
+                .filter(p -> p.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS)
+                .ifPresent(p -> {
+                    throw new RuntimeException("Payment has already been successfully processed for order " + request.getOrderId());
+                });
+
+        PaymentEntity payment = paymentRepository.findByOrderId(request.getOrderId()).orElse(null);
+        if (payment == null) {
+            payment = new PaymentEntity();
+            payment.setOrderId(request.getOrderId());
+            payment.setAmount(request.getAmount());
+            payment.setPaymentMode(PaymentEntity.PaymentMode.CARD);
+            payment.setPaymentStatus(PaymentEntity.PaymentStatus.PENDING);
+            payment = paymentRepository.save(payment);
+        }
+        return payment;
+    }
+
+    @Transactional
+    public PaymentEntity updatePaymentStatusAndPublish(Long paymentId, PaymentEntity.PaymentStatus status, String transId, String responseText, String customerEmail, String customerName) {
+        PaymentEntity payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment record not found: " + paymentId));
+        payment.setPaymentStatus(status);
+        payment.setGatewayTransactionId(transId);
+        payment.setTransactionRef(transId != null ? transId : "REF_" + System.currentTimeMillis());
+        payment.setPaymentDate(LocalDateTime.now());
+        payment.setGatewayResponseText(responseText);
+        
+        return saveAndPublish(payment, customerEmail, customerName);
+    }
+
     public PaymentEntity processCardPayment(PaymentRequest request) {
         boolean isMockMode = "test".equalsIgnoreCase(environment)
                 || "mock".equalsIgnoreCase(environment)
                 || apiLoginId == null
-                || apiLoginId.contains("dummy")
-                || apiLoginId.contains("your");
+                || apiLoginId.contains("dummy");
+
+        PaymentEntity payment = checkAndCreateInitialPayment(request);
+        if (payment.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS) {
+            return payment;
+        }
 
         if (isMockMode) {
-            PaymentEntity payment = new PaymentEntity();
-            payment.setOrderId(request.getOrderId());
-            payment.setAmount(request.getAmount());
-            payment.setPaymentMode(PaymentEntity.PaymentMode.CARD);
-            payment.setPaymentStatus(PaymentEntity.PaymentStatus.SUCCESS);
-            payment.setTransactionRef("MOCK_CARD_" + System.currentTimeMillis());
-            payment.setPaymentDate(LocalDateTime.now());
-            payment.setGatewayResponseText("Simulated Approved");
-            return saveAndPublish(payment, request.getCustomerEmail(), request.getCustomerName());
+            return updatePaymentStatusAndPublish(payment.getPaymentId(), 
+                PaymentEntity.PaymentStatus.SUCCESS, 
+                "MOCK_CARD_" + System.currentTimeMillis(), 
+                "Simulated Approved", 
+                request.getCustomerEmail(), 
+                request.getCustomerName());
         }
 
         configureAuthorizeNet();
@@ -97,21 +130,25 @@ public class PaymentService {
         controller.execute();
 
         CreateTransactionResponse response = controller.getApiResponse();
-        PaymentEntity payment = new PaymentEntity();
-        payment.setOrderId(request.getOrderId());
-        payment.setAmount(request.getAmount());
-        payment.setPaymentMode(PaymentEntity.PaymentMode.CARD);
+
+        PaymentEntity.PaymentStatus finalStatus = PaymentEntity.PaymentStatus.FAILED;
+        String transId = null;
+        String responseText = "Gateway error";
 
         if (response != null && response.getMessages().getResultCode() == MessageTypeEnum.OK) {
-            applySuccessfulGatewayResponse(payment, response.getTransactionResponse());
-            log.info("Payment SUCCESS for order: {}", request.getOrderId());
+            TransactionResponse result = response.getTransactionResponse();
+            if (result != null && result.getMessages() != null) {
+                finalStatus = PaymentEntity.PaymentStatus.SUCCESS;
+                transId = result.getTransId();
+                responseText = result.getMessages().getMessage().get(0).getDescription();
+            } else if (result != null && result.getErrors() != null && !result.getErrors().getError().isEmpty()) {
+                responseText = result.getErrors().getError().get(0).getErrorText();
+            }
         } else {
-            payment.setPaymentStatus(PaymentEntity.PaymentStatus.FAILED);
-            payment.setGatewayResponseText(getGatewayFailureMessage(response));
-            log.error("Payment FAILED for order: {}", request.getOrderId());
+            responseText = getGatewayFailureMessage(response);
         }
 
-        return saveAndPublish(payment, request.getCustomerEmail(), request.getCustomerName());
+        return updatePaymentStatusAndPublish(payment.getPaymentId(), finalStatus, transId, responseText, request.getCustomerEmail(), request.getCustomerName());
     }
 
     // ─── UPI / COD — Offline / generic payment ────────────────────────────────
@@ -124,6 +161,12 @@ public class PaymentService {
     @Transactional
     public PaymentEntity processOfflinePayment(Long orderId, Double amount, String paymentMode,
                                                 String customerEmail, String customerName) {
+        paymentRepository.findByOrderId(orderId)
+                .filter(p -> p.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS)
+                .ifPresent(p -> {
+                    throw new RuntimeException("Payment has already been successfully processed for order " + orderId);
+                });
+
         PaymentEntity payment = new PaymentEntity();
         payment.setOrderId(orderId);
         payment.setAmount(amount);
@@ -141,7 +184,6 @@ public class PaymentService {
         payment.setTransactionRef(prefix + System.currentTimeMillis());
 
         if ("COD".equals(paymentMode.toUpperCase())) {
-            // COD stays PENDING until order is DELIVERED
             payment.setPaymentStatus(PaymentEntity.PaymentStatus.PENDING);
         } else {
             payment.setPaymentStatus(PaymentEntity.PaymentStatus.SUCCESS);
@@ -156,6 +198,12 @@ public class PaymentService {
     @Transactional
     public PaymentEntity processNetBankingPayment(Long orderId, Double amount, String bankName,
                                                    String customerEmail, String customerName) {
+        paymentRepository.findByOrderId(orderId)
+                .filter(p -> p.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS)
+                .ifPresent(p -> {
+                    throw new RuntimeException("Payment has already been successfully processed for order " + orderId);
+                });
+
         PaymentEntity payment = new PaymentEntity();
         payment.setOrderId(orderId);
         payment.setAmount(amount);
@@ -173,6 +221,12 @@ public class PaymentService {
     @Transactional
     public PaymentEntity processWalletPayment(Long orderId, Double amount, String walletType,
                                                String customerEmail, String customerName) {
+        paymentRepository.findByOrderId(orderId)
+                .filter(p -> p.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS)
+                .ifPresent(p -> {
+                    throw new RuntimeException("Payment has already been successfully processed for order " + orderId);
+                });
+
         PaymentEntity payment = new PaymentEntity();
         payment.setOrderId(orderId);
         payment.setAmount(amount);
@@ -190,6 +244,12 @@ public class PaymentService {
     @Transactional
     public PaymentEntity processEmiPayment(Long orderId, Double amount, String cardNumber,
                                             Integer emiTenure, String customerEmail, String customerName) {
+        paymentRepository.findByOrderId(orderId)
+                .filter(p -> p.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS)
+                .ifPresent(p -> {
+                    throw new RuntimeException("Payment has already been successfully processed for order " + orderId);
+                });
+
         PaymentEntity payment = new PaymentEntity();
         payment.setOrderId(orderId);
         payment.setAmount(amount);
@@ -220,7 +280,6 @@ public class PaymentService {
         payment.setGatewayResponseText("COD collected on delivery");
 
         PaymentEntity saved = paymentRepository.save(payment);
-        // Update order payment status to PAID
         orderServiceClient.updateOrderPaymentStatus(orderId, "PAID");
         log.info("COD transaction assigned for delivered order: {}", orderId);
         return saved;
@@ -236,7 +295,10 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public List<PaymentEntity> getAllPayments() {
-        return paymentRepository.findAll();
+        // Safety cap: admin-only, max 500 (HIGH-6c). Use paginated API for larger datasets.
+        return paymentRepository.findAll(
+                org.springframework.data.domain.PageRequest.of(0, 500))
+                .getContent();
     }
 
     // ─── Internal helpers ─────────────────────────────────────────────────────
@@ -257,9 +319,14 @@ public class PaymentService {
         } else if (saved.getPaymentStatus() == PaymentEntity.PaymentStatus.FAILED) {
             orderServiceClient.updateOrderPaymentStatus(saved.getOrderId(), "UNPAID");
         }
-        // PENDING (COD) — don't update order status until delivery
 
-        kafkaTemplate.send(PAYMENT_EVENTS_TOPIC, event);
+        try {
+            kafkaTemplate.send(PAYMENT_EVENTS_TOPIC, event);
+            log.info("Published payment-events topic successfully for order: {}", saved.getOrderId());
+        } catch (Exception e) {
+            log.error("Failed to publish payment-events to Kafka: {}", e.getMessage());
+        }
+        
         return saved;
     }
 
@@ -295,6 +362,9 @@ public class PaymentService {
     }
 
     private String formatExpiry(String expiryMonth, String expiryYear) {
+        if (expiryMonth == null || expiryYear == null) {
+            return "2029-12";
+        }
         String month = expiryMonth.length() == 1 ? "0" + expiryMonth : expiryMonth;
         String year = expiryYear.length() == 2 ? "20" + expiryYear : expiryYear;
         return year + "-" + month;

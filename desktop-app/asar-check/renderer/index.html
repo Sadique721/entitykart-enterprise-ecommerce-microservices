@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EntityKart Control Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --surface2:  #21262d;
+    --border:    #30363d;
+    --accent:    #58a6ff;
+    --accent2:   #7ee787;
+    --warn:      #f78166;
+    --text:      #e6edf3;
+    --muted:     #8b949e;
+    --radius:    8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Sidebar ── */
+  .layout { display: flex; flex: 1; overflow: hidden; }
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .brand {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-logo {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #58a6ff, #7ee787);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; color: #0d1117;
+    flex-shrink: 0;
+  }
+  .brand-name { font-weight: 700; font-size: 14px; color: var(--text); }
+  .brand-sub  { font-size: 11px; color: var(--muted); }
+
+  .nav { flex: 1; padding: 8px; overflow-y: auto; }
+  .nav-section { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; padding: 12px 8px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: var(--radius);
+    cursor: pointer; color: var(--muted); font-size: 13px;
+    transition: all .15s; user-select: none; margin-bottom: 1px;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(88,166,255,.12); color: var(--accent); }
+  .nav-item svg { flex-shrink: 0; }
+
+  .sidebar-footer {
+    padding: 12px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+  }
+  .sidebar-footer span { color: var(--accent2); font-weight: 600; }
+
+  /* ── Content ── */
+  .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar {
+    height: 48px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 18px; gap: 12px;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-weight: 600; font-size: 14px; flex: 1; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 6px; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all .15s; user-select: none;
+  }
+  .btn-primary { background: var(--accent); color: #0d1117; }
+  .btn-primary:hover { filter: brightness(1.12); }
+  .btn-danger  { background: var(--warn); color: #0d1117; }
+  .btn-danger:hover { filter: brightness(1.12); }
+  .btn-ghost {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+  .pages { flex: 1; overflow: hidden; position: relative; }
+  .page { display: none; height: 100%; overflow-y: auto; padding: 20px; }
+  .page.active { display: block; }
+
+  /* ── Dashboard ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 14px; margin-bottom: 22px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 700; }
+  .stat-value.green { color: var(--accent2); }
+  .stat-value.red   { color: var(--warn); }
+  .stat-value.blue  { color: var(--accent); }
+
+  /* ── Service Table ── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .section-title { font-size: 14px; font-weight: 600; }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--surface2); padding: 10px 16px;
+    text-align: left; font-size: 11px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: .6px;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.02); }
+  td { padding: 10px 16px; font-size: 13px; vertical-align: middle; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .badge.running { background: rgba(126,231,135,.15); color: var(--accent2); border: 1px solid rgba(126,231,135,.3); }
+  .badge.stopped { background: rgba(247,129,102,.15); color: var(--warn);    border: 1px solid rgba(247,129,102,.3); }
+  .dot { width:7px; height:7px; border-radius: 50%; }
+  .dot.running { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); animation: pulse 2s infinite; }
+  .dot.stopped { background: var(--warn); }
+  @keyframes pulse {
+    0%,100% { opacity:1; }
+    50% { opacity:.4; }
+  }
+  .service-name { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+  .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .port-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 11px; font-family: 'Consolas', monospace; color: var(--muted); }
+  .action-btns { display: flex; gap: 6px; }
+  .icon-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 5px; cursor: pointer; padding: 5px 9px;
+    font-size: 11px; color: var(--muted); transition: all .15s;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .icon-btn:hover { background: rgba(88,166,255,.1); color: var(--accent); border-color: var(--accent); }
+  .icon-btn.stop:hover { background: rgba(247,129,102,.1); color: var(--warn); border-color: var(--warn); }
+
+  /* ── Logs ── */
+  .log-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+  select {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 12px; border-radius: 6px;
+    font-family: inherit; font-size: 12px; cursor: pointer;
+  }
+  .log-box {
+    background: #010409; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; font-family: 'Consolas','Courier New', monospace; font-size: 12px;
+    line-height: 1.6; color: #8b949e; height: calc(100vh - 220px); overflow-y: auto;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  .log-box .info  { color: #58a6ff; }
+  .log-box .warn  { color: #f0883e; }
+  .log-box .error { color: #f78166; }
+  .log-box .ok    { color: #7ee787; }
+
+  /* ── Health ── */
+  .health-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 14px; }
+  .health-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .health-icon { font-size: 28px; }
+  .health-label { font-weight: 600; font-size: 14px; }
+  .health-status { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-block; width: fit-content; }
+  .health-status.ok  { background: rgba(126,231,135,.15); color: var(--accent2); }
+  .health-status.fail{ background: rgba(247,129,102,.15); color: var(--warn); }
+  .health-status.checking { background: rgba(88,166,255,.15); color: var(--accent); }
+
+  /* ── Settings ── */
+  .settings-form { max-width: 600px; display: flex; flex-direction: column; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .form-input {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 6px;
+    font-family: inherit; font-size: 13px; outline: none; transition: border .15s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* Quick Actions */
+  .quick-actions { display: flex; gap: 10px; margin-bottom: 22px; flex-wrap: wrap; }
+
+  /* About page */
+  .about-card {
+    max-width: 560px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 30px;
+  }
+  .about-logo { width: 60px; height: 60px; background: linear-gradient(135deg,#58a6ff,#7ee787); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #0d1117; margin-bottom: 18px; }
+  .about-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .about-version { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .about-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .about-list li { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+  .about-list li::before { content: "✓"; color: var(--accent2); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">EK</div>
+      <div>
+        <div class="brand-name">EntityKart</div>
+        <div class="brand-sub">Control Panel</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('services')" id="nav-services">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12H19M5 6h14M5 18h14"/></svg>
+        Services
+      </div>
+      <div class="nav-section">Tools</div>
+      <div class="nav-item" onclick="showPage('logs')" id="nav-logs">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+        Logs
+      </div>
+      <div class="nav-item" onclick="showPage('health')" id="nav-health">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        Health Check
+      </div>
+      <div class="nav-section">Config</div>
+      <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </div>
+      <div class="nav-item" onclick="showPage('about')" id="nav-about">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        About
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      v1.0.0 &nbsp;·&nbsp; <span>Production</span>
+    </div>
+  </aside>
+
+  <!-- ══ CONTENT ══ -->
+  <main class="content">
+
+    <!-- Top Bar -->
+    <div class="topbar">
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
+      <button class="btn btn-ghost" onclick="refreshStatus()">↻ Refresh</button>
+      <button class="btn btn-primary" onclick="startAll()">▶ Start All</button>
+      <button class="btn btn-danger"  onclick="stopAll()">■ Stop All</button>
+    </div>
+
+    <!-- Pages -->
+    <div class="pages">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Running Services</div>
+            <div class="stat-value green" id="stat-running">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Stopped Services</div>
+            <div class="stat-value red" id="stat-stopped">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Services</div>
+            <div class="stat-value blue" id="stat-total">10</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Last Checked</div>
+            <div class="stat-value" style="font-size:14px;margin-top:4px" id="stat-time">—</div>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="btn btn-primary" onclick="startAll()">▶  Start All Services</button>
+          <button class="btn btn-danger"  onclick="stopAll()">■  Stop All Services</button>
+          <button class="btn btn-ghost"   onclick="runHealth()">♥  Run Health Check</button>
+          <button class="btn btn-ghost"   onclick="openFolder()">📁  Open Project Folder</button>
+        </div>
+
+        <div class="section-header">
+          <span class="section-title">Service Overview</span>
+          <span style="color:var(--muted);font-size:11px" id="dashboard-refresh-info">Auto-refreshes every 30s</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Service</th><th>Port</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-table-body">
+              <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">Loading services...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── SERVICES ── -->
+      <div class="page" id="page-services">
+        <div class="section-header" style="margin-bottom:16px">
+          <span class="section-title">All Microservices</span>
+          <button class="btn btn-ghost" onclick="refreshStatus()">↻ Refresh Status</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Service</th><th>Port</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="services-table-body">
+              <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── LOGS ── -->
+      <div class="page" id="page-logs">
+        <div class="log-controls">
+          <label style="color:var(--muted);font-size:12px">Service:</label>
+          <select id="log-service-select">
+            <option value="common-services">API Gateway / Common Services</option>
+            <option value="user-service">User Service</option>
+            <option value="product-service">Product Service</option>
+            <option value="cart-service">Cart Service</option>
+            <option value="order-service">Order Service</option>
+            <option value="payment-service">Payment Service</option>
+            <option value="review-service">Review Service</option>
+            <option value="return-service">Return Service</option>
+            <option value="wishlist-service">Wishlist Service</option>
+          </select>
+          <button class="btn btn-primary" onclick="startLogs()">▶ Stream Logs</button>
+          <button class="btn btn-ghost"   onclick="stopLogs()">■ Stop</button>
+          <button class="btn btn-ghost"   onclick="clearLogs()">🗑 Clear</button>
+        </div>
+        <div class="log-box" id="log-output">Select a service and click "Stream Logs" to begin...</div>
+      </div>
+
+      <!-- ── HEALTH ── -->
+      <div class="page" id="page-health">
+        <div class="section-header" style="margin-bottom:18px">
+          <span class="section-title">System Health Check</span>
+          <button class="btn btn-primary" onclick="runHealth()">Run Health Check</button>
+        </div>
+        <div class="health-grid" id="health-grid">
+          <div class="health-card">
+            <div class="health-icon">🌐</div>
+            <div class="health-label">API Gateway</div>
+            <div class="health-status checking" id="h-gateway">Not checked</div>
+          </div>
+          <div class="health-card">
+            <div class="health-icon">👤</div>
+            <div class="health-label">User Service</div>
+            <div class="health-status checking" id="h-userSvc">Not checked</div>
+          </div>
+          <div class="health-card">
+            <div class="health-icon">📨</div>
+            <div class="health-label">Kafka Broker</div>
+            <div class="health-status checking" id="h-kafka">Not checked</div>
+          </div>
+          <div class="health-card">
+            <div class="health-icon">⏱️</div>
+            <div class="health-label">Last Checked</div>
+            <div class="health-status checking" id="h-time">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SETTINGS ── -->
+      <div class="page" id="page-settings">
+        <div class="section-title" style="margin-bottom:18px">Environment Configuration</div>
+        <form class="settings-form" onsubmit="saveSettings(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">MySQL Host (Aiven)</label>
+              <input class="form-input" id="cfg-DB_HOST" placeholder="host.aivencloud.com"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">MySQL Port</label>
+              <input class="form-input" id="cfg-DB_PORT" placeholder="3306"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">DB Username</label>
+              <input class="form-input" id="cfg-DB_USER" placeholder="avnadmin"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">DB Password</label>
+              <input class="form-input" type="password" id="cfg-DB_PASSWORD" placeholder="••••••••"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">JWT Secret (min 32 characters)</label>
+            <input class="form-input" id="cfg-JWT_SECRET" placeholder="your-super-secure-jwt-secret-key"/>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">SMTP Email (Gmail)</label>
+              <input class="form-input" id="cfg-MAIL_USERNAME" placeholder="you@gmail.com"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">SMTP App Password</label>
+              <input class="form-input" type="password" id="cfg-MAIL_PASSWORD" placeholder="••••••••"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Cloudinary Cloud Name</label>
+              <input class="form-input" id="cfg-CLOUDINARY_CLOUD_NAME" placeholder="my-cloud"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cloudinary API Key</label>
+              <input class="form-input" id="cfg-CLOUDINARY_API_KEY" placeholder="123456789012345"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Authorize.Net Login ID</label>
+              <input class="form-input" id="cfg-AUTHORIZE_NET_API_LOGIN_ID" placeholder="API Login ID"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Authorize.Net Transaction Key</label>
+              <input class="form-input" id="cfg-AUTHORIZE_NET_TRANSACTION_KEY" placeholder="Transaction Key"/>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" type="submit">💾  Save Configuration</button>
+            <button class="btn btn-ghost"   type="button" onclick="loadSettings()">↻  Reload from .env</button>
+          </div>
+          <div id="settings-msg" style="font-size:12px;color:var(--accent2);display:none">✓ Configuration saved successfully!</div>
+        </form>
+      </div>
+
+      <!-- ── ABOUT ── -->
+      <div class="page" id="page-about">
+        <div class="about-card">
+          <div class="about-logo">EK</div>
+          <div class="about-title">EntityKart Control Panel</div>
+          <div class="about-version">Version 1.0.0 &nbsp;·&nbsp; Enterprise Edition</div>
+          <ul class="about-list">
+            <li>9 Spring Boot Microservices</li>
+            <li>Spring Cloud Gateway + Eureka Service Discovery</li>
+            <li>Apache Kafka Event-Driven Architecture</li>
+            <li>Aiven MySQL — 9 separate databases</li>
+            <li>Flyway Database Migrations</li>
+            <li>HttpOnly Cookie Session Management</li>
+            <li>Resilience4j Circuit Breakers</li>
+            <li>145 Automated Tests (100% pass)</li>
+            <li>Authorize.Net Payment Gateway</li>
+            <li>Cloudinary Image Storage</li>
+          </ul>
+          <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
+            Built with ❤️ by Antigravity Elite Team &nbsp;·&nbsp; 2026
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /pages -->
+  </main>
+</div>
+
+<script>
+const api = window.electronAPI;
+let services = [];
+let statusData = {};
+let autoRefreshTimer = null;
+
+const COLORS = {
+  'common-services':  '#58a6ff',
+  'user-service':     '#a78bfa',
+  'product-service':  '#34d399',
+  'cart-service':     '#fbbf24',
+  'order-service':    '#60a5fa',
+  'payment-service':  '#f472b6',
+  'review-service':   '#fb923c',
+  'return-service':   '#e879f9',
+  'wishlist-service': '#2dd4bf',
+  'kafka':            '#f87171',
+};
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  const titles = { dashboard:'Dashboard', services:'Services', logs:'Logs', health:'Health Check', settings:'Settings', about:'About' };
+  document.getElementById('topbar-title').textContent = titles[id] || id;
+  if (id === 'settings') loadSettings();
+  if (id === 'health')   runHealth();
+}
+
+// ── Service Table Renderer ────────────────────────────────────────────────────
+function renderTable(tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  if (!services.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">No services loaded</td></tr>'; return; }
+  tbody.innerHTML = services.map(svc => {
+    const status = statusData[svc.key] || 'STOPPED';
+    const isUp   = status === 'RUNNING';
+    const col    = COLORS[svc.key] || '#8b949e';
+    return `<tr>
+      <td><div class="service-name"><span class="color-dot" style="background:${col}"></span>${svc.name}</div></td>
+      <td><span class="port-badge">:${svc.port}</span></td>
+      <td><span class="badge ${isUp?'running':'stopped'}"><span class="dot ${isUp?'running':'stopped'}"></span>${status}</span></td>
+      <td><div class="action-btns">
+        <span class="icon-btn" onclick="startSvc('${svc.key}')">▶ Start</span>
+        <span class="icon-btn stop" onclick="stopSvc('${svc.key}')">■ Stop</span>
+        <span class="icon-btn" onclick="viewLogs('${svc.key}')">📋 Logs</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats() {
+  const running = Object.values(statusData).filter(s=>s==='RUNNING').length;
+  const stopped = Object.values(statusData).filter(s=>s==='STOPPED').length;
+  document.getElementById('stat-running').textContent = running;
+  document.getElementById('stat-stopped').textContent = stopped;
+  document.getElementById('stat-total').textContent   = services.length;
+  document.getElementById('stat-time').textContent    = new Date().toLocaleTimeString();
+}
+
+// ── Status Refresh ────────────────────────────────────────────────────────────
+async function refreshStatus() {
+  if (!api) return;
+  statusData = await api.getServiceStatus();
+  renderTable('dashboard-table-body');
+  renderTable('services-table-body');
+  updateStats();
+}
+
+async function init() {
+  if (!api) return;
+  services = await api.getServicesList();
+  await refreshStatus();
+  // Auto-refresh every 30s
+  clearInterval(autoRefreshTimer);
+  autoRefreshTimer = setInterval(refreshStatus, 30000);
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+async function startAll() {
+  const btn = event.target;
+  btn.textContent = '⏳ Starting...'; btn.disabled = true;
+  await api.startAll();
+  setTimeout(() => { btn.textContent = '▶ Start All'; btn.disabled = false; refreshStatus(); }, 4000);
+}
+
+async function stopAll() {
+  if (!confirm('Stop ALL running services?')) return;
+  await api.stopAll();
+  setTimeout(refreshStatus, 2000);
+}
+
+async function startSvc(name) { await api.startService(name); setTimeout(refreshStatus, 3000); }
+async function stopSvc(name)  { await api.stopService(name);  setTimeout(refreshStatus, 2000); }
+
+function openFolder() { api.openProjectFolder && api.openProjectFolder(); }
+
+function viewLogs(svcKey) {
+  document.getElementById('log-service-select').value = svcKey;
+  showPage('logs');
+  setTimeout(startLogs, 100);
+}
+
+// ── Logs ──────────────────────────────────────────────────────────────────────
+function startLogs() {
+  const svc = document.getElementById('log-service-select').value;
+  const box = document.getElementById('log-output');
+  box.textContent = `Connecting to ${svc} logs...\n`;
+  if (api) api.streamLogs(svc);
+}
+
+function stopLogs()  { if (api) api.stopLogStream(); }
+function clearLogs() { document.getElementById('log-output').textContent = ''; }
+
+if (window.electronAPI) {
+  window.electronAPI.onLogData(data => {
+    const box = document.getElementById('log-output');
+    box.textContent += data;
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+// ── Health ────────────────────────────────────────────────────────────────────
+async function runHealth() {
+  const ids = ['h-gateway','h-userSvc','h-kafka','h-time'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = 'Checking...'; el.className = 'health-status checking'; }
+  });
+  if (!api) return;
+  const r = await api.checkHealth();
+  const set = (id, ok) => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = ok ? '✓ Online' : '✗ Offline'; el.className = 'health-status ' + (ok ? 'ok' : 'fail'); }
+  };
+  set('h-gateway', r.gateway);
+  set('h-userSvc', r.userSvc);
+  set('h-kafka',   r.kafka);
+  const t = document.getElementById('h-time');
+  if (t) { t.textContent = new Date(r.timestamp).toLocaleTimeString(); t.className = 'health-status ok'; }
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+async function loadSettings() {
+  if (!api) return;
+  const cfg = await api.readConfig();
+  for (const [k,v] of Object.entries(cfg)) {
+    const el = document.getElementById('cfg-' + k);
+    if (el) el.value = v;
+  }
+}
+
+async function saveSettings(e) {
+  e.preventDefault();
+  if (!api) return;
+  const cfg = {};
+  document.querySelectorAll('[id^="cfg-"]').forEach(el => {
+    cfg[el.id.replace('cfg-','')] = el.value;
+  });
+  await api.saveConfig(cfg);
+  const msg = document.getElementById('settings-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

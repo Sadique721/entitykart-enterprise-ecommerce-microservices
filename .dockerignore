@@ -1,0 +1,26 @@
+# EntityKart .dockerignore
+.git
+.gitignore
+.idea
+.vscode
+.gradle
+**/build/
+**/bin/
+node_modules/
+**/node_modules/
+*.apk
+*.keystore
+*-logs.txt
+*.log
+android/
+flutter/
+metadata.json
+docker-compose.yml
+Dockerfile
+README.md
+ARCHITECTURE_AND_FLOWS.md
+HOW_TO_START.txt
+build_all.bat
+start_local.ps1
+desktop-app/
+shared-lib/

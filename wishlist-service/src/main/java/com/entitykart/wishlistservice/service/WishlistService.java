@@ -23,6 +23,9 @@ public class WishlistService {
 
     @Transactional
     public void addToWishlist(Long customerId, Long productId) {
+        if (customerId == null || productId == null) {
+            throw new RuntimeException("Customer ID and Product ID cannot be null");
+        }
         if (wishlistRepository.existsByCustomerIdAndProductId(customerId, productId)) {
             throw new RuntimeException("Product already in wishlist");
         }
@@ -82,6 +85,9 @@ public class WishlistService {
 
     @Transactional(readOnly = true)
     public List<WishlistItemDTO> getAllWishlistItems() {
-        return wishlistRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        // Safety cap: admin-only endpoint, max 1000 records (HIGH-6c)
+        return wishlistRepository.findAll(
+                org.springframework.data.domain.PageRequest.of(0, 1000))
+                .stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@ComponentScan(basePackages = {"com.entitykart.productservice", "com.entitykart.common"})
+@ComponentScan(basePackages = {"com.entitykart.productservice"})
 public class ProductServiceApplication {
 
     public static void main(String[] args) {

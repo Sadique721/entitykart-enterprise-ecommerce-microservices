@@ -133,7 +133,10 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public List<NotificationEntity> getAllNotifications() {
-        return notificationRepository.findAll();
+        // Safety cap: max 1000 records to prevent OOM on large notification tables
+        return notificationRepository.findAll(
+                org.springframework.data.domain.PageRequest.of(0, 1000))
+                .getContent();
     }
 
     @Transactional(readOnly = true)

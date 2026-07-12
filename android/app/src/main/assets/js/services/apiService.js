@@ -40,6 +40,7 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
     return {
         request: function(config) {
             showLoading();
+            config.withCredentials = true;
             // Inject JWT Token from localStorage if exists
             var token = localStorage.getItem('ekToken');
             if (token) {

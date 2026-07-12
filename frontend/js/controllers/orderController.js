@@ -37,7 +37,17 @@ app.controller('orderController', [
         }
 
         function processOrdersList(data, addresses) {
-            var sortedOrders = data.sort(function(a, b) {
+            var ordersList = [];
+            if (data) {
+                if (Array.isArray(data)) {
+                    ordersList = data;
+                } else if (Array.isArray(data.content)) {
+                    ordersList = data.content;
+                } else if (data.data && Array.isArray(data.data.content)) {
+                    ordersList = data.data.content;
+                }
+            }
+            var sortedOrders = ordersList.sort(function(a, b) {
                 return new Date(b.orderDate) - new Date(a.orderDate);
             });
 

@@ -73,6 +73,11 @@ public class ProductController {
         return productService.getProductsFiltered(categoryId, subCategoryId, search, minPrice, maxPrice, pageable);
     }
 
+    @GetMapping("/batch")
+    public List<ProductDTO> getProductsBatch(@RequestParam("ids") List<Long> ids) {
+        return productService.getProductsByIds(ids);
+    }
+
     @GetMapping("/all")
     public List<ProductDTO> getAllProducts() {
         return productService.getAllProducts();

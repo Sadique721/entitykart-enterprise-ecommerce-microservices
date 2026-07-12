@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
  * Used to validate product existence, price, and stock before adding to cart.
  * Service is discovered via Eureka by name "product-service".
  */
-@FeignClient(name = "product-service")
+@FeignClient(name = "product-service", fallback = ProductServiceClientFallback.class)
 public interface ProductServiceClient {
 
     /**
@@ -20,6 +20,9 @@ public interface ProductServiceClient {
      */
     @GetMapping("/api/products/{id}")
     ProductInfo getProduct(@PathVariable("id") Long id);
+
+    @GetMapping("/api/products/batch")
+    java.util.List<ProductInfo> getProductsBatch(@org.springframework.web.bind.annotation.RequestParam("ids") java.util.List<Long> ids);
 
     /**
      * Inner DTO — mirrors the relevant fields returned by product-service.

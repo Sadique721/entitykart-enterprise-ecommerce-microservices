@@ -1,54 +1,71 @@
 /**
- * Entitykart AngularJS Application Config
+ * EntityKart AngularJS Application Config
+ * v3.0.0 — Local Network Only (no Render/cloud fallback)
+ *
+ * APK: MainActivity discovers gateway IP on local WiFi and injects it.
+ *      The app waits on a loading screen until gateway is found.
+ * Browser: Uses localhost:9900 (docker-compose gateway).
  */
 var app = angular.module('entitykartApp', ['ngRoute']);
 
-// Base URL for the API Gateway – dynamically detected from current host
-// Production Render URL (used by APK when no custom LAN IP is saved)
-var RENDER_PRODUCTION_URL = 'https://entitykart-enterprise-ecommerce.onrender.com';
+// Gateway port — same across local + docker environments
+var LOCAL_GATEWAY_PORT = '9900';
 
-app.constant('API_BASE', (function() {
+app.constant('API_BASE', (function () {
     if (typeof window !== 'undefined') {
         var protocol = window.location.protocol;
-        var host = window.location.hostname;
+        var host     = window.location.hostname;
 
-        // ── Mobile WebView / APK Context (file:// protocol or AndroidConfig / AndroidBridge) ──
-        if (protocol === 'file:' || 
-            (window.AndroidConfig && window.AndroidConfig.apiBase) || 
+        // ── Mobile WebView / APK Context ──────────────────────────────────────
+        // MainActivity shows a loading screen, discovers the LAN gateway,
+        // then injects the URL via AndroidBridge and loads this page.
+        // By the time this runs, AndroidBridge.getApiBase() should return the URL.
+        if (protocol === 'file:' ||
+            (window.AndroidConfig && window.AndroidConfig.apiBase) ||
             (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function')) {
-            
-            var bridgeUrl = '';
+
+            // 1. AndroidBridge — set by MainActivity after LAN discovery
+            if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
+                var bridgeUrl = window.AndroidBridge.getApiBase();
+                if (bridgeUrl && bridgeUrl.trim().length > 0) { return bridgeUrl; }
+            }
+            // 2. AndroidConfig (legacy)
             if (window.AndroidConfig && window.AndroidConfig.apiBase) {
-                bridgeUrl = window.AndroidConfig.apiBase;
-            } else if (window.AndroidBridge && typeof window.AndroidBridge.getApiBase === 'function') {
-                bridgeUrl = window.AndroidBridge.getApiBase();
-            } else if (window.ENTITYKART_API_BASE) {
-                bridgeUrl = window.ENTITYKART_API_BASE;
+                return window.AndroidConfig.apiBase;
             }
-            
-            if (bridgeUrl && bridgeUrl.trim().length > 0) {
-                return bridgeUrl;
+            // 3. Window global injected by WebViewClient.onPageFinished
+            if (window.ENTITYKART_API_BASE && window.ENTITYKART_API_BASE.trim().length > 0) {
+                return window.ENTITYKART_API_BASE;
             }
-            
-            // Hardlock to Render Cloud for all APK/WebView clients to prevent local IP connection failures
-            return RENDER_PRODUCTION_URL;
+            // 4. localStorage — persisted from last successful session by MainActivity
+            try {
+                var savedIp   = localStorage.getItem('API_IP');
+                var savedPort = localStorage.getItem('API_PORT') || LOCAL_GATEWAY_PORT;
+                if (savedIp && savedIp.trim().length > 0) {
+                    return 'http://' + savedIp + ':' + savedPort;
+                }
+            } catch (e) { /* ignore storage errors in restricted contexts */ }
+
+            // 5. Gateway not yet found — MainActivity is still scanning
+            //    Return an obvious placeholder; will be overridden by injectApiBase()
+            return 'http://0.0.0.0:' + LOCAL_GATEWAY_PORT;
         }
 
-        // ── Web Browser Mode ──────────────────────────────────────────────────
-        // Local development on localhost/127.0.0.1
+        // ── Web Browser Mode (Development) ───────────────────────────────────
         if (host === 'localhost' || host === '127.0.0.1') {
-            var activePort = localStorage.getItem('API_PORT') || '9080';
-            return window.location.protocol + '//' + host + ':' + activePort;
+            // docker-compose gateway always runs on 9900
+            var activePort = localStorage.getItem('API_PORT') || LOCAL_GATEWAY_PORT;
+            return protocol + '//' + host + ':' + activePort;
         }
 
-        // Production deployment (Render): API gateway is same-origin (proxied by Nginx)
-        return window.location.protocol + '//' + window.location.host;
+        // ── Production (deployed behind Nginx) ────────────────────────────────
+        return protocol + '//' + window.location.host;
     }
-    return 'http://localhost:9080';
+    return 'http://localhost:' + LOCAL_GATEWAY_PORT;
 })());
 
 // Route Configurations
-app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpProvider) {
+app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
     $routeProvider
         .when('/', {
@@ -113,13 +130,15 @@ app.config(['$routeProvider', '$httpProvider', function($routeProvider, $httpPro
 
     // Add interceptor to pass authentication tokens and handle common response statuses globally
     $httpProvider.interceptors.push('apiInterceptor');
+
+    // Configure default CSRF settings
+    $httpProvider.defaults.xsrfCookieName = 'XSRF-TOKEN';
+    $httpProvider.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
 }]);
 
 // Global app initialization
-app.run(['$rootScope', '$location', 'authService', function($rootScope, $location, authService) {
-    // IMPORTANT: Restore auth state from localStorage BEFORE any route guard fires.
-    // This prevents the edge-case where a refreshed page sees the user as logged out
-    // for a brief moment and incorrectly redirects login/register pages.
+app.run(['$rootScope', '$location', 'authService', function ($rootScope, $location, authService) {
+    // Restore auth state from localStorage BEFORE any route guard fires.
     authService.init();
 
     // Pages that are always publicly accessible — never redirect these
@@ -128,19 +147,19 @@ app.run(['$rootScope', '$location', 'authService', function($rootScope, $locatio
     // Pages that require a logged-in user
     var restrictedPages = ['/checkout', '/orders', '/returns', '/wishlist', '/admin', '/profile'];
 
-    $rootScope.$on('$routeChangeStart', function(event, next, current) {
+    $rootScope.$on('$routeChangeStart', function (event, next, current) {
         var path = $location.path();
 
         // --- Guard: Never block access to public pages ---
-        var isPublic = publicPages.some(function(page) {
+        var isPublic = publicPages.some(function (page) {
             return path === page || path.indexOf(page) === 0;
         });
         if (isPublic) {
-            return; // Always allow public pages through, no redirect
+            return;
         }
 
         // --- Guard: Restricted pages need authentication ---
-        var isRestricted = restrictedPages.some(function(page) {
+        var isRestricted = restrictedPages.some(function (page) {
             return path.indexOf(page) === 0;
         });
 
@@ -167,4 +186,3 @@ app.run(['$rootScope', '$location', 'authService', function($rootScope, $locatio
         }
     });
 }]);
-

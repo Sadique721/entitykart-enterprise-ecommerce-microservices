@@ -16,8 +16,11 @@ public class LoginResponse {
     private String role;
     private String profilePicURL;
     private long expiresIn; // ms
+    private String refreshToken; // opaque refresh token (null if rememberMe = false)
 
-    public LoginResponse(String token, Long userId, String name, String email, String role, String profilePicURL, long expiresIn) {
+    /** Backward-compatible constructor (no refresh token) */
+    public LoginResponse(String token, Long userId, String name, String email,
+                         String role, String profilePicURL, long expiresIn) {
         this.token = token;
         this.tokenType = "Bearer";
         this.userId = userId;
@@ -26,5 +29,13 @@ public class LoginResponse {
         this.role = role;
         this.profilePicURL = profilePicURL;
         this.expiresIn = expiresIn;
+        this.refreshToken = null;
+    }
+
+    /** Full constructor including refresh token */
+    public LoginResponse(String token, Long userId, String name, String email,
+                         String role, String profilePicURL, long expiresIn, String refreshToken) {
+        this(token, userId, name, email, role, profilePicURL, expiresIn);
+        this.refreshToken = refreshToken;
     }
 }

@@ -1,4 +1,4 @@
-worker_processes 1;
+worker_processes auto;
 daemon on;
 
 events {
@@ -10,6 +10,12 @@ http {
     default_type application/octet-stream;
     sendfile on;
     keepalive_timeout 65;
+
+    # ── Rate Limiting Zones ───────────────────────────────────────────────────
+    # General API: 10 req/sec per IP
+    limit_req_zone $binary_remote_addr zone=api_limit:10m  rate=10r/s;
+    # Login / Register: 3 req/min per IP (brute-force protection)
+    limit_req_zone $binary_remote_addr zone=login_limit:5m rate=3r/m;
 
     # ── Gzip compression for faster frontend delivery ─────────────────────────
     gzip on;
@@ -30,6 +36,15 @@ http {
         listen PORT_NUMBER;
         server_name localhost;
 
+        # ── Security Headers ───────────────────────────────────────────────────
+        add_header X-Frame-Options           "DENY"                            always;
+        add_header X-Content-Type-Options    "nosniff"                         always;
+        add_header X-XSS-Protection          "1; mode=block"                   always;
+        add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header Permissions-Policy        "geolocation=(), microphone=()"   always;
+        add_header Content-Security-Policy   "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://ajax.googleapis.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://res.cloudinary.com blob: https://*; connect-src 'self' http://localhost:9900 https://*; frame-ancestors 'none';" always;
+
         # ── Static Frontend Assets ────────────────────────────────────────────
         location / {
             root /app/frontend;
@@ -40,11 +55,52 @@ http {
             location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
                 expires 7d;
                 add_header Cache-Control "public, max-age=604800, immutable";
+                # Keep security headers on static cache
+                add_header X-Frame-Options "DENY" always;
+                add_header X-Content-Type-Options "nosniff" always;
+                add_header X-XSS-Protection "1; mode=block" always;
+                add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+                add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://ajax.googleapis.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://res.cloudinary.com blob: https://*; connect-src 'self' http://localhost:9900 https://*; frame-ancestors 'none';" always;
             }
+        }
+
+        # ── Login — strict rate limit (brute-force protection) ────────────────
+        location = /api/users/login {
+            limit_req zone=login_limit burst=5 nodelay;
+            limit_req_status 429;
+
+            proxy_pass         http://api_gateway;
+            proxy_http_version 1.1;
+            proxy_set_header   Connection "";
+            proxy_set_header   Host              $host;
+            proxy_set_header   X-Real-IP         $remote_addr;
+            proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-Proto $scheme;
+
+            add_header Access-Control-Allow-Origin      $http_origin  always;
+            add_header Access-Control-Allow-Methods     "POST, OPTIONS" always;
+            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, Accept" always;
+            add_header Access-Control-Allow-Credentials "true" always;
+
+            if ($request_method = OPTIONS) {
+                add_header Access-Control-Allow-Origin      $http_origin;
+                add_header Access-Control-Allow-Methods     "POST, OPTIONS";
+                add_header Access-Control-Allow-Headers     "Authorization, Content-Type, Accept";
+                add_header Access-Control-Allow-Credentials "true";
+                add_header Content-Length 0;
+                add_header Content-Type   text/plain;
+                return 204;
+            }
+
+            proxy_read_timeout 60s;
+            proxy_intercept_errors on;
+            error_page 502 503 504 = @api_error;
         }
 
         # ── API Proxy — forward /api/* to the Spring Cloud Gateway ───────────
         location /api/ {
+            limit_req zone=api_limit burst=20 nodelay;
+
             proxy_pass http://api_gateway;
             proxy_http_version 1.1;
             proxy_set_header Connection "";           # Enable HTTP/1.1 keepalive upstream
@@ -53,16 +109,18 @@ http {
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
 
-            # ── CORS headers (allows APK WebView cross-origin requests) ───────
-            add_header Access-Control-Allow-Origin "*" always;
+            # ── CORS headers (dynamic origin echo for APK/Web compatibility) ───────
+            add_header Access-Control-Allow-Origin $http_origin always;
             add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS" always;
-            add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept, X-Requested-With" always;
+            add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept, X-Requested-With, X-XSRF-TOKEN" always;
+            add_header Access-Control-Allow-Credentials "true" always;
 
             # Handle CORS preflight OPTIONS requests
             if ($request_method = OPTIONS) {
-                add_header Access-Control-Allow-Origin "*";
+                add_header Access-Control-Allow-Origin $http_origin;
                 add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS";
-                add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept";
+                add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept, X-Requested-With, X-XSRF-TOKEN";
+                add_header Access-Control-Allow-Credentials "true";
                 add_header Content-Length 0;
                 add_header Content-Type text/plain;
                 return 204;
@@ -102,29 +160,33 @@ http {
             proxy_read_timeout 120s;
         }
 
-        # ── Eureka Discovery / Common-Services Dashboard ─────────────────────
+        # ── Eureka Discovery — internal access only ──────────────────────────
         location /discovery/ {
+            allow 127.0.0.1;
+            allow 10.0.0.0/8;
+            allow 172.16.0.0/12;
+            deny  all;
+
             proxy_pass http://127.0.0.1:9900/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host              $host;
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
         }
 
         location /eureka/ {
+            allow 127.0.0.1;
+            allow 10.0.0.0/8;
+            allow 172.16.0.0/12;
+            deny  all;
+
             proxy_pass http://127.0.0.1:9900/eureka/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host              $host;
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
         }
 
-        # ── Logs Proxy ────────────────────────────────────────────────────────
-        location /logs/ {
-            alias /var/log/;
-            autoindex on;
-            default_type text/plain;
-        }
 
         # ── Friendly error handler for API 502/503/504 ───────────────────────
         location @api_error {

@@ -3,8 +3,8 @@
  * v2.0 — Full payment flow: checkout → processPayment → success/failure toast
  */
 app.controller('cartController', [
-    '$scope', '$location', 'cartService', 'authService', 'orderService', 'apiService',
-    function($scope, $location, cartService, authService, orderService, apiService) {
+    '$scope', '$location', 'cartService', 'authService', 'orderService', 'apiService', 'wishlistService',
+    function($scope, $location, cartService, authService, orderService, apiService, wishlistService) {
 
         // === Address Management ===
         $scope.userAddresses = [];
@@ -175,16 +175,10 @@ app.controller('cartController', [
         // Save for Later — moves item from cart to wishlist
         $scope.saveForLater = function(item) {
             cartService.removeItem(item.productId).then(function() {
-                apiService.post('/api/wishlist/add', null, { productId: item.productId })
-                    .catch(function() {
-                        var wl = JSON.parse(localStorage.getItem('ekWishlistLocal') || '[]');
-                        if (!wl.find(function(w) { return w.productId === item.productId; })) {
-                            wl.push({ productId: item.productId, productName: item.productName, price: item.price });
-                            localStorage.setItem('ekWishlistLocal', JSON.stringify(wl));
-                        }
-                    });
-                $scope.$emit('showToast', { title: 'Saved for Later', message: item.productName + ' moved to your wishlist.', type: 'success' });
-                $scope.loadCartData();
+                wishlistService.addToWishlist(item.productId).then(function() {
+                    $scope.$emit('showToast', { title: 'Saved for Later', message: item.productName + ' moved to your wishlist.', type: 'success' });
+                    $scope.loadCartData();
+                });
             });
         };
 

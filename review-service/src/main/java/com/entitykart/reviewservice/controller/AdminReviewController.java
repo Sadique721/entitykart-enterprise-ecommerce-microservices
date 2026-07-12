@@ -44,6 +44,6 @@ public class AdminReviewController {
 
     @GetMapping("/all")
     public List<ReviewDTO> getAllReviewsList() {
-        return reviewService.getAllReviewsList();
+        return reviewService.getAllReviews(org.springframework.data.domain.PageRequest.of(0, 1000)).getContent();
     }
 }

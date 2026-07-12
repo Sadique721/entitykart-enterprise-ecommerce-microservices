@@ -236,21 +236,20 @@ app.controller('productController', [
 
         $scope.loadProducts = function() {
             // productService.getProducts($scope.catFilterId, null, $scope.currentPage, 12)
-            productService.getProducts($scope.catFilterId, null, $scope.currentPage, 50, $scope.searchQuery, $scope.priceMin, $scope.priceMax, $scope.sortOption)
+            productService.getProducts($scope.catFilterId, $scope.subFilterId, $scope.currentPage, 50, $scope.searchQuery, $scope.priceMin, $scope.priceMax, $scope.sortOption)
                 .then(function(data) {
                     var items = data.content;
 
-                    // Filter by subcategory
+                    // Filter by subcategory (client-side stacked filter)
                     if ($scope.subFilterId) {
                         items = items.filter(function(p) {
                             return p.subCategoryId == $scope.subFilterId;
                         });
                     }
 
-                    // Client-side search filter
-                    /*
-                    if ($scope.searchQuery) {
-                        var q = $scope.searchQuery.toLowerCase();
+                    // Client-side search filter — applied ON TOP of subcategory
+                    if ($scope.searchQuery && $scope.searchQuery.trim() !== '') {
+                        var q = $scope.searchQuery.toLowerCase().trim();
                         items = items.filter(function(p) {
                             return p.productName.toLowerCase().indexOf(q) > -1 ||
                                    (p.brand || '').toLowerCase().indexOf(q) > -1 ||
@@ -258,15 +257,15 @@ app.controller('productController', [
                         });
                     }
 
-                    // Price range filter
-                    if ($scope.priceMin !== null && $scope.priceMin !== '') {
+                    // Price range filter — stacked on top
+                    if ($scope.priceMin !== null && $scope.priceMin !== '' && !isNaN($scope.priceMin)) {
                         items = items.filter(function(p) { return p.price >= parseFloat($scope.priceMin); });
                     }
-                    if ($scope.priceMax !== null && $scope.priceMax !== '') {
+                    if ($scope.priceMax !== null && $scope.priceMax !== '' && !isNaN($scope.priceMax)) {
                         items = items.filter(function(p) { return p.price <= parseFloat($scope.priceMax); });
                     }
 
-                    // Sort
+                    // Sort — applied last after all filters
                     if ($scope.sortOption === 'price_asc') {
                         items.sort(function(a, b) { return a.price - b.price; });
                     } else if ($scope.sortOption === 'price_desc') {
@@ -276,7 +275,6 @@ app.controller('productController', [
                     } else if ($scope.sortOption === 'newest') {
                         items.sort(function(a, b) { return b.productId - a.productId; });
                     }
-                    */
 
                     $scope.products = items;
                     $scope.totalPages = data.totalPages;
@@ -411,11 +409,10 @@ app.controller('productController', [
 
         $scope.addToCart = function(product, qty) {
             var quantity = qty || 1;
-            cartService.addToCart(product.productId, product.productName, quantity, product.price)
+            cartService.addToCart(product.productId, product.productName, quantity, product.price, product.mainImageURL)
                 .then(function() {
                     $scope.$emit('showToast', {
                         title: 'Added to Cart',
-                        // BUG FIX: was missing space between quantity and 'x'
                         message: quantity + ' × ' + product.productName + ' added successfully.',
                         type: 'success'
                     });
@@ -424,7 +421,7 @@ app.controller('productController', [
 
         // BUG FIX: buyNow now redirects to /checkout directly (was /cart before)
         $scope.buyNow = function(product) {
-            cartService.addToCart(product.productId, product.productName, 1, product.price)
+            cartService.addToCart(product.productId, product.productName, 1, product.price, product.mainImageURL)
                 .then(function() {
                     $scope.$emit('showToast', {
                         title: 'Proceeding to Checkout',

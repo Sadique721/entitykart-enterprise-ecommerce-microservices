@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EntityKart Enterprise</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: #0a0e1a;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Title Bar ─────────────────────────────── */
+    .titlebar {
+      -webkit-app-region: drag;
+      height: 40px;
+      background: #070b14;
+      border-bottom: 1px solid rgba(99,179,237,0.15);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    .tb-logo { font-size: 18px; filter: drop-shadow(0 0 8px rgba(66,153,225,0.6)); }
+    .tb-title { font-size: 13px; font-weight: 600; color: #90cdf4; }
+    .tb-version { font-size: 10px; color: rgba(160,174,192,0.4); }
+    .tb-spacer { flex: 1; }
+    .tb-status {
+      -webkit-app-region: no-drag;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: rgba(160,174,192,0.6);
+    }
+    .health-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #68d391;
+      box-shadow: 0 0 6px #68d391;
+    }
+    .health-dot.warn { background: #f6ad55; box-shadow: 0 0 6px #f6ad55; }
+    .health-dot.bad { background: #fc8181; box-shadow: 0 0 6px #fc8181; }
+
+    /* Window Controls */
+    .win-controls {
+      display: flex;
+      gap: 8px;
+      margin-left: 16px;
+      -webkit-app-region: no-drag;
+    }
+    .win-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .win-btn:hover { opacity: 0.8; }
+    .win-close { background: #fc5c65; }
+    .win-min { background: #f7b731; }
+    .win-max { background: #20bf6b; }
+
+    /* ─── Tabs ───────────────────────────────────── */
+    .tabs {
+      display: flex;
+      background: #070b14;
+      border-bottom: 1px solid rgba(99,179,237,0.1);
+      padding: 0 8px;
+      flex-shrink: 0;
+    }
+    .tab {
+      padding: 10px 18px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(160,174,192,0.5);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .tab:hover { color: #90cdf4; }
+    .tab.active {
+      color: #63b3ed;
+      border-bottom-color: #4299e1;
+    }
+
+    /* ─── Tab Content ────────────────────────────── */
+    .tab-content { flex: 1; overflow: hidden; position: relative; }
+    .tab-pane { display: none; width: 100%; height: 100%; }
+    .tab-pane.active { display: flex; flex-direction: column; }
+
+    /* ─── Store Pane (iframe) ────────────────────── */
+    #pane-store { background: #fff; }
+    #pane-store iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+      background: #fff;
+    }
+    .store-topbar {
+      background: #070b14;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(99,179,237,0.1);
+    }
+    .store-url-bar {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(99,179,237,0.15);
+      border-radius: 6px;
+      padding: 5px 10px;
+      color: rgba(160,174,192,0.7);
+      font-size: 11px;
+      font-family: 'Consolas', monospace;
+    }
+    .btn-icon {
+      width: 28px; height: 28px;
+      background: rgba(99,179,237,0.1);
+      border: 1px solid rgba(99,179,237,0.2);
+      border-radius: 6px;
+      color: #63b3ed;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    .btn-icon:hover { background: rgba(99,179,237,0.2); }
+
+    /* ─── Service Manager Pane ───────────────────── */
+    #pane-services { overflow-y: auto; padding: 20px; }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #90cdf4;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .services-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .services-table th {
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(160,174,192,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0 12px 8px 12px;
+    }
+    .service-row {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(99,179,237,0.08);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      transition: all 0.2s;
+    }
+    .service-row:hover { background: rgba(99,179,237,0.04); }
+    .service-row td {
+      padding: 12px 12px;
+      font-size: 12px;
+    }
+    .svc-name { font-weight: 500; color: #e2e8f0; }
+    .svc-port { color: rgba(160,174,192,0.5); font-family: monospace; font-size: 11px; }
+    .svc-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .svc-status.healthy {
+      background: rgba(104, 211, 145, 0.1);
+      color: #68d391;
+      border: 1px solid rgba(104,211,145,0.2);
+    }
+    .svc-status.starting {
+      background: rgba(246, 173, 85, 0.1);
+      color: #f6ad55;
+      border: 1px solid rgba(246,173,85,0.2);
+    }
+    .svc-status.unknown, .svc-status.error {
+      background: rgba(252, 129, 129, 0.1);
+      color: #fc8181;
+      border: 1px solid rgba(252,129,129,0.2);
+    }
+    .btn-action {
+      padding: 4px 10px;
+      border: 1px solid rgba(99,179,237,0.3);
+      border-radius: 6px;
+      background: rgba(99,179,237,0.08);
+      color: #63b3ed;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-action:hover { background: rgba(99,179,237,0.18); }
+    .actions-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .btn-primary {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #4299e1, #3182ce);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(66,153,225,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(66,153,225,0.4); }
+    .btn-danger {
+      padding: 8px 16px;
+      background: rgba(252,129,129,0.1);
+      color: #fc8181;
+      border: 1px solid rgba(252,129,129,0.3);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-danger:hover { background: rgba(252,129,129,0.2); }
+
+    /* ─── Logs Pane ──────────────────────────────── */
+    #pane-logs { flex-direction: row; overflow: hidden; }
+    .log-sidebar {
+      width: 200px;
+      border-right: 1px solid rgba(99,179,237,0.1);
+      padding: 16px 12px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .log-sidebar-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(160,174,192,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .log-container-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 7px 10px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: rgba(160,174,192,0.6);
+      font-size: 11px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: all 0.15s;
+    }
+    .log-container-btn.active, .log-container-btn:hover {
+      background: rgba(99,179,237,0.08);
+      border-color: rgba(99,179,237,0.2);
+      color: #63b3ed;
+    }
+    .log-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .log-toolbar {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(99,179,237,0.08);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .log-title { font-size: 12px; font-weight: 600; color: #90cdf4; }
+    .log-output {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: rgba(160,174,192,0.8);
+      background: rgba(0,0,0,0.3);
+    }
+    .log-output::-webkit-scrollbar { width: 4px; }
+    .log-output::-webkit-scrollbar-thumb { background: rgba(99,179,237,0.2); border-radius: 2px; }
+    .log-line-out { color: rgba(160,174,192,0.7); }
+    .log-line-err { color: #fc8181; }
+
+    /* ─── Settings Pane ──────────────────────────── */
+    #pane-settings { overflow-y: auto; padding: 24px; }
+    .settings-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(99,179,237,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .settings-card h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #90cdf4;
+      margin-bottom: 14px;
+    }
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size: 12px; color: #e2e8f0; }
+    .setting-value { font-size: 12px; color: rgba(160,174,192,0.6); font-family: monospace; }
+    .btn-open {
+      padding: 5px 12px;
+      background: rgba(99,179,237,0.1);
+      border: 1px solid rgba(99,179,237,0.2);
+      border-radius: 6px;
+      color: #63b3ed;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-open:hover { background: rgba(99,179,237,0.2); }
+
+    /* ─── Refresh indicator ─────────────────────── */
+    .refresh-anim {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Title Bar -->
+  <div class="titlebar">
+    <span class="tb-logo">🛒</span>
+    <span class="tb-title">EntityKart Enterprise</span>
+    <span class="tb-version">v1.0.0</span>
+    <div class="tb-spacer"></div>
+    <div class="tb-status" id="healthIndicator">
+      <div class="health-dot warn" id="healthDot"></div>
+      <span id="healthText">Checking...</span>
+    </div>
+    <div class="win-controls">
+      <button class="win-btn win-close" onclick="window.entitykart.close()" title="Close app"></button>
+      <button class="win-btn win-min" onclick="window.entitykart.minimize()" title="Minimize"></button>
+      <button class="win-btn win-max" onclick="window.entitykart.maximize()" title="Maximize / Restore"></button>
+    </div>
+  </div>
+
+
+  <!-- Tab Bar -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('store', this)">🛍️ EntityKart Store</div>
+    <div class="tab" onclick="switchTab('services', this)">⚙️ Service Manager</div>
+    <div class="tab" onclick="switchTab('logs', this)">📋 Live Logs</div>
+    <div class="tab" onclick="switchTab('settings', this)">🔧 Settings</div>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+
+    <!-- Tab 1: Store (iframe) -->
+    <div class="tab-pane active" id="pane-store">
+      <div class="store-topbar">
+        <button class="btn-icon" onclick="storeFrame.contentWindow.history.back()">◀</button>
+        <button class="btn-icon" onclick="storeFrame.contentWindow.history.forward()">▶</button>
+        <button class="btn-icon" onclick="storeFrame.contentWindow.location.reload()">↺</button>
+        <div class="store-url-bar">http://localhost:9001</div>
+        <button class="btn-icon" title="Open in browser" onclick="window.entitykart.openBrowser('http://localhost:9001')">↗</button>
+      </div>
+      <iframe id="storeFrame" src="http://localhost:9001" allowfullscreen></iframe>
+    </div>
+
+    <!-- Tab 2: Service Manager -->
+    <div class="tab-pane" id="pane-services">
+      <div class="section-title">📊 Microservice Status</div>
+      <div class="actions-bar">
+        <button class="btn-primary" onclick="refreshStatus()">
+          <span id="refreshIcon">⟳</span> Refresh Status
+        </button>
+        <button class="btn-danger" onclick="confirmStop()">⏹ Stop All Services</button>
+      </div>
+      <table class="services-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Port</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="servicesList"></tbody>
+      </table>
+    </div>
+
+    <!-- Tab 3: Live Logs -->
+    <div class="tab-pane" id="pane-logs">
+      <div class="log-sidebar">
+        <div class="log-sidebar-title">Containers</div>
+        <div id="containerList"></div>
+      </div>
+      <div class="log-view">
+        <div class="log-toolbar">
+          <span class="log-title" id="logTitle">Select a container →</span>
+          <button class="btn-action" onclick="clearLogs()" style="margin-left:auto">Clear</button>
+          <button class="btn-action" onclick="scrollToBottom()">↓ Bottom</button>
+        </div>
+        <div class="log-output" id="logOutput"></div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Settings -->
+    <div class="tab-pane" id="pane-settings">
+      <div class="section-title">🔧 Application Settings</div>
+      <div class="settings-card">
+        <h3>Service URLs</h3>
+        <div class="setting-row">
+          <span class="setting-label">🛍️ Frontend (Nginx)</span>
+          <span class="setting-value">http://localhost:9001</span>
+          <button class="btn-open" onclick="window.entitykart.openBrowser('http://localhost:9001')">Open</button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">🌐 API Gateway</span>
+          <span class="setting-value">http://localhost:9900</span>
+          <button class="btn-open" onclick="window.entitykart.openBrowser('http://localhost:9900')">Open</button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">🔍 Eureka Dashboard</span>
+          <span class="setting-value">http://localhost:9900/eureka/web</span>
+          <button class="btn-open" onclick="window.entitykart.openBrowser('http://localhost:9900/eureka/web')">Open</button>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3>Quick Actions</h3>
+        <div class="setting-row">
+          <span class="setting-label">🚀 Start All Services</span>
+          <button class="btn-primary" onclick="startServices()" style="padding:5px 12px;font-size:11px">Start</button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">⏹ Stop All Services</span>
+          <button class="btn-danger" onclick="confirmStop()" style="padding:5px 12px;font-size:11px">Stop</button>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3>About</h3>
+        <div class="setting-row">
+          <span class="setting-label">App Version</span>
+          <span class="setting-value">1.0.0</span>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Architecture</span>
+          <span class="setting-value">9 Microservices + Spring Cloud Gateway</span>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Backend</span>
+          <span class="setting-value">Java 17 + Spring Boot 3.3</span>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Frontend</span>
+          <span class="setting-value">AngularJS + Nginx</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const ek = window.entitykart;
+    let servicesConfig = [];
+    let activeContainer = null;
+    let currentStatuses = {};
+    let refreshInterval = null;
+
+    // ─── Tab Switching ──────────────────────────────────────────
+    function switchTab(id, el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('pane-' + id).classList.add('active');
+    }
+
+    // ─── Service Status ─────────────────────────────────────────
+    async function refreshStatus() {
+      const icon = document.getElementById('refreshIcon');
+      icon.classList.add('refresh-anim');
+
+      const { services } = await ek.getServiceStatus();
+      currentStatuses = services;
+      renderServiceTable(services);
+      updateHealthIndicator(services);
+
+      icon.classList.remove('refresh-anim');
+    }
+
+    function renderServiceTable(statuses) {
+      const tbody = document.getElementById('servicesList');
+      tbody.innerHTML = '';
+      servicesConfig.forEach(svc => {
+        const status = statuses[svc.name] || 'unknown';
+        const tr = document.createElement('tr');
+        tr.className = 'service-row';
+        tr.innerHTML = `
+          <td><span class="svc-name">${svc.name}</span></td>
+          <td><span class="svc-port">:${svc.port}</span></td>
+          <td>
+            <span class="svc-status ${status}">
+              ${status === 'healthy' ? '● ' : status === 'starting' ? '◎ ' : '✕ '}
+              ${status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>
+          </td>
+          <td>
+            <button class="btn-action" onclick="restartSvc('${svc.container}')">↺ Restart</button>
+            <button class="btn-action" onclick="viewLog('${svc.container}', '${svc.name}')" style="margin-left:4px">📋 Logs</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateHealthIndicator(statuses) {
+      const dot = document.getElementById('healthDot');
+      const txt = document.getElementById('healthText');
+      const values = Object.values(statuses);
+      const healthy = values.filter(v => v === 'healthy').length;
+      const total = servicesConfig.length;
+
+      if (healthy === total) {
+        dot.className = 'health-dot'; txt.textContent = 'All services healthy';
+      } else if (healthy >= 3) {
+        dot.className = 'health-dot warn'; txt.textContent = `${healthy}/${total} healthy`;
+      } else {
+        dot.className = 'health-dot bad'; txt.textContent = `${healthy}/${total} healthy`;
+      }
+    }
+
+    async function restartSvc(container) {
+      const btn = event.target;
+      btn.textContent = '⏳';
+      btn.disabled = true;
+      await ek.restartService(container);
+      setTimeout(() => { btn.textContent = '↺ Restart'; btn.disabled = false; }, 2000);
+    }
+
+    async function confirmStop() {
+      if (!confirm('Stop all EntityKart microservices?')) return;
+      await ek.stopServices();
+      setTimeout(refreshStatus, 2000);
+    }
+
+    async function startServices() {
+      await ek.startServices();
+      setTimeout(refreshStatus, 5000);
+    }
+
+    // ─── Logs ───────────────────────────────────────────────────
+    function populateContainerList() {
+      const list = document.getElementById('containerList');
+      list.innerHTML = '';
+      servicesConfig.forEach(svc => {
+        const btn = document.createElement('button');
+        btn.className = 'log-container-btn';
+        btn.textContent = svc.name;
+        btn.onclick = () => viewLog(svc.container, svc.name, btn);
+        list.appendChild(btn);
+      });
+    }
+
+    function viewLog(container, name, btnEl) {
+      // Deactivate previous
+      document.querySelectorAll('.log-container-btn').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+
+      if (activeContainer) ek.stopLogStream(activeContainer);
+      activeContainer = container;
+      document.getElementById('logTitle').textContent = `📋 ${name}`;
+      document.getElementById('logOutput').innerHTML = '';
+
+      ek.startLogStream(container);
+      switchTab('logs', document.querySelectorAll('.tab')[2]);
+      document.querySelectorAll('.tab')[2].classList.add('active');
+      document.querySelectorAll('.tab').forEach((t, i) => { if (i !== 2) t.classList.remove('active'); });
+      document.querySelectorAll('.tab-pane').forEach((p, i) => { p.classList.toggle('active', i === 2); });
+    }
+
+    function clearLogs() {
+      document.getElementById('logOutput').innerHTML = '';
+    }
+
+    function scrollToBottom() {
+      const el = document.getElementById('logOutput');
+      el.scrollTop = el.scrollHeight;
+    }
+
+    // ─── Init ────────────────────────────────────────────────────
+    async function init() {
+      servicesConfig = await ek.getServicesConfig();
+      populateContainerList();
+      refreshStatus();
+
+      // Auto-refresh every 15s
+      refreshInterval = setInterval(refreshStatus, 15000);
+
+      // Listen for live log lines
+      ek.onContainerLog(({ container, line }) => {
+        if (container !== activeContainer) return;
+        const out = document.getElementById('logOutput');
+        const div = document.createElement('div');
+        div.className = 'log-line-out';
+        div.textContent = line;
+        out.appendChild(div);
+        out.scrollTop = out.scrollHeight;
+      });
+
+      // Listen for real-time service status updates
+      ek.onServiceStatus(({ services }) => {
+        currentStatuses = services;
+        renderServiceTable(services);
+        updateHealthIndicator(services);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

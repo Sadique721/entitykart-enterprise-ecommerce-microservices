@@ -12,6 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
@@ -19,19 +25,38 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    @PostMapping
+    public OrderDTO createOrder(@RequestBody com.entitykart.shared.dto.CartCheckoutEvent event) {
+        return orderService.createOrder(event);
+    }
+
     @GetMapping("/{orderId}")
-    public OrderDTO getOrder(@PathVariable Long orderId) {
-        return orderService.getOrder(orderId);
+    public OrderDTO getOrder(
+            @PathVariable Long orderId,
+            @RequestHeader(value = "X-Customer-Id", required = false) Long loggedInCustomerId,
+            @RequestHeader(value = "X-User-Role", required = false) String loggedInUserRole) {
+        OrderDTO order = orderService.getOrder(orderId);
+        if (loggedInCustomerId != null && !order.getCustomerId().equals(loggedInCustomerId) && !"ADMIN".equalsIgnoreCase(loggedInUserRole)) {
+            throw new RuntimeException("Unauthorized to view this order");
+        }
+        return order;
     }
 
     @GetMapping("/customer/{customerId}")
-    public List<OrderDTO> getCustomerOrders(@PathVariable Long customerId) {
-        return orderService.getOrdersByCustomer(customerId);
+    public Page<OrderDTO> getCustomerOrders(
+            @PathVariable Long customerId,
+            Pageable pageable,
+            @RequestHeader(value = "X-Customer-Id", required = false) Long loggedInCustomerId,
+            @RequestHeader(value = "X-User-Role", required = false) String loggedInUserRole) {
+        if (loggedInCustomerId != null && !customerId.equals(loggedInCustomerId) && !"ADMIN".equalsIgnoreCase(loggedInUserRole)) {
+            throw new RuntimeException("Unauthorized to view these orders");
+        }
+        return orderService.getOrdersByCustomer(customerId, pageable);
     }
 
     @GetMapping("/all")
-    public List<OrderDTO> getAllOrders() {
-        return orderService.getAllOrders();
+    public Page<OrderDTO> getAllOrders(Pageable pageable) {
+        return orderService.getAllOrders(pageable);
     }
 
     /** Used by admin frontend to update order status (PLACED → CONFIRMED → SHIPPED → DELIVERED → CANCELLED) */

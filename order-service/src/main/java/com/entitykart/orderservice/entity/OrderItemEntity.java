@@ -27,6 +27,11 @@ public class OrderItemEntity {
     private Integer quantity;
     private Double price;
 
+    /** DB-computed: quantity * price. Do NOT set manually — MySQL generates this. */
+    @jakarta.persistence.Column(insertable = false, updatable = false)
+    private Double subtotal;
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", insertable = false, updatable = false)
     private OrderEntity order;

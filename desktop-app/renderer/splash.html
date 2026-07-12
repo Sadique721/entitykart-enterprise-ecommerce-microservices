@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EntityKart</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 480px;
+      height: 300px;
+      background: transparent;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .splash {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a0e1a 0%, #1a2332 50%, #0d1421 100%);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border: 1px solid rgba(99, 179, 237, 0.3);
+      box-shadow: 0 0 60px rgba(66, 153, 225, 0.3), inset 0 0 60px rgba(0,0,0,0.5);
+    }
+    .glow-ring {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 2px solid rgba(99, 179, 237, 0.2);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .glow-ring:nth-child(2) { width: 160px; height: 160px; animation-delay: 0.5s; }
+    .glow-ring:nth-child(3) { width: 120px; height: 120px; animation-delay: 1s; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+    }
+    .logo-container {
+      z-index: 10;
+      text-align: center;
+    }
+    .logo-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 20px rgba(99, 179, 237, 0.8));
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .logo-title {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #63b3ed, #90cdf4, #4299e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 2px;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: rgba(99, 179, 237, 0.6);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .spinner {
+      margin-top: 32px;
+      width: 40px;
+      height: 4px;
+      background: rgba(99, 179, 237, 0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      z-index: 10;
+    }
+    .spinner-bar {
+      height: 100%;
+      width: 40%;
+      background: linear-gradient(90deg, #4299e1, #63b3ed);
+      border-radius: 4px;
+      animation: slide 1.2s ease-in-out infinite;
+    }
+    @keyframes slide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+    .version {
+      position: absolute;
+      bottom: 16px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.2);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div class="splash">
+    <div class="glow-ring"></div>
+    <div class="glow-ring"></div>
+    <div class="glow-ring"></div>
+    <div class="logo-container">
+      <div class="logo-icon">🛒</div>
+      <div class="logo-title">EntityKart</div>
+      <div class="logo-sub">Enterprise Edition</div>
+    </div>
+    <div class="spinner">
+      <div class="spinner-bar"></div>
+    </div>
+    <div class="version">v1.0.0</div>
+  </div>
+</body>
+</html>

@@ -21,22 +21,11 @@ app.service('authService', ['apiService', '$rootScope', function(apiService, $ro
     this.register = function(userData) {
         return apiService.post('/api/users/register', userData)
             .then(function(response) {
-                // If registration succeeds, save user in our local mock database for easy demo logins
-                var mockDb = JSON.parse(localStorage.getItem('ekMockUsers') || '[]');
-                mockDb.push({
-                    id: response.data.id || Date.now(),
-                    name: userData.name,
-                    email: userData.email,
-                    password: userData.password,
-                    role: userData.role || 'USER'
-                });
-                localStorage.setItem('ekMockUsers', JSON.stringify(mockDb));
                 return response.data;
             });
     };
 
     this.login = function(credentials) {
-        // Try calling the gateway backend first, in case user-service or gateway auth is configured
         return apiService.post('/api/users/login', credentials)
             .then(function(response) {
                 token = response.data.token;
@@ -53,57 +42,8 @@ app.service('authService', ['apiService', '$rootScope', function(apiService, $ro
                 return currentUser;
             })
             .catch(function(error) {
-                // If the error status is not -1, it means the server responded with an error (e.g. 400 Bad Request, 401 Unauthorized)
-                // In this case, we should not fallback to mock authentication; we should display the actual server error!
-                if (error.status !== -1) {
-                    var msg = (error.data && error.data.message) ? error.data.message : 'Invalid email or password.';
-                    throw { data: { message: msg } };
-                }
-
-                // If server is unreachable (status === -1)
-                console.warn('API Gateway is unreachable. Checking local mock database...');
-                
-                // Check local mock database
-                var mockDb = JSON.parse(localStorage.getItem('ekMockUsers') || '[]');
-                
-                // Add default admin and user account for testing convenience
-                if (mockDb.length === 0) {
-                    mockDb = [
-                        { id: 1, name: 'Demo Customer', email: 'customer@example.com', password: 'password', role: 'USER' },
-                        { id: 2, name: 'System Admin', email: 'admin@example.com', password: 'adminpassword', role: 'ADMIN' }
-                    ];
-                    localStorage.setItem('ekMockUsers', JSON.stringify(mockDb));
-                }
-
-                var user = mockDb.find(function(u) {
-                    return u.email === credentials.email && u.password === credentials.password;
-                });
-
-                if (user) {
-                    token = 'mock-jwt-token-for-user-' + user.id;
-                    currentUser = {
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        role: user.role
-                    };
-                    localStorage.setItem('ekToken', token);
-                    localStorage.setItem('ekUser', JSON.stringify(currentUser));
-                    $rootScope.$broadcast('auth:login', currentUser);
-                    
-                    // Show a toast that it's a mock login
-                    $rootScope.$broadcast('showToast', {
-                        title: 'Logged In (Mock)',
-                        message: 'Welcome ' + user.name + '! Role: ' + user.role,
-                        type: 'info'
-                    });
-                    
-                    return currentUser;
-                } else {
-                    // Backend is down and this email is not in the mock database
-                    // Give a context-aware error depending on deployment mode
-                    throw { data: { message: 'Cannot connect to server. Make sure:\n1. Docker is running on your PC (docker-compose up)\n2. Your phone and PC are on the same WiFi\n3. Firewall allows port 9900' } };
-                }
+                var msg = (error.data && error.data.message) ? error.data.message : 'Invalid email or password.';
+                throw { data: { message: msg } };
             });
     };
 

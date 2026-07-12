@@ -30,6 +30,7 @@ dependencies {
 
     // ── Servlet Gateway (for Tomcat integration) ──────────────────────────────
     implementation("org.springframework.cloud:spring-cloud-starter-gateway-mvc")
+    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
 
     // ── Service Discovery ─────────────────────────────────────────────────────
     // Eureka SERVER (from discovery-server)
@@ -51,12 +52,21 @@ dependencies {
 
     // ── Database ──────────────────────────────────────────────────────────────
     runtimeOnly("com.mysql:mysql-connector-j")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-mysql")
 
     // ── Utilities ─────────────────────────────────────────────────────────────
     compileOnly("org.projectlombok:lombok:1.18.34")
     annotationProcessor("org.projectlombok:lombok:1.18.34")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     archiveFileName.set("common-services.jar")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

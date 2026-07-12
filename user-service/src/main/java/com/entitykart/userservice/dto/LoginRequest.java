@@ -13,4 +13,7 @@ public class LoginRequest {
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    /** When true, a long-lived refresh token (90 days) is issued alongside the JWT. */
+    private Boolean rememberMe = false;
 }

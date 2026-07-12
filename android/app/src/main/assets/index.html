@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EntityKart — Premium E-Commerce Platform | Shop Electronics, Fashion & More</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>EntityKart â€” Premium E-Commerce Platform | Shop Electronics, Fashion & More</title>
     <!-- SEO Meta Tags -->
     <meta name="description" content="EntityKart is a modern e-commerce platform offering premium electronics, fashion, home decor and more. Fast delivery, easy returns, and secure payments.">
     <meta name="keywords" content="e-commerce, online shopping, electronics, fashion, home decor, EntityKart">
     <meta name="robots" content="index, follow">
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="EntityKart — Premium E-Commerce Platform">
+    <meta property="og:title" content="EntityKart â€” Premium E-Commerce Platform">
     <meta property="og:description" content="Shop premium products across electronics, fashion, home and more. Free delivery, easy returns, secure payments.">
     <meta property="og:site_name" content="EntityKart">
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="EntityKart — Premium E-Commerce Platform">
+    <meta name="twitter:title" content="EntityKart â€” Premium E-Commerce Platform">
     <meta name="twitter:description" content="Shop premium products with free delivery and easy returns.">
     
     <!-- Premium Google Fonts -->
@@ -27,7 +28,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Chart.js for Admin Analytics Dashboard -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="css/style.css">
@@ -44,7 +45,7 @@
             <a href="#!/login" ng-if="!isLoggedIn()"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</a>
             <a href="#!/register" ng-if="!isLoggedIn()"><i class="fa-solid fa-user-plus"></i> Sign Up</a>
             <span ng-if="isLoggedIn()"><i class="fa-solid fa-user-check"></i> Hello, {{ getUserName() }}</span>
-            <a href=""><i class="fa-solid fa-headset"></i> 24/7 Support</a>
+            <a href="javascript:void(0)" aria-label="24/7 Customer Support"><i class="fa-solid fa-headset"></i> 24/7 Support</a>
         </div>
     </div>
 
@@ -100,12 +101,6 @@
                         <i class="fa-solid fa-user-shield"></i> <span>Admin</span>
                     </a>
                     
-                    <!-- Render Cloud Status Badge -->
-                    <a href="https://entitykart-enterprise-ecommerce.onrender.com" target="_blank" class="render-status-badge" title="Powered by Render Cloud">
-                        <i class="fa-solid fa-cloud"></i>
-                        <span>Live on Render</span>
-                        <span class="render-dot"></span>
-                    </a>
 
                     <!-- Authentication Status -->
                     <div class="auth-section">
@@ -127,7 +122,7 @@
                                 <a href="#!/wishlist" ng-click="closeUserMenu(); closeMobileMenu()"><i class="fa-solid fa-heart"></i> My Wishlist</a>
                                 <a href="#!/returns" ng-click="closeUserMenu(); closeMobileMenu()"><i class="fa-solid fa-rotate-left"></i> My Returns</a>
                                 <hr class="dropdown-divider">
-                                <a href="" ng-click="logout(); closeMobileMenu()"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+                                <a href="javascript:void(0)" ng-click="logout(); closeMobileMenu()"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
                             </div>
                         </div>
                     </div>
@@ -208,7 +203,7 @@
                 <h4>Contact</h4>
                 <ul>
                     <li><i class="fa fa-envelope"></i> support@entitykart.com</li>
-                    <li><i class="fa fa-phone"></i> +91 98765 43210</li>
+                    <li><i class="fa fa-phone"></i> +91 92747 02850</li>
                     <li><i class="fa fa-location-dot"></i> Tech Park, Building 4, Bengaluru</li>
                 </ul>
             </div>

@@ -49,11 +49,16 @@
                         </span>
                     </div>
 
-                    <h3 class="return-product-name">
-                        <a href="#!/product/{{ ret.productId }}" class="text-accent">
-                            {{ ret.productName || ('Product #' + ret.productId) }}
-                        </a>
-                    </h3>
+                    <div style="display: flex; align-items: center; gap: 0.8rem; margin-top: 0.5rem;">
+                        <div style="width: 40px; height: 40px; border-radius: 4px; overflow: hidden; border: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; background: white; flex-shrink: 0;">
+                            <img ng-src="{{ ret.mainImageURL || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=100&auto=format&fit=crop&q=60' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <h3 class="return-product-name" style="margin: 0; font-size: 1rem;">
+                            <a href="#!/product/{{ ret.productId }}" class="text-accent">
+                                {{ ret.productName || ('Product #' + ret.productId) }}
+                            </a>
+                        </h3>
+                    </div>
 
                     <div class="return-details-grid">
                         <div>

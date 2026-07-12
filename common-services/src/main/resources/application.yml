@@ -4,8 +4,7 @@
 #  Port Layout:
 #    9900 → Eureka Discovery Server (main HTTP port)
 #    The gateway & notification REST run inside the same process
-#    on port 9900 via Spring MVC (non-reactive paths) or 9901
-#    if overridden. Set SERVER_PORT=9900 in env.
+#    on port 9900 via Spring MVC
 # ============================================================
 server:
   port: ${SERVER_PORT:9900}
@@ -16,13 +15,13 @@ spring:
   main:
     web-application-type: servlet
 
-  # ── Multipart (for gateway file-upload passthrough) ──────────────────────
+  # ── Multipart (for gateway file-upload passthrough) ──────────────────────────
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  # ── Database (Notification entity persistence) ───────────────────────────
+  # ── Database (Notification entity persistence) ────────────────────────────────
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:defaultdb}?useSSL=true&requireSSL=true&trustServerCertificate=true
     username: ${DB_USERNAME:root}
@@ -30,13 +29,23 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: UTC
 
-  # ── Kafka (Notification consumers) ──────────────────────────────────────
+  # ── Flyway ──────────────────────────────────────────────────────────────────
+  flyway:
+    enabled: true
+    baseline-on-migrate: ${SPRING_FLYWAY_BASELINE_ON_MIGRATE:true}
+    baseline-version: 0
+    validate-on-migrate: false
+    locations: classpath:db/migration
+
+  # ── Kafka (Notification consumers) ──────────────────────────────────────────
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
@@ -63,7 +72,7 @@ spring:
       properties:
         spring.json.add.type.headers: false
 
-  # ── Email / SMTP ─────────────────────────────────────────────────────────
+  # ── Email / SMTP ─────────────────────────────────────────────────────────────
   mail:
     host: smtp.gmail.com
     port: 587
@@ -80,79 +89,124 @@ spring:
         timeout: 3000
         writetimeout: 5000
 
-  # ── Spring Cloud Gateway Routes ──────────────────────────────────────────
+  # ── Spring Cloud Gateway Routes ───────────────────────────────────────────────
   cloud:
     gateway:
       mvc:
         routes:
-          # ── User Service ───────────────────────────────────────────────────
+          # ── User Service (includes /api/users/sessions, /refresh-token) ──────
           - id: user-service
             uri: lb://user-service
             predicates:
               - Path=/api/users,/api/users/**
+            filters:
+              - name: CircuitBreaker
+                args:
+                  id: userServiceCircuitBreaker
+                  fallbackUri: forward:/fallback/user-service
 
-          # ── Product Service ────────────────────────────────────────────────
+          # ── Product Service ──────────────────────────────────────────────────
           - id: product-service-products
             uri: lb://product-service
             predicates:
               - Path=/api/products,/api/products/**
+            filters:
+              - name: CircuitBreaker
+                args:
+                  id: productServiceCircuitBreaker
+                  fallbackUri: forward:/fallback/product-service
 
-          # ── Category Service (part of product-service) ─────────────────────
+          # ── Category Service (part of product-service) ───────────────────────
           - id: product-service-categories
             uri: lb://product-service
             predicates:
               - Path=/api/categories,/api/categories/**
+            filters:
+              - name: CircuitBreaker
+                args:
+                  id: productServiceCircuitBreaker
+                  fallbackUri: forward:/fallback/product-service
 
-          # ── Cart Service ───────────────────────────────────────────────────
+          # ── Cart Service ─────────────────────────────────────────────────────
           - id: cart-service
             uri: lb://cart-service
             predicates:
               - Path=/api/cart,/api/cart/**
+            filters:
+              - name: CircuitBreaker
+                args:
+                  id: cartServiceCircuitBreaker
+                  fallbackUri: forward:/fallback/cart-service
 
-          # ── Order Service ──────────────────────────────────────────────────
+          # ── Order Service ────────────────────────────────────────────────────
           - id: order-service
             uri: lb://order-service
             predicates:
               - Path=/api/orders,/api/orders/**
+            filters:
+              - name: CircuitBreaker
+                args:
+                  id: orderServiceCircuitBreaker
+                  fallbackUri: forward:/fallback/order-service
 
-          # ── Payment Service ────────────────────────────────────────────────
+          # ── Payment Service ──────────────────────────────────────────────────
           - id: payment-service
             uri: lb://payment-service
             predicates:
               - Path=/api/payments,/api/payments/**
+            filters:
+              - name: CircuitBreaker
+                args:
+                  id: paymentServiceCircuitBreaker
+                  fallbackUri: forward:/fallback/payment-service
 
-          # ── Wishlist Service ───────────────────────────────────────────────
+          # ── Wishlist Service ─────────────────────────────────────────────────
           - id: wishlist-service
             uri: lb://wishlist-service
             predicates:
               - Path=/api/wishlist,/api/wishlist/**
+            filters:
+              - name: CircuitBreaker
+                args:
+                  id: wishlistServiceCircuitBreaker
+                  fallbackUri: forward:/fallback/wishlist-service
 
-          # ── Review Service (public GET + admin) ───────────────────────────
+          # ── Review Service (public GET + admin) ──────────────────────────────
           - id: review-service
             uri: lb://review-service
             predicates:
               - Path=/api/reviews,/api/reviews/**,/api/admin/reviews,/api/admin/reviews/**
+            filters:
+              - name: CircuitBreaker
+                args:
+                  id: reviewServiceCircuitBreaker
+                  fallbackUri: forward:/fallback/review-service
 
-          # ── Return Service ─────────────────────────────────────────────────
+          # ── Return Service ───────────────────────────────────────────────────
           - id: return-service
             uri: lb://return-service
             predicates:
               - Path=/api/returns,/api/returns/**,/api/admin/returns,/api/admin/returns/**
+            filters:
+              - name: CircuitBreaker
+                args:
+                  id: returnServiceCircuitBreaker
+                  fallbackUri: forward:/fallback/return-service
 
-          # ── Admin Notifications & Export — served locally (no lb routing) ──
+          # ── Admin Notifications & Export — served locally (no lb routing) ────
           # These endpoints live inside common-services itself; no forwarding needed.
           # Spring MVC will handle /api/admin/notifications/** and /api/admin/export/**
           # directly via NotificationController and AdminExportController.
           # DO NOT add lb routes for them — they will loop.
 
 
-# ── Eureka Server (self – Discovery) ────────────────────────────────────────
+# ── Eureka Server (self — Discovery) ─────────────────────────────────────────
 eureka:
   instance:
     hostname: ${EUREKA_HOSTNAME:localhost}
     prefer-ip-address: true
   client:
-    # This service IS the Eureka server – do not register with itself
+    # This service IS the Eureka server — do not register with itself
     register-with-eureka: false
     fetch-registry: true
     service-url:
@@ -161,26 +215,43 @@ eureka:
     wait-time-in-ms-when-sync-empty: 0
     response-cache-update-interval-ms: 5000
 
-# ── JWT (used by the embedded Gateway filter) ────────────────────────────────
+# ── JWT (used by the embedded Gateway filter) ─────────────────────────────────
 jwt:
-  secret: ${JWT_SECRET:your-super-secret-jwt-key-change-this-in-production}
+  secret: ${JWT_SECRET}
 
-# ── App meta (Notification service helpers) ──────────────────────────────────
+# ── App meta (Notification service helpers) ───────────────────────────────────
 app:
   admin-email: ${ADMIN_EMAIL:admin@entitykart.com}
   frontend-url: ${APP_URL:http://localhost:9901}
 
-# ── Logging ──────────────────────────────────────────────────────────────────
+# ── Logging ───────────────────────────────────────────────────────────────────
 logging:
   level:
-    com.entitykart: DEBUG
+    com.entitykart: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
-    org.springframework.mail: DEBUG
+    org.springframework.mail: INFO
 
-# ── Management / Actuator ───────────────────────────────────────────────────
+# ── Management / Actuator ─────────────────────────────────────────────────────
 management:
   health:
     mail:
       enabled: false
+
+# ── Resilience4j Circuit Breaker & Timeout Configuration ──────────────────────
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 10s
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        permitted-number-of-calls-in-half-open-state: 2
+        sliding-window-type: COUNT_BASED
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 5s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
 

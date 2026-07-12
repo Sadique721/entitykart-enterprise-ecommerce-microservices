@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,11 +34,59 @@ class _WebViewScreenState extends State<WebViewScreen> {
     _loadIpConfig().then((_) => _initWebView());
   }
 
-  // ---- Load backend IP from SharedPreferences (Hardlocked to Render Cloud) ----
+  // ---- Load backend IP from SharedPreferences / Hardcoded Targets / Probe ----
   Future<void> _loadIpConfig() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedIp = prefs.getString('backend_ip') ?? '';
+    final savedPort = prefs.getString('backend_port') ?? '9900';
+
+    if (savedIp.isNotEmpty) {
+      final ok = await _probeTarget(savedIp, int.tryParse(savedPort) ?? 9900);
+      if (ok) {
+        setState(() {
+          _backendApiBase = 'http://$savedIp:$savedPort';
+        });
+        return;
+      }
+    }
+
+    // Probe hardcoded targets
+    final targets = [
+      {'ip': '192.168.1.21', 'port': 9900},
+      {'ip': '192.168.1.21', 'port': 9001},
+      {'ip': '10.111.223.213', 'port': 9900},
+      {'ip': '10.111.223.213', 'port': 9001},
+    ];
+
+    for (var target in targets) {
+      final ip = target['ip'] as String;
+      final port = target['port'] as int;
+      final ok = await _probeTarget(ip, port);
+      if (ok) {
+        setState(() {
+          _backendApiBase = 'http://$ip:$port';
+        });
+        await prefs.setString('backend_ip', ip);
+        await prefs.setString('backend_port', port.toString());
+        return;
+      }
+    }
+
+    // Fallback default
     setState(() {
-      _backendApiBase = 'https://entitykart-enterprise-ecommerce.onrender.com';
+      _backendApiBase = 'http://192.168.1.21:9900';
     });
+  }
+
+  Future<bool> _probeTarget(String ip, int port) async {
+    try {
+      final client = HttpClient()..connectionTimeout = const Duration(milliseconds: 500);
+      final request = await client.getUrl(Uri.parse('http://$ip:$port/'));
+      final response = await request.close();
+      return response.statusCode >= 200 && response.statusCode <= 403;
+    } catch (_) {
+      return false;
+    }
   }
 
   void _initWebView() {
@@ -86,7 +135,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
         // Expose backend config to AngularJS app
         window.AndroidConfig = {
-          apiBase: "${_backendApiBase.isNotEmpty ? _backendApiBase : 'https://entitykart-enterprise-ecommerce.onrender.com'}",
+          apiBase: "${_backendApiBase.isNotEmpty ? _backendApiBase : 'http://192.168.1.21:9900'}",
           platform: "flutter",
           version: "1.5.0"
         };

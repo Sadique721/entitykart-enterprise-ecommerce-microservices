@@ -107,28 +107,31 @@ public class ReviewService {
         return value == null ? 0.0 : value;
     }
 
-    public List<ReviewDTO> getAllReviewsList() {
-        return reviewRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(java.util.stream.Collectors.toList());
-    }
-
     public Map<String, Object> getReviewStats() {
         Map<String, Object> stats = new HashMap<>();
-        long totalReviews = reviewRepository.count();
-        Double avgRating = reviewRepository.getOverallAverageRating();
+        List<Object[]> ratingCounts = reviewRepository.getRatingDistributionAll();
+        
+        long totalReviews = 0;
+        double sumRatings = 0.0;
+        for (Object[] row : ratingCounts) {
+            Integer rating = (Integer) row[0];
+            Long count = (Long) row[1];
+            totalReviews += count;
+            sumRatings += (rating * count);
+        }
+        Double avgRating = totalReviews > 0 ? (sumRatings / totalReviews) : 0.0;
         long productsWithReviews = reviewRepository.countProductsWithReviews();
         long activeReviewers = reviewRepository.countDistinctCustomers();
 
         stats.put("totalReviews", totalReviews);
-        stats.put("avgRating", avgRating != null ? avgRating : 0.0);
+        stats.put("avgRating", avgRating);
         stats.put("productsWithReviews", productsWithReviews);
         stats.put("activeReviewers", activeReviewers);
         return stats;
     }
 
     public Map<String, Object> getRatingDistribution() {
-        Map<String, Object> distribution = new HashMap<>();
+        Map<String, Object> stats = getReviewStats();
         List<Object[]> ratingCounts = reviewRepository.getRatingDistributionAll();
 
         long oneStar = 0, twoStar = 0, threeStar = 0, fourStar = 0, fiveStar = 0;
@@ -144,25 +147,12 @@ public class ReviewService {
             }
         }
 
-        distribution.put("oneStar", oneStar);
-        distribution.put("twoStar", twoStar);
-        distribution.put("threeStar", threeStar);
-        distribution.put("fourStar", fourStar);
-        distribution.put("fiveStar", fiveStar);
-
-        long totalReviews = reviewRepository.count();
-        distribution.put("totalReviews", totalReviews);
-
-        Double avgRating = reviewRepository.getOverallAverageRating();
-        distribution.put("avgRating", avgRating != null ? avgRating : 0.0);
-
-        long productsWithReviews = reviewRepository.countProductsWithReviews();
-        distribution.put("productsWithReviews", productsWithReviews);
-
-        long activeReviewers = reviewRepository.countDistinctCustomers();
-        distribution.put("activeReviewers", activeReviewers);
-
-        return distribution;
+        stats.put("oneStar", oneStar);
+        stats.put("twoStar", twoStar);
+        stats.put("threeStar", threeStar);
+        stats.put("fourStar", fourStar);
+        stats.put("fiveStar", fiveStar);
+        return stats;
     }
 
     public Map<String, Object> getMonthlyReviews(Integer year) {

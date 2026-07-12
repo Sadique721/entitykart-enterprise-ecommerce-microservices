@@ -217,47 +217,14 @@ app.service('cartService', ['apiService', 'authService', '$rootScope', '$q', fun
             if (paymentData.emiTenure) params.emiTenure = paymentData.emiTenure;
         }
 
-        return apiService.post('/api/cart/checkout', null, params)
+        return apiService.post('/api/cart/checkout', params)
             .then(function(response) {
                 $rootScope.$broadcast('cart:updated');
                 return response.data; // returns order object with orderId
             })
-            .catch(function() {
-                // If api fails, we mock successful checkout creation
-                return self.getCart().then(function(items) {
-                    if (items.length === 0) {
-                        throw new Error('Cart is empty');
-                    }
-                    
-                    return self.getCartTotal().then(function(total) {
-                        var mockOrders = JSON.parse(localStorage.getItem('ekMockOrders') || '[]');
-                        var newOrder = {
-                            orderId: Date.now(),
-                            customerId: customerId,
-                            addressId: addressId || 1001,
-                            totalAmount: total,
-                            orderStatus: 'PLACED',
-                            paymentStatus: 'PENDING',
-                            orderDate: new Date().toISOString(),
-                            items: items.map(function(item) {
-                                return {
-                                    orderItemId: Date.now() + Math.round(Math.random() * 1000),
-                                    productId: item.productId,
-                                    productName: item.productName,
-                                    quantity: item.quantity,
-                                    price: item.price,
-                                    subtotal: item.subtotal
-                                };
-                            })
-                        };
-                        mockOrders.push(newOrder);
-                        localStorage.setItem('ekMockOrders', JSON.stringify(mockOrders));
-                        
-                        // Clear the cart locally
-                        self.clearCart();
-                        return newOrder;
-                    });
-                });
+            .catch(function(error) {
+                var msg = (error.data && error.data.message) ? error.data.message : 'Checkout failed.';
+                throw new Error(msg);
             });
     };
 

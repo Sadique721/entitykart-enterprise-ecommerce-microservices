@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EntityKart – Environment Configuration Wizard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(135deg, #0a0d14 0%, #121824 100%);
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-title h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #38ef7d 0%, #11998e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header-title p {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 2px;
+        }
+        .wizard-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 220px;
+            background: rgba(0, 0, 0, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .step-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 12px 15px;
+            text-align: left;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step-btn.active {
+            background: rgba(56, 239, 125, 0.1);
+            color: #38ef7d;
+        }
+        .step-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.03);
+            color: #ffffff;
+        }
+        .step-number {
+            display: inline-flex;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: #ffffff;
+        }
+        .step-btn.active .step-number {
+            background: #38ef7d;
+            color: #0c1017;
+        }
+        .form-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        h2 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.75);
+        }
+        input {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        input:focus {
+            border-color: #38ef7d;
+            box-shadow: 0 0 8px rgba(56, 239, 125, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .footer-nav {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 20px 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .btn-secondary:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .btn-primary {
+            background: #38ef7d;
+            color: #0c1017;
+            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.25);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(56, 239, 125, 0.35);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">
+            <h1>EntityKart Environment Setup</h1>
+            <p>Welcome! Configure your environment keys below to scaffold your local configuration.</p>
+        </div>
+    </div>
+
+    <div class="wizard-body">
+        <div class="sidebar">
+            <button class="step-btn active" onclick="showStep(1)">
+                <span class="step-number">1</span> Database Configuration
+            </button>
+            <button class="step-btn" onclick="showStep(2)">
+                <span class="step-number">2</span> Message Broker
+            </button>
+            <button class="step-btn" onclick="showStep(3)">
+                <span class="step-number">3</span> Security & Cloud
+            </button>
+            <button class="step-btn" onclick="showStep(4)">
+                <span class="step-number">4</span> Payment Gateway
+            </button>
+        </div>
+
+        <div class="form-content">
+            <!-- STEP 1 -->
+            <div id="step-1" class="tab-panel active">
+                <h2>Database Properties</h2>
+                <div class="form-group">
+                    <label for="db_host">MySQL Host</label>
+                    <input type="text" id="db_host" value="localhost">
+                </div>
+                <div class="form-group">
+                    <label for="db_port">MySQL Port</label>
+                    <input type="text" id="db_port" value="3306">
+                </div>
+                <div class="form-group">
+                    <label for="db_user">Database Username</label>
+                    <input type="text" id="db_user" value="root">
+                </div>
+                <div class="form-group">
+                    <label for="db_pass">Database Password</label>
+                    <input type="password" id="db_pass" placeholder="••••••••">
+                </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div id="step-2" class="tab-panel">
+                <h2>Event Broker Details</h2>
+                <div class="form-group">
+                    <label for="kafka_bootstrap">Kafka Bootstrap Servers</label>
+                    <input type="text" id="kafka_bootstrap" value="localhost:9092">
+                </div>
+                <div class="form-group">
+                    <label for="zookeeper_host">Zookeeper Host</label>
+                    <input type="text" id="zookeeper_host" value="localhost:2181">
+                </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div id="step-3" class="tab-panel">
+                <h2>Secrets & Storage</h2>
+                <div class="form-group">
+                    <label for="jwt_secret">JWT Secret Key (Default: auto-generated if left empty)</label>
+                    <input type="text" id="jwt_secret" placeholder="Enter secure JWT signing secret">
+                </div>
+                <div class="form-group">
+                    <label for="cloudinary_url">Cloudinary API URL</label>
+                    <input type="text" id="cloudinary_url" placeholder="cloudinary://key:secret@cloudname">
+                </div>
+                <div class="form-group">
+                    <label for="mail_host">SMTP Server Host</label>
+                    <input type="text" id="mail_host" value="smtp.gmail.com">
+                </div>
+                <div class="form-group">
+                    <label for="mail_user">SMTP Username</label>
+                    <input type="text" id="mail_user" placeholder="user@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label for="mail_pass">SMTP App Password</label>
+                    <input type="password" id="mail_pass" placeholder="••••••••••••••••">
+                </div>
+            </div>
+
+            <!-- STEP 4 -->
+            <div id="step-4" class="tab-panel">
+                <h2>Authorize.Net Keys</h2>
+                <div class="form-group">
+                    <label for="auth_net_id">API Login ID</label>
+                    <input type="text" id="auth_net_id" placeholder="Authorize.Net API Login ID">
+                </div>
+                <div class="form-group">
+                    <label for="auth_net_key">Transaction Key</label>
+                    <input type="password" id="auth_net_key" placeholder="Authorize.Net Transaction Key">
+                </div>
+                <div class="form-group">
+                    <label for="auth_net_env">Gateway Environment</label>
+                    <input type="text" id="auth_net_env" value="sandbox">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-nav">
+        <button id="prev-btn" class="btn btn-secondary" onclick="prevStep()" disabled>Back</button>
+        <button id="next-btn" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        function showStep(stepNum) {
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.querySelectorAll('.step-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(`step-${stepNum}`).classList.add('active');
+            document.querySelectorAll('.step-btn')[stepNum - 1].classList.add('active');
+
+            currentStep = stepNum;
+            
+            document.getElementById('prev-btn').disabled = (currentStep === 1);
+            if (currentStep === totalSteps) {
+                document.getElementById('next-btn').innerText = 'Finish & Run';
+            } else {
+                document.getElementById('next-btn').innerText = 'Next';
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                showStep(currentStep + 1);
+            } else {
+                saveAndFinish();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                showStep(currentStep - 1);
+            }
+        }
+
+        async function saveAndFinish() {
+            const dbHost = document.getElementById('db_host').value;
+            const dbPort = document.getElementById('db_port').value;
+            const dbUser = document.getElementById('db_user').value;
+            const dbPass = document.getElementById('db_pass').value;
+
+            const kafka = document.getElementById('kafka_bootstrap').value;
+            const zookeeper = document.getElementById('zookeeper_host').value;
+
+            let jwt = document.getElementById('jwt_secret').value;
+            if (!jwt) {
+                jwt = generateSecureRandomString(32);
+            }
+
+            const cloudinary = document.getElementById('cloudinary_url').value;
+            const mailHost = document.getElementById('mail_host').value;
+            const mailUser = document.getElementById('mail_user').value;
+            const mailPass = document.getElementById('mail_pass').value;
+
+            const authId = document.getElementById('auth_net_id').value;
+            const authKey = document.getElementById('auth_net_key').value;
+            const authEnv = document.getElementById('auth_net_env').value;
+
+            const envConfig = {
+                'DB_HOST': dbHost,
+                'DB_PORT': dbPort,
+                'SPRING_DATASOURCE_USERNAME': dbUser,
+                'SPRING_DATASOURCE_PASSWORD': dbPass,
+                'SPRING_KAFKA_BOOTSTRAP_SERVERS': kafka,
+                'ZOOKEEPER_HOST': zookeeper,
+                'JWT_SECRET_KEY': jwt,
+                'CLOUDINARY_URL': cloudinary,
+                'SPRING_MAIL_HOST': mailHost,
+                'SPRING_MAIL_USERNAME': mailUser,
+                'SPRING_MAIL_PASSWORD': mailPass,
+                'AUTHORIZE_NET_API_LOGIN_ID': authId,
+                'AUTHORIZE_NET_TRANSACTION_KEY': authKey,
+                'AUTHORIZE_NET_ENVIRONMENT': authEnv
+            };
+
+            await window.api.saveConfig(envConfig);
+            window.api.closeWizard();
+        }
+
+        function generateSecureRandomString(len) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
+            let res = '';
+            for (let i = 0; i < len; i++) {
+                res += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return res;
+        }
+    </script>
+</body>
+</html>

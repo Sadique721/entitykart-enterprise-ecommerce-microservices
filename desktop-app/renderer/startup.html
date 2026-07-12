@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EntityKart — Starting</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: #0a0e1a;
+      color: #e2e8f0;
+      width: 700px;
+      height: 480px;
+      overflow: hidden;
+      user-select: none;
+    }
+    .drag-region {
+      -webkit-app-region: drag;
+      background: linear-gradient(135deg, #0a0e1a 0%, #0d1526 100%);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(99, 179, 237, 0.1);
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #4299e1, #3182ce);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px rgba(66, 153, 225, 0.4);
+    }
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+    .header-sub {
+      font-size: 11px;
+      color: rgba(160, 174, 192, 0.7);
+    }
+    .win-controls {
+      display: flex;
+      gap: 8px;
+      -webkit-app-region: no-drag;
+    }
+    .win-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+    .win-close { background: #fc5c65; }
+    .win-min { background: #f7b731; }
+    .win-max { background: #20bf6b; opacity: 0.3; cursor: not-allowed; }
+    .content {
+      padding: 28px 32px;
+    }
+    .phase-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #63b3ed;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .phase-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4299e1;
+      animation: blink 1s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(99, 179, 237, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4299e1, #63b3ed, #90cdf4);
+      border-radius: 6px;
+      transition: width 0.5s ease;
+      width: 0%;
+      box-shadow: 0 0 10px rgba(99, 179, 237, 0.5);
+    }
+    .log-panel {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(99, 179, 237, 0.1);
+      border-radius: 10px;
+      padding: 12px 14px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 11px;
+    }
+    .log-panel::-webkit-scrollbar { width: 4px; }
+    .log-panel::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+    .log-panel::-webkit-scrollbar-thumb { background: rgba(99, 179, 237, 0.3); border-radius: 2px; }
+    .log-line {
+      padding: 2px 0;
+      color: rgba(160, 174, 192, 0.8);
+      line-height: 1.5;
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+    .log-line.success { color: #68d391; }
+    .log-line.error { color: #fc8181; }
+    .log-line.info { color: #63b3ed; }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .service-chip {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(99, 179, 237, 0.1);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: rgba(160, 174, 192, 0.6);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(160, 174, 192, 0.3);
+      flex-shrink: 0;
+    }
+    .status-dot.healthy { background: #68d391; box-shadow: 0 0 6px #68d391; }
+    .status-dot.starting { background: #f6ad55; animation: blink 0.8s infinite; }
+    .status-dot.error { background: #fc8181; }
+  </style>
+</head>
+<body>
+  <div class="drag-region">
+    <div class="header-left">
+      <div class="logo-badge">🛒</div>
+      <div>
+        <div class="header-title">EntityKart Enterprise</div>
+        <div class="header-sub">Initializing microservices...</div>
+      </div>
+    </div>
+    <div class="win-controls">
+      <button class="win-btn win-close" onclick="ek.close()" title="Quit Application"></button>
+      <button class="win-btn win-min" onclick="ek.minimize()" title="Minimize"></button>
+      <button class="win-btn win-max" title="Startup window cannot be maximized"></button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="phase-label">
+      <div class="phase-dot" id="phaseDot"></div>
+      <span id="phaseText">Starting up...</span>
+      <span style="margin-left:auto;font-size:11px;color:rgba(160,174,192,0.5)" id="progressPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+    <div class="log-panel" id="logPanel"></div>
+    <div class="services-grid" id="servicesGrid"></div>
+  </div>
+
+  <script>
+    const ek = window.entitykart;
+    const logPanel = document.getElementById('logPanel');
+    const progressBar = document.getElementById('progressBar');
+    const progressPct = document.getElementById('progressPct');
+    const phaseText = document.getElementById('phaseText');
+    const servicesGrid = document.getElementById('servicesGrid');
+    let servicesConfig = [];
+
+    function addLog(msg) {
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      if (msg.startsWith('✅') || msg.startsWith('🎉')) line.classList.add('success');
+      else if (msg.startsWith('❌')) line.classList.add('error');
+      else if (msg.startsWith('🚀') || msg.startsWith('🐳') || msg.startsWith('⏳')) line.classList.add('info');
+      line.textContent = msg;
+      logPanel.appendChild(line);
+      logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    function renderServices(statuses) {
+      servicesGrid.innerHTML = '';
+      servicesConfig.forEach(svc => {
+        const status = statuses[svc.name] || 'unknown';
+        const chip = document.createElement('div');
+        chip.className = 'service-chip';
+        chip.innerHTML = `<div class="status-dot ${status}"></div><span>${svc.name}</span>`;
+        servicesGrid.appendChild(chip);
+      });
+    }
+
+    async function init() {
+      servicesConfig = await ek.getServicesConfig();
+      renderServices({});
+
+      ek.onStartupLog(msg => addLog(msg));
+      ek.onStartupStatus(({ phase, progress }) => {
+        phaseText.textContent = phase || 'Starting...';
+        progressBar.style.width = `${progress || 0}%`;
+        progressPct.textContent = `${progress || 0}%`;
+      });
+      ek.onServiceStatus(({ services }) => renderServices(services));
+    }
+
+    init();
+  </script>
+</body>
+</html>

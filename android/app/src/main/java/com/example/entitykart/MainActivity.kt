@@ -327,28 +327,45 @@ class MainActivity : ComponentActivity() {
     // Returns "http://IP:PORT" if found, or "" if not found
     // ─────────────────────────────────────────────────────────────────────────
     private suspend fun discoverBackend(): String = withContext(Dispatchers.IO) {
-        val subnets = getLocalSubnets()
-        if (subnets.isEmpty()) return@withContext ""
-
-        // Probe common PC IPs first (most home routers assign these)
-        // PC is typically .1, .2, .10, .20, .23, .100, .101, .200 etc.
-        val priorityLast = listOf(
-            1, 2, 3, 4, 5, 10, 11, 20, 21, 22, 23, 24, 25, 30,
-            50, 100, 101, 102, 103, 104, 105, 150, 200, 210, 220, 240, 250, 254
+        // 1. Probe the user's hardcoded targets first (on both ports 9900 and 9001)
+        val hardcodedTargets = listOf(
+            Pair("192.168.1.21", 9900),
+            Pair("192.168.1.21", 9001),
+            Pair("10.111.223.213", 9900),
+            Pair("10.111.223.213", 9001)
         )
-        // Remaining IPs scanned after priority list
-        val remaining = (6..254).filterNot { it in priorityLast }
-        val fullList  = priorityLast + remaining
+        for (target in hardcodedTargets) {
+            if (probeGateway(target.first, target.second)) {
+                return@withContext "http://${target.first}:${target.second}"
+            }
+        }
 
-        for (subnet in subnets) {
-            for (host in fullList) {
-                val ip = "$subnet.$host"
-                if (probeGateway(ip)) {
-                    return@withContext "http://$ip:$GATEWAY_PORT"
+        // 2. Fallback: Scan active subnets
+        val subnets = getLocalSubnets()
+        if (subnets.isNotEmpty()) {
+            // Probe common PC IPs first
+            val priorityLast = listOf(
+                1, 2, 3, 4, 5, 10, 11, 20, 21, 22, 23, 24, 25, 30,
+                50, 100, 101, 102, 103, 104, 105, 150, 200, 210, 220, 240, 250, 254
+            )
+            val remaining = (6..254).filterNot { it in priorityLast }
+            val fullList  = priorityLast + remaining
+
+            for (subnet in subnets) {
+                for (host in fullList) {
+                    val ip = "$subnet.$host"
+                    if (probeGateway(ip, 9900)) {
+                        return@withContext "http://$ip:9900"
+                    }
+                    if (probeGateway(ip, 9001)) {
+                        return@withContext "http://$ip:9001"
+                    }
                 }
             }
         }
-        return@withContext ""
+        
+        // Final fallback if offline/no gateway found
+        return@withContext "http://192.168.1.21:9900"
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -379,12 +396,12 @@ class MainActivity : ComponentActivity() {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Probe whether the EntityKart gateway responds on http://{ip}:9900
-    // HTTP 200–403 = gateway is up; 401 from JWT filter = gateway is running
+    // Probe whether the EntityKart gateway responds on http://{ip}:{port}
+    // HTTP 200–403 = gateway is up
     // ─────────────────────────────────────────────────────────────────────────
-    private fun probeGateway(ip: String): Boolean {
+    private fun probeGateway(ip: String, port: Int = GATEWAY_PORT): Boolean {
         return try {
-            val url  = URL("http://$ip:$GATEWAY_PORT$PROBE_PATH")
+            val url  = URL("http://$ip:$port$PROBE_PATH")
             val conn = url.openConnection() as HttpURLConnection
             conn.connectTimeout = PROBE_TIMEOUT
             conn.readTimeout    = PROBE_TIMEOUT

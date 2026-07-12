@@ -80,3 +80,9 @@ Ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
+
+# Custom Project Additions (Phase 1 Audit)
+*.apk
+*.keystore
+*-logs.txt
+metadata.json

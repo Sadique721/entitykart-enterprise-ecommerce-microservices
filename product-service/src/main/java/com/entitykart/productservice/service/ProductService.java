@@ -11,7 +11,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductService {
+
+    /** Safety cap: getAllProducts() must never scan the whole table (HIGH-6b). */
+    private static final int MAX_UNBOUNDED_FETCH = 500;
 
     private static final String PRODUCT_EVENTS_TOPIC = "product-events";
 
@@ -66,6 +72,16 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    public List<ProductDTO> getProductsByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return productRepository.findAllById(ids).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public Page<ProductDTO> getProducts(Pageable pageable) {
         return productRepository.findAll(pageable).map(this::convertToDTO);
     }
@@ -100,9 +116,22 @@ public class ProductService {
         return dto;
     }
 
+    /**
+     * Returns up to {@value #MAX_UNBOUNDED_FETCH} products.
+     * Prefer {@link #getProducts(Pageable)} for paginated access.
+     * HIGH-6b: Unbounded findAll() replaced with a hard-capped page to prevent OOM.
+     */
     @Transactional(readOnly = true)
     public List<ProductDTO> getAllProducts() {
-        return productRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        long total = productRepository.count();
+        if (total > MAX_UNBOUNDED_FETCH) {
+            log.warn("getAllProducts() fetched only first {} of {} total products. Use paginated endpoint instead.",
+                    MAX_UNBOUNDED_FETCH, total);
+        }
+        return productRepository.findAll(PageRequest.of(0, MAX_UNBOUNDED_FETCH))
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional

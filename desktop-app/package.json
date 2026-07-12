@@ -1,0 +1,50 @@
+{
+  "name": "entitykart-desktop",
+  "version": "1.0.0",
+  "description": "EntityKart Enterprise Desktop Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.entitykart.desktop",
+    "productName": "EntityKart",
+    "copyright": "Copyright © 2026 EntityKart",
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "EntityKart",
+      "menuCategory": "EntityKart",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "build/**/*",
+      "node_modules/**/*"
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.1.0"
+  },
+  "devDependencies": {
+    "electron": "^30.5.1",
+    "electron-builder": "^24.13.3"
+  },
+  "author": "EntityKart",
+  "license": "UNLICENSED",
+  "allowScripts": {
+    "electron@30.5.1": true
+  }
+}

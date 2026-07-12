@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients
-@ComponentScan(basePackages = {"com.entitykart.wishlistservice", "com.entitykart.common"})
+@ComponentScan(basePackages = {"com.entitykart.wishlistservice"})
 public class WishlistServiceApplication {
 
     public static void main(String[] args) {

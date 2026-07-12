@@ -1,0 +1,11 @@
+{
+  "name": "entitykart-desktop",
+  "version": "1.0.0",
+  "description": "EntityKart Local Service Manager and Control Panel",
+  "main": "main.js",
+  "author": "Antigravity Elite Team",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

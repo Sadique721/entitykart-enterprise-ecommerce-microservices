@@ -29,11 +29,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSavedSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final ip = prefs.getString('backend_ip') ?? '';
-    final port = prefs.getString('backend_port') ?? '9080';
+    final port = prefs.getString('backend_port') ?? '9900';
     setState(() {
       _ipController.text = ip;
       _portController.text = port;
-      _currentTarget = ip.isNotEmpty ? 'http://$ip:$port' : 'https://entitykart-enterprise-ecommerce.onrender.com (Render Cloud)';
+      _currentTarget = ip.isNotEmpty ? 'http://$ip:$port' : 'http://192.168.1.21:9900 (Default Local Gateway)';
     });
   }
 
@@ -72,11 +72,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _ipController.clear();
       _portController.text = '9900';
-      _currentTarget = 'https://entitykart-enterprise-ecommerce.onrender.com (Render Cloud)';
+      _currentTarget = 'http://192.168.1.21:9900 (Default Local Gateway)';
       _saved = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reset to default Render Cloud connection')),
+      const SnackBar(content: Text('Reset to default local connection')),
     );
   }
 

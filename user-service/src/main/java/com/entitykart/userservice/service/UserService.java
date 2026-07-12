@@ -1,25 +1,29 @@
 package com.entitykart.userservice.service;
 
+import com.entitykart.shared.dto.UserCreatedEvent;
+import com.entitykart.shared.dto.PasswordResetEvent;
+import com.entitykart.shared.util.HashUtils;
+import com.entitykart.shared.validation.PasswordValidator;
 import com.entitykart.userservice.dto.UserDTO;
 import com.entitykart.userservice.dto.LoginRequest;
 import com.entitykart.userservice.dto.LoginResponse;
 import com.entitykart.userservice.entity.UserEntity;
-import com.entitykart.userservice.event.UserCreatedEvent;
-import com.entitykart.userservice.event.PasswordResetEvent;
 import com.entitykart.userservice.repository.UserRepository;
 import com.entitykart.userservice.repository.AddressRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,25 +37,67 @@ public class UserService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    private final java.util.concurrent.ConcurrentHashMap<String, FailedLoginAttempts> failedAttempts = new java.util.concurrent.ConcurrentHashMap<>();
 
-    @Value("${jwt.expiration:86400000}")
-    private long jwtExpiration;
+    private static class FailedLoginAttempts {
+        int count;
+        LocalDateTime lastAttempt;
+        LocalDateTime lockedUntil;
+    }
 
+    private void checkBruteForceLock(String email) {
+        FailedLoginAttempts attempts = failedAttempts.get(email.toLowerCase());
+        if (attempts != null && attempts.lockedUntil != null && attempts.lockedUntil.isAfter(LocalDateTime.now())) {
+            throw new RuntimeException("Account temporarily locked due to multiple failed login attempts. Try again in " 
+                + java.time.Duration.between(LocalDateTime.now(), attempts.lockedUntil).toMinutes() + " minutes.");
+        }
+    }
+
+    private void recordLoginSuccess(String email) {
+        failedAttempts.remove(email.toLowerCase());
+    }
+
+    private void recordLoginFailure(String email) {
+        failedAttempts.compute(email.toLowerCase(), (k, v) -> {
+            if (v == null) {
+                v = new FailedLoginAttempts();
+                v.count = 1;
+                v.lastAttempt = LocalDateTime.now();
+            } else {
+                if (v.lastAttempt.plusMinutes(15).isBefore(LocalDateTime.now())) {
+                    v.count = 1;
+                } else {
+                    v.count++;
+                }
+                v.lastAttempt = LocalDateTime.now();
+            }
+
+            if (v.count >= 5) {
+                v.lockedUntil = LocalDateTime.now().plusMinutes(30);
+                log.warn("Account {} locked due to 5 failed login attempts.", k);
+            }
+            return v;
+        });
+    }
+
+    @Transactional
     public UserDTO register(UserDTO dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("User already exists with email: " + dto.getEmail());
         }
 
-        UserEntity user = new UserEntity();
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
         if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
             throw new RuntimeException("Password is required");
         }
+
+        PasswordValidator.validate(dto.getPassword());
+
+        UserEntity user = new UserEntity();
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRole("USER");
         user.setActive(true);
@@ -71,36 +117,35 @@ public class UserService {
             log.info("UserCreatedEvent published for userId={}", saved.getId());
         } catch (Exception e) {
             log.error("Failed to publish UserCreatedEvent for userId={}: {}", saved.getId(), e.getMessage());
-            // Do NOT rethrow — user is already saved in DB, registration succeeded
         }
 
         return convertToDTO(saved);
     }
 
     public LoginResponse login(LoginRequest request) {
-        UserEntity user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+        checkBruteForceLock(request.getEmail());
 
-        if (!user.isActive()) {
-            throw new RuntimeException("User account is inactive");
+        UserEntity user;
+        try {
+            user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+            if (!user.isActive()) {
+                throw new RuntimeException("User account is inactive");
+            }
+
+            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                throw new RuntimeException("Invalid email or password");
+            }
+        } catch (Exception e) {
+            recordLoginFailure(request.getEmail());
+            throw e;
         }
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
-        }
+        recordLoginSuccess(request.getEmail());
+        String token = jwtService.generateToken(user.getId(), user.getEmail(), user.getRole());
 
-        Key key = io.jsonwebtoken.security.Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-        String token = io.jsonwebtoken.Jwts.builder()
-                .setSubject(user.getEmail())
-                .claim("userId", user.getId())
-                .claim("email", user.getEmail())
-                .claim("role", user.getRole())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(key, io.jsonwebtoken.SignatureAlgorithm.HS256)
-                .compact();
-
-        return new LoginResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getProfilePicURL(), jwtExpiration);
+        return new LoginResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getProfilePicURL(), jwtService.getExpiration());
     }
 
     private UserDTO convertToDTO(UserEntity entity) {
@@ -109,7 +154,7 @@ public class UserService {
         dto.setName(entity.getName());
         dto.setEmail(entity.getEmail());
         dto.setRole(entity.getRole());
-        dto.setActive(entity.isActive());  // Convert primitive to Boolean
+        dto.setActive(entity.isActive());
         dto.setGender(entity.getGender());
         dto.setContactNum(entity.getContactNum());
         dto.setProfilePicURL(entity.getProfilePicURL());
@@ -117,25 +162,19 @@ public class UserService {
         return dto;
     }
 
-    /**
-     * Forgot-password: saves a reset token and publishes Kafka event so
-     * notification-service emails it to the user.
-     *
-     * Design: NEVER throw an exception to the caller — always return void (200 OK).
-     * This prevents email enumeration attacks AND prevents "Failed to send token"
-     * errors when Kafka is momentarily slow or the user doesn't exist.
-     */
+    @Transactional
     public void forgotPassword(String email) {
-        // Security: silently ignore if email not registered
         var optUser = userRepository.findByEmail(email);
         if (optUser.isEmpty()) {
             log.warn("Forgot-password request for unregistered email: {}", email);
-            return;  // Return 200 OK — do not reveal whether email exists
+            return;
         }
 
         UserEntity user = optUser.get();
-        String token = UUID.randomUUID().toString();
-        user.setResetToken(token);
+        String rawToken = UUID.randomUUID().toString();
+        String hashedToken = HashUtils.sha256(rawToken);
+        
+        user.setResetToken(hashedToken);
         user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
         userRepository.save(user);
 
@@ -143,27 +182,30 @@ public class UserService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                token
+                rawToken
         );
 
-        // Kafka send: wrap in try-catch so HTTP response is always 200
-        // Email may be delayed if Kafka is starting up, but will be delivered
         try {
             kafkaTemplate.send("password-reset-events", event);
             log.info("Password reset event published for userId={}, email={}", user.getId(), email);
         } catch (Exception e) {
             log.error("Failed to publish password-reset event for {}: {}", email, e.getMessage());
-            // Do NOT rethrow — token is saved in DB, user can retry
         }
     }
 
+    @Transactional
     public void resetPassword(String token, String newPassword) {
-        UserEntity user = userRepository.findByResetToken(token)
+        // Hash incoming token to match hashed token stored in DB
+        String hashedToken = HashUtils.sha256(token);
+        UserEntity user = userRepository.findByResetToken(hashedToken)
                 .orElseThrow(() -> new RuntimeException("Invalid or expired reset token"));
 
         if (user.getResetTokenExpiry() == null || user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Reset token has expired");
         }
+
+        // Validate new password complexity
+        PasswordValidator.validate(newPassword);
 
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setResetToken(null);
@@ -171,21 +213,26 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<UserDTO> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(this::convertToDTO);
     }
 
-    /**
-     * Fetch a single user by ID — called by order-service via FeignClient.
-     */
+    @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         return convertToDTO(user);
     }
 
+    @Transactional(readOnly = true)
+    public UserEntity getUserEntityById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    @Transactional
     public UserDTO updateUser(Long id, UserDTO dto) {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -197,17 +244,15 @@ public class UserService {
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            PasswordValidator.validate(dto.getPassword());
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
         if (dto.getRole() != null) {
             user.setRole(dto.getRole());
         }
-        // Preserve active status: only change if explicitly provided in payload
-        // Boolean null means field was not sent → keep existing active value
         if (dto.getActive() != null) {
             user.setActive(dto.getActive());
         }
-        // If null → keep user.active unchanged (prevents accidental deactivation)
         user.setGender(dto.getGender());
         user.setContactNum(dto.getContactNum());
         user.setProfilePicURL(dto.getProfilePicURL());
@@ -216,6 +261,7 @@ public class UserService {
         return convertToDTO(saved);
     }
 
+    @Transactional
     public void deleteUser(Long id) {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -223,6 +269,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
     public UserDTO toggleUserStatus(Long id) {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -231,9 +278,9 @@ public class UserService {
         return convertToDTO(saved);
     }
 
+    @Transactional(readOnly = true)
     public java.util.Map<String, Object> getUserStats() {
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
-        // stats.put("totalUsers", userRepository.count());
         stats.put("totalUsers", userRepository.count());
         stats.put("totalAdmins", userRepository.countByRole("ADMIN"));
         stats.put("totalActive", userRepository.countByActive(true));
