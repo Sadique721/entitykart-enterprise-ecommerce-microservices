@@ -76,9 +76,18 @@ public class PaymentController {
 
     // ─── Read endpoints ───────────────────────────────────────────────────────
     @GetMapping("/order/{orderId}")
-    public PaymentDTO getPaymentByOrder(@PathVariable Long orderId) {
-        PaymentEntity entity = paymentService.getPaymentByOrderId(orderId);
-        return toDTO(entity);
+    public org.springframework.http.ResponseEntity<PaymentDTO> getPaymentByOrder(@PathVariable Long orderId) {
+        try {
+            PaymentEntity entity = paymentService.getPaymentByOrderId(orderId);
+            return org.springframework.http.ResponseEntity.ok(toDTO(entity));
+        } catch (Exception e) {
+            PaymentDTO dto = new PaymentDTO();
+            dto.setOrderId(orderId);
+            dto.setPaymentStatus("PENDING");
+            dto.setPaymentMode("UNKNOWN");
+            dto.setTransactionRef("N/A");
+            return org.springframework.http.ResponseEntity.ok(dto);
+        }
     }
 
     @GetMapping("/all")
