@@ -816,7 +816,15 @@ app.controller('adminController', [
         // --- Users ---
         $scope.loadAdminUsers = function() {
             userService.getAllUsers().then(function(users) {
-                $scope.adminUsers = users;
+                var usersList = [];
+                if (users) {
+                    if (Array.isArray(users)) {
+                        usersList = users;
+                    } else if (Array.isArray(users.content)) {
+                        usersList = users.content;
+                    }
+                }
+                $scope.adminUsers = usersList;
             });
         };
 

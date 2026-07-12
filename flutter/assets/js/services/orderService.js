@@ -30,6 +30,9 @@ app.service('orderService', ['apiService', 'authService', '$q', function(apiServ
 
         return apiService.get('/api/orders/customer/' + customerId)
             .then(function(response) {
+                if (response.data && response.data.content) {
+                    return response.data.content;
+                }
                 return response.data;
             })
             .catch(function() {
@@ -63,6 +66,9 @@ app.service('orderService', ['apiService', 'authService', '$q', function(apiServ
         // Spring Boot may or may not expose a global get all orders, we fallback to our mock
         return apiService.get('/api/orders/all')
             .then(function(response) {
+                if (response.data && response.data.content) {
+                    return response.data.content;
+                }
                 return response.data;
             })
             .catch(function() {

@@ -43,6 +43,9 @@ app.service('userService', ['apiService', '$q', function(apiService, $q) {
     this.getAllUsers = function() {
         return apiService.get('/api/users/all')
             .then(function(response) {
+                if (response.data && response.data.content) {
+                    return response.data.content;
+                }
                 if (response.data && response.data.length > 0) {
                     return response.data;
                 }

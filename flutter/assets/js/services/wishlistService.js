@@ -88,6 +88,9 @@ app.service('wishlistService', ['apiService', 'authService', '$rootScope', '$q',
 
         return apiService.get('/api/wishlist', { customerId: customerId })
             .then(function(response) {
+                if (response.data && response.data.content) {
+                    return response.data.content;
+                }
                 return response.data;
             })
             .catch(function() {

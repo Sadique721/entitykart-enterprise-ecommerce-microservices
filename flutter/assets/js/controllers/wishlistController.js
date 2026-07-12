@@ -17,8 +17,16 @@ app.controller('wishlistController', [
 
         $scope.loadWishlist = function() {
             wishlistService.getWishlist().then(function(items) {
+                var itemsList = [];
+                if (items) {
+                    if (Array.isArray(items)) {
+                        itemsList = items;
+                    } else if (Array.isArray(items.content)) {
+                        itemsList = items.content;
+                    }
+                }
                 // Fetch product metadata for each item in the wishlist
-                var promises = items.map(function(item) {
+                var promises = itemsList.map(function(item) {
                     return productService.getProduct(item.productId)
                         .then(function(prod) {
                             return prod;
