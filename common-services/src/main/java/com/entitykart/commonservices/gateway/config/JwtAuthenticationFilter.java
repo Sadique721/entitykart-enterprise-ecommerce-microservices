@@ -223,7 +223,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (isAuthenticatedViaCookie && isUnsafe) {
             String csrfHeader = request.getHeader("X-XSRF-TOKEN");
             if (existingCsrf == null || csrfHeader == null || !existingCsrf.equals(csrfHeader)) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid or missing CSRF token");
+                writeError(request, response, HttpServletResponse.SC_FORBIDDEN, "Invalid or missing CSRF token");
                 return;
             }
         }
@@ -261,7 +261,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             || path.endsWith("/toggle-status")
                             || (path.startsWith("/api/orders/") && path.endsWith("/status")))
                             && !"ADMIN".equalsIgnoreCase(role)) {
-                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied: Admin role required");
+                        writeError(request, response, HttpServletResponse.SC_FORBIDDEN, "Access Denied: Admin role required");
                         return;
                     }
 
@@ -270,18 +270,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             } catch (Exception e) {
                 if (!isPublic) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");
+                    writeError(request, response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
                     return;
                 }
             }
         } else {
             if (!isPublic) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Token");
+                writeError(request, response, HttpServletResponse.SC_UNAUTHORIZED, "Missing authentication token");
                 return;
             }
         }
 
         filterChain.doFilter(wrappedRequest, response);
+    }
+
+    private void writeError(HttpServletRequest request, HttpServletResponse response, int status, String message) throws java.io.IOException {
+        String origin = request.getHeader("Origin");
+        response.setHeader("Access-Control-Allow-Origin", origin != null ? origin : "*");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept, X-Requested-With, X-XSRF-TOKEN");
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 
     private static class HeaderMutatingRequestWrapper extends HttpServletRequestWrapper {
