@@ -28,6 +28,16 @@ public class EmailService {
     @Value("${app.frontend-url:http://localhost:9901}")
     private String frontendUrl;
 
+    @jakarta.annotation.PostConstruct
+    void validateMailConfig() {
+        if (fromEmail == null || fromEmail.isBlank()) {
+            log.error("🚨 spring.mail.username is EMPTY — MAIL_USERNAME env var is not set. " +
+                    "All outgoing emails will silently fail until this is fixed.");
+        } else {
+            log.info("Mail sender configured as: {}", fromEmail);
+        }
+    }
+
     /**
      * Sends an HTML email asynchronously (fire-and-forget).
      * Uses @Async so the Kafka listener thread is never blocked by SMTP.

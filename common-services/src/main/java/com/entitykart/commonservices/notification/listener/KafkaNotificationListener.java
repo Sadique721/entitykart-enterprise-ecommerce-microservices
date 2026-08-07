@@ -1,6 +1,10 @@
 package com.entitykart.commonservices.notification.listener;
 
-import com.entitykart.commonservices.notification.dto.*;
+import com.entitykart.commonservices.notification.dto.PaymentProcessedEvent;
+import com.entitykart.commonservices.notification.dto.ReturnApprovedEvent;
+import com.entitykart.commonservices.notification.dto.UserCreatedEvent;
+import com.entitykart.commonservices.notification.dto.PasswordResetEvent;
+import com.entitykart.shared.dto.OrderPlacedEvent;
 import com.entitykart.commonservices.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

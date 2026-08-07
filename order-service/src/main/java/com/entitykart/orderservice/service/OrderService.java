@@ -75,35 +75,36 @@ public class OrderService {
 
         orderItemRepository.saveAll(orderItems);
 
-        String email = "customer@example.com";
-        String name = "Customer";
+        UserServiceClient.UserInfo userInfo = null;
         try {
-            UserServiceClient.UserInfo userInfo = userServiceClient.getUser(event.getCustomerId());
-            if (userInfo != null) {
-                if (userInfo.getEmail() != null) email = userInfo.getEmail();
-                if (userInfo.getName() != null) name = userInfo.getName();
-            }
+            userInfo = userServiceClient.getUser(event.getCustomerId());
         } catch (Exception e) {
-            log.warn("Could not retrieve customer details from user-service for customerId {}: {}", event.getCustomerId(), e.getMessage());
+            log.error("Could not fetch customerId={} from user-service — order-placed email will be SKIPPED: {}",
+                    event.getCustomerId(), e.getMessage());
         }
 
-        OrderPlacedEvent placedEvent = new OrderPlacedEvent(
-                savedOrder.getOrderId(),
-                savedOrder.getCustomerId(),
-                savedOrder.getTotalAmount(),
-                LocalDateTime.now(),
-                email,
-                name,
-                savedOrder.getOrderStatus().name(),
-                event.getPaymentMode(),
-                null // upiId is null at creation
-        );
+        if (userInfo == null || userInfo.getEmail() == null || userInfo.getEmail().isBlank()) {
+            log.error("No valid email resolved for customerId={} — NOT publishing order-events for orderId={}",
+                    event.getCustomerId(), savedOrder.getOrderId());
+        } else {
+            OrderPlacedEvent placedEvent = new OrderPlacedEvent(
+                    savedOrder.getOrderId(),
+                    savedOrder.getCustomerId(),
+                    savedOrder.getTotalAmount(),
+                    LocalDateTime.now(),
+                    userInfo.getEmail(),
+                    userInfo.getName() != null ? userInfo.getName() : "Customer",
+                    savedOrder.getOrderStatus().name(),
+                    event.getPaymentMode(),
+                    null // upiId is null at creation
+            );
 
-        try {
-            kafkaTemplate.send(ORDER_EVENTS_TOPIC, placedEvent);
-            log.info("Order placed event published for orderId: {}", savedOrder.getOrderId());
-        } catch (Exception e) {
-            log.error("Failed to publish order-events for orderId={}: {}", savedOrder.getOrderId(), e.getMessage());
+            try {
+                kafkaTemplate.send(ORDER_EVENTS_TOPIC, placedEvent);
+                log.info("Order placed event published for orderId={} to email={}", savedOrder.getOrderId(), userInfo.getEmail());
+            } catch (Exception e) {
+                log.error("Failed to publish order-events for orderId={}: {}", savedOrder.getOrderId(), e.getMessage());
+            }
         }
 
         return convertToDTO(savedOrder);
@@ -148,17 +149,18 @@ public class OrderService {
     }
 
     private void publishOrderStatusEvent(OrderEntity order) {
-        String email = "customer@example.com";
-        String name  = "Customer";
+        UserServiceClient.UserInfo userInfo = null;
         try {
-            UserServiceClient.UserInfo userInfo = userServiceClient.getUser(order.getCustomerId());
-            if (userInfo != null) {
-                if (userInfo.getEmail() != null) email = userInfo.getEmail();
-                if (userInfo.getName()  != null) name  = userInfo.getName();
-            }
+            userInfo = userServiceClient.getUser(order.getCustomerId());
         } catch (Exception e) {
-            log.warn("Could not fetch user {} from user-service for notification: {}",
+            log.error("Could not fetch customerId={} from user-service — status-change email will be SKIPPED: {}",
                     order.getCustomerId(), e.getMessage());
+        }
+
+        if (userInfo == null || userInfo.getEmail() == null || userInfo.getEmail().isBlank()) {
+            log.error("No valid email resolved for customerId={} — NOT publishing order-events for orderId={}",
+                    order.getCustomerId(), order.getOrderId());
+            return;
         }
 
         OrderPlacedEvent event = new OrderPlacedEvent(
@@ -166,8 +168,8 @@ public class OrderService {
                 order.getCustomerId(),
                 order.getTotalAmount(),
                 LocalDateTime.now(),
-                email,
-                name,
+                userInfo.getEmail(),
+                userInfo.getName() != null ? userInfo.getName() : "Customer",
                 order.getOrderStatus().name(),
                 null,
                 null
@@ -176,7 +178,7 @@ public class OrderService {
         try {
             kafkaTemplate.send(ORDER_EVENTS_TOPIC, event);
             log.info("Published order-events: orderId={}, status={}, email={}",
-                    order.getOrderId(), order.getOrderStatus(), email);
+                    order.getOrderId(), order.getOrderStatus(), userInfo.getEmail());
         } catch (Exception e) {
             log.error("Failed to publish order-events for orderId={}: {}", order.getOrderId(), e.getMessage());
         }

@@ -12,6 +12,7 @@ x-common-env: &common-env
   EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://common-services:9900/eureka/
   SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
   SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "false"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "none"
   JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
 
 x-logging: &default-logging
@@ -70,7 +71,7 @@ services:
   common-services:
     build: ./common-services
     container_name: common-services_entitykart
-    mem_limit: 768m
+    mem_limit: 1024m
     cpus: 0.5
     ports:
       - "9900:9900"
@@ -92,6 +93,7 @@ services:
       APP_URL: http://localhost:9001
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
       SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "none"
       JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
     logging: *default-logging
     healthcheck:

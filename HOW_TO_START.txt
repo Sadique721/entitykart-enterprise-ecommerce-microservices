@@ -107,8 +107,8 @@
   │  DB_USERNAME = root                                     │
   │  DB_PASSWORD = 0721                                     │
   │  JWT_SECRET  = (generate a strong 256-bit secret)       │
-  │  MAIL_USERNAME = mdsadiqueamin721786@gmail.com          │
-  │  MAIL_PASSWORD = pocnnqlcudavlwhi                       │
+  │  MAIL_USERNAME = <your-gmail-address>                   │
+  │  MAIL_PASSWORD = <your-gmail-app-password>              │
   └─────────────────────────────────────────────────────────┘
 
   To generate a strong JWT secret (run in PowerShell):
@@ -253,8 +253,8 @@
   $env:SPRING_KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
   $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
   $env:JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
-  $env:MAIL_USERNAME="mdsadiqueamin721786@gmail.com"
-  $env:MAIL_PASSWORD="pocnnqlcudavlwhi"
+  $env:MAIL_USERNAME="<your-gmail-address>"
+  $env:MAIL_PASSWORD="<your-gmail-app-password>"
   $env:CLOUDINARY_CLOUD_NAME="dcnoffp8x"
   $env:CLOUDINARY_API_KEY="563865189212327"
   $env:CLOUDINARY_API_SECRET="r4AUWImkWRkvcH3Fn9kDGYK6uEc"
@@ -334,8 +334,8 @@
   $env:DB_PORT="3306"; $env:DB_USERNAME="root"; $env:DB_PASSWORD="0721"
   $env:SPRING_KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
   $env:EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://localhost:9900/eureka/"
-  $env:MAIL_USERNAME="mdsadiqueamin721786@gmail.com"
-  $env:MAIL_PASSWORD="pocnnqlcudavlwhi"
+  $env:MAIL_USERNAME="<your-gmail-address>"
+  $env:MAIL_PASSWORD="<your-gmail-app-password>"
   .\gradlew bootRun
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -397,8 +397,8 @@
           "JWT_SECRET": "your-super-secret-jwt-key-change-this-in-production",
           "SPRING_KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
           "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE": "http://localhost:9900/eureka/",
-          "MAIL_USERNAME": "mdsadiqueamin721786@gmail.com",
-          "MAIL_PASSWORD": "pocnnqlcudavlwhi"
+          "MAIL_USERNAME": "<your-gmail-address>",
+          "MAIL_PASSWORD": "<your-gmail-app-password>"
         }
       }
     ]
