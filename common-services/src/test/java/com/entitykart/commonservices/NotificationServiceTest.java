@@ -175,7 +175,8 @@ public class NotificationServiceTest {
 
     @Test
     public void testGetAllNotifications() {
-        when(notificationRepository.findAll()).thenReturn(List.of(testNotification));
+        org.springframework.data.domain.Page<NotificationEntity> page = new org.springframework.data.domain.PageImpl<>(List.of(testNotification));
+        when(notificationRepository.findAll(any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
 
         List<NotificationEntity> result = notificationService.getAllNotifications();
 

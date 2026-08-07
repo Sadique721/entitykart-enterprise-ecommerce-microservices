@@ -3,11 +3,13 @@ name: Common Services CI/CD
 on:
   push:
     paths:
+      - 'shared-lib/**'
       - 'common-services/**'
       - '.github/workflows/common-services-ci.yml'
     branches: [ main ]
   pull_request:
     paths:
+      - 'shared-lib/**'
       - 'common-services/**'
       - '.github/workflows/common-services-ci.yml'
     branches: [ main ]
@@ -30,6 +32,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.5
+
+      - name: Build shared-lib
+        working-directory: shared-lib
+        run: ./gradlew publishToMavenLocal
 
       - name: Run Tests
         working-directory: common-services
