@@ -7,7 +7,11 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * CommonServicesApplication
@@ -24,6 +28,7 @@ import org.springframework.web.client.RestTemplate;
 @EnableEurekaServer
 @EnableKafka
 @EnableAsync
+@EnableScheduling  // Required for @Scheduled rate-limiter eviction in JwtAuthenticationFilter
 public class CommonServicesApplication {
 
     public static void main(String[] args) {
@@ -45,12 +50,33 @@ public class CommonServicesApplication {
         return new RestTemplate();
     }
 
+    /**
+     * Issue 2 fix: CORS allow-list driven by the CORS_ALLOWED_ORIGINS environment variable.
+     *
+     * Previous config used addAllowedOriginPattern("*") with allowCredentials(true), which is
+     * a classic reflected-origin CORS misconfiguration — any website could make credentialed
+     * requests and read the responses (cookies, JWTs, etc.).
+     *
+     * Replace the wildcard with the explicit list of real frontend origins.
+     * Default covers local development; override CORS_ALLOWED_ORIGINS in production.
+     *
+     * Example .env entry:
+     *   CORS_ALLOWED_ORIGINS=https://entitykart.com,http://localhost:9901
+     */
+    @org.springframework.beans.factory.annotation.Value(
+            "${gateway.cors.allowed-origins:http://localhost:9901,http://localhost:3000}")
+    private String allowedOriginsRaw;
+
     @Bean
     public org.springframework.web.filter.CorsFilter corsFilter() {
-        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
-        org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
+        var source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        var config = new org.springframework.web.cors.CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*");
+        List<String> origins = Arrays.stream(allowedOriginsRaw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+        config.setAllowedOrigins(origins);
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

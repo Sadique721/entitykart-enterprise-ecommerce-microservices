@@ -71,9 +71,23 @@ public class OrderController {
         orderService.updateOrderStatus(orderId, status);
     }
 
-    /** Used by payment-service FeignClient to update payment status (PAID / UNPAID) */
+    /**
+     * Used by payment-service FeignClient to update payment status (PAID / UNPAID).
+     *
+     * Issue 4 fix (defense-in-depth): require ADMIN role for external callers.
+     * Internal service-to-service calls (e.g. payment-service Feign) do not supply
+     * X-Customer-Id, so loggedInCustomerId will be null — those are allowed through.
+     * A regular logged-in customer with a non-null loggedInCustomerId is rejected.
+     */
     @PutMapping("/{orderId}/payment-status")
-    public void updatePaymentStatus(@PathVariable Long orderId, @RequestParam String status) {
+    public void updatePaymentStatus(
+            @PathVariable Long orderId,
+            @RequestParam String status,
+            @RequestHeader(value = "X-Customer-Id", required = false) Long loggedInCustomerId,
+            @RequestHeader(value = "X-User-Role",   required = false) String loggedInUserRole) {
+        if (loggedInCustomerId != null && !"ADMIN".equalsIgnoreCase(loggedInUserRole)) {
+            throw new RuntimeException("Access Denied: Admin role required to update payment status");
+        }
         orderService.updatePaymentStatus(orderId, status);
     }
 }

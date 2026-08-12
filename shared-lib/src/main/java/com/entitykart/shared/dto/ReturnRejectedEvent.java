@@ -14,4 +14,6 @@ public class ReturnRejectedEvent {
     private Long productId;
     private String reason;
     private String status;
+    private String customerEmail;
+    private String customerName;
 }

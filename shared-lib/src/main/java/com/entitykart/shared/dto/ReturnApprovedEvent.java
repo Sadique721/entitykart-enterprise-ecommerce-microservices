@@ -14,4 +14,6 @@ public class ReturnApprovedEvent {
     private Long productId;
     private Double refundAmount;
     private String status;
+    private String customerEmail;
+    private String customerName;
 }

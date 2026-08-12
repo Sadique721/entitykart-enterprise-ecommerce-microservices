@@ -255,3 +255,15 @@ resilience4j:
         failure-rate-threshold: 50
         event-consumer-buffer-size: 10
 
+# ── Gateway Security Configuration ─────────────────────────────────────────────
+gateway:
+  # Issue 2 fix: explicit CORS allow-list.
+  # Set CORS_ALLOWED_ORIGINS env var to a comma-separated list of real frontend
+  # origins in production (e.g. "https://entitykart.com,https://admin.entitykart.com").
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:9901,http://localhost:3000}
+
+  # Issue 6 fix: IP address of the trusted reverse proxy in front of this gateway.
+  # When set, X-Forwarded-For is trusted only if the physical request comes from this IP.
+  # Leave blank (default) to disable XFF trust and always use the TCP remote address.
+  trusted-proxy: ${GATEWAY_TRUSTED_PROXY:}

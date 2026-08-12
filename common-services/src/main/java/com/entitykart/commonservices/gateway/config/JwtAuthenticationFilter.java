@@ -3,14 +3,17 @@ package com.entitykart.commonservices.gateway.config;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -24,14 +27,30 @@ import java.util.*;
  *
  * Intercepts all incoming requests, validates JWT tokens, and injects
  * X-Customer-Id / X-User-Email / X-User-Role headers for downstream microservices.
+ *
+ * Security fixes applied:
+ *   - Issue 1:  /api/products and /api/categories are public for GET only.
+ *   - Issue 4:  /api/orders/{id}/payment-status now requires ADMIN role.
+ *   - Issue 6:  X-Forwarded-For is only trusted from the configured GATEWAY_TRUSTED_PROXY.
+ *   - Issue 7:  Rate-limiter maps are evicted every 10 minutes via @Scheduled.
+ *   - Issue 8:  JWT with no userId claim returns 401 for protected endpoints.
+ *   - Issue 9:  @PostConstruct warns when Eureka uses default admin/admin credentials.
  */
+@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    private final Map<String, TokenBucket> loginRateLimiters = new java.util.concurrent.ConcurrentHashMap<>();
+    /**
+     * Issue 6 fix: only read X-Forwarded-For when the physical caller matches this IP.
+     * Set via GATEWAY_TRUSTED_PROXY env var. Leave blank to always use getRemoteAddr().
+     */
+    @Value("${gateway.trusted-proxy:}")
+    private String trustedProxy;
+
+    private final Map<String, TokenBucket> loginRateLimiters   = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, TokenBucket> paymentRateLimiters = new java.util.concurrent.ConcurrentHashMap<>();
 
     private static class TokenBucket {
@@ -39,15 +58,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         private final double refillRatePerSecond;
         private double tokens;
         private long lastRefillTime;
+        /** Issue 7: track last access time so idle buckets can be evicted. */
+        volatile long lastAccessMillis;
 
         public TokenBucket(double capacity, double refillRatePerMinute) {
-            this.capacity = capacity;
+            this.capacity            = capacity;
             this.refillRatePerSecond = refillRatePerMinute / 60.0;
-            this.tokens = capacity;
-            this.lastRefillTime = System.currentTimeMillis();
+            this.tokens              = capacity;
+            this.lastRefillTime      = System.currentTimeMillis();
+            this.lastAccessMillis    = this.lastRefillTime;
         }
 
         public synchronized boolean tryConsume() {
+            lastAccessMillis = System.currentTimeMillis();
             refill();
             if (tokens >= 1.0) {
                 tokens -= 1.0;
@@ -64,23 +87,67 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
+    /**
+     * Issue 7 fix: evict rate-limiter buckets that have not been accessed in the last 10 minutes.
+     * Runs automatically every 10 minutes via Spring's task scheduler.
+     */
+    @Scheduled(fixedDelay = 600_000)
+    public void evictStaleBuckets() {
+        long cutoff = System.currentTimeMillis() - 10 * 60 * 1000L;
+        int loginRemoved   = 0;
+        int paymentRemoved = 0;
+        for (Iterator<Map.Entry<String, TokenBucket>> it = loginRateLimiters.entrySet().iterator(); it.hasNext(); ) {
+            if (it.next().getValue().lastAccessMillis < cutoff) { it.remove(); loginRemoved++; }
         }
-        return ip;
+        for (Iterator<Map.Entry<String, TokenBucket>> it = paymentRateLimiters.entrySet().iterator(); it.hasNext(); ) {
+            if (it.next().getValue().lastAccessMillis < cutoff) { it.remove(); paymentRemoved++; }
+        }
+        if (loginRemoved + paymentRemoved > 0) {
+            log.debug("Rate-limiter eviction: removed {} login + {} payment buckets", loginRemoved, paymentRemoved);
+        }
     }
 
-    // Public endpoints — no token required
+    /**
+     * Issue 9 fix: warn at startup when Eureka dashboard uses the default admin/admin
+     * credentials so it can never be silently overlooked before a production deploy.
+     */
+    @PostConstruct
+    public void warnIfDefaultEurekaCredentials() {
+        String user = System.getenv("EUREKA_USER");
+        String pass = System.getenv("EUREKA_PASSWORD");
+        if (user == null || "admin".equals(user) || pass == null || "admin".equals(pass)) {
+            log.warn("\u26a0\ufe0f  SECURITY WARNING: Eureka dashboard is using default admin/admin credentials. " +
+                     "Set EUREKA_USER and EUREKA_PASSWORD environment variables before deploying to production.");
+        }
+    }
+
+    /**
+     * Issue 6 fix: only trust X-Forwarded-For when the physical request comes from the
+     * known/trusted reverse proxy IP configured via GATEWAY_TRUSTED_PROXY.
+     * Without a trusted-proxy configured, getRemoteAddr() is always used directly.
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String remoteAddr = request.getRemoteAddr();
+        if (trustedProxy != null && !trustedProxy.isBlank() && trustedProxy.equals(remoteAddr)) {
+            String xff = request.getHeader("X-Forwarded-For");
+            if (xff != null && !xff.isEmpty() && !"unknown".equalsIgnoreCase(xff)) {
+                // Take only the leftmost address — the actual client IP added by the trusted proxy
+                return xff.split(",")[0].trim();
+            }
+        }
+        return remoteAddr;
+    }
+
+    // Public endpoints — no token required.
+    // Issue 1 fix: /api/products and /api/categories are REMOVED from this list.
+    // They are now handled with a GET-only method check in doFilterInternal() below,
+    // matching the existing pattern used for /api/reviews.
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
             "/api/users/login",
             "/api/users/register",
             "/api/users/forgot-password",
             "/api/users/reset-password",
             "/api/users/refresh-token",   // refresh-token uses its own token, not JWT
-            "/api/products",
-            "/api/categories",
             "/actuator"
     );
     @Override
@@ -167,11 +234,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 3. Check if it is a public endpoint
+        // 3. Determine if this is a public endpoint.
+        //    Issue 1 fix: /api/products and /api/categories are public for GET only,
+        //    matching the existing pattern used for /api/reviews.
         boolean isPublic = PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith);
-        if (path.startsWith("/api/reviews") && method.equalsIgnoreCase("GET")) {
-            isPublic = true;
-        }
+        if (path.startsWith("/api/reviews")    && method.equalsIgnoreCase("GET")) isPublic = true;
+        if (path.startsWith("/api/products")   && method.equalsIgnoreCase("GET")) isPublic = true;
+        if (path.startsWith("/api/categories") && method.equalsIgnoreCase("GET")) isPublic = true;
 
         String token = null;
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -254,12 +323,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     wrappedRequest.addHeader("X-User-Email", email);
                     wrappedRequest.addHeader("X-User-Role", role);
 
-                    // Admin-only paths require ADMIN role (Defense in Depth)
+                    // Admin-only paths require ADMIN role (Defense in Depth).
+                    // Issue 4 fix: /api/orders/{id}/payment-status is now included
+                    // alongside /api/orders/{id}/status so that payment status cannot
+                    // be set by a regular logged-in customer.
                     if ((path.contains("/api/admin/")
                             || path.equals("/api/users/all")
                             || path.equals("/api/users/stats")
                             || path.endsWith("/toggle-status")
-                            || (path.startsWith("/api/orders/") && path.endsWith("/status")))
+                            || (path.startsWith("/api/orders/")
+                                && (path.endsWith("/status") || path.endsWith("/payment-status"))))
                             && !"ADMIN".equalsIgnoreCase(role)) {
                         writeError(request, response, HttpServletResponse.SC_FORBIDDEN, "Access Denied: Admin role required");
                         return;
@@ -268,6 +341,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     filterChain.doFilter(wrappedRequest, response);
                     return;
                 }
+
+                // Issue 8 fix: token signature is valid but the userId claim is absent.
+                // This is a structurally invalid token — reject it for protected endpoints
+                // rather than silently falling through without X-Customer-Id / X-User-Role.
+                if (!isPublic) {
+                    writeError(request, response, HttpServletResponse.SC_UNAUTHORIZED,
+                               "Token is missing required claims (userId)");
+                    return;
+                }
+
             } catch (Exception e) {
                 if (!isPublic) {
                     writeError(request, response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
@@ -284,12 +367,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(wrappedRequest, response);
     }
 
+    /**
+     * Write a JSON error response.
+     * Issue 2 fix (partial): Access-Control-Allow-Origin is NOT set here.
+     * Echoing back whatever Origin the client sent would bypass the CorsFilter allow-list.
+     * The CorsFilter bean is responsible for all CORS headers for legitimate origins.
+     */
     private void writeError(HttpServletRequest request, HttpServletResponse response, int status, String message) throws java.io.IOException {
-        String origin = request.getHeader("Origin");
-        response.setHeader("Access-Control-Allow-Origin", origin != null ? origin : "*");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept, X-Requested-With, X-XSRF-TOKEN");
         response.setStatus(status);
         response.setContentType("application/json");
         response.getWriter().write("{\"error\": \"" + message + "\"}");

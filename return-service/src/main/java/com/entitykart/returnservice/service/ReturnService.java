@@ -1,6 +1,7 @@
 package com.entitykart.returnservice.service;
 
 import com.entitykart.returnservice.client.OrderServiceClient;
+import com.entitykart.returnservice.client.UserServiceClient;
 import com.entitykart.returnservice.dto.*;
 import com.entitykart.returnservice.entity.ReturnEntity;
 import com.entitykart.returnservice.repository.ReturnRepository;
@@ -27,6 +28,7 @@ public class ReturnService {
     private final OrderServiceClient orderServiceClient;
     private final RefundProcessor refundProcessor;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final UserServiceClient userServiceClient;
 
     // ─── Customer Operations ──────────────────────────────────────────────────
 
@@ -173,6 +175,23 @@ public class ReturnService {
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private void publishReturnEvent(ReturnEntity entity) {
+        // Issue 5 fix: fetch customer email and name from user-service so the
+        // notification listener (common-services) can actually send the email.
+        // The lookup is best-effort; if it fails the event is still published
+        // (with null fields) so the Kafka log shows the attempt.
+        String customerEmail = null;
+        String customerName  = "Customer";
+        try {
+            UserServiceClient.UserInfo userInfo = userServiceClient.getUser(entity.getCustomerId());
+            if (userInfo != null) {
+                customerEmail = userInfo.getEmail();
+                customerName  = userInfo.getName() != null ? userInfo.getName() : "Customer";
+            }
+        } catch (Exception e) {
+            log.warn("Could not fetch customer details for returnId={}, email will be missing: {}",
+                     entity.getReturnId(), e.getMessage());
+        }
+
         Object event;
         if (entity.getStatus() == ReturnEntity.ReturnStatus.APPROVED) {
             event = new ReturnApprovedEvent(
@@ -181,7 +200,9 @@ public class ReturnService {
                     entity.getCustomerId(),
                     entity.getProductId(),
                     entity.getRefundAmount(),
-                    entity.getStatus().name()
+                    entity.getStatus().name(),
+                    customerEmail,
+                    customerName
             );
         } else if (entity.getStatus() == ReturnEntity.ReturnStatus.REJECTED) {
             event = new ReturnRejectedEvent(
@@ -190,7 +211,9 @@ public class ReturnService {
                     entity.getCustomerId(),
                     entity.getProductId(),
                     entity.getRejectionReason(),
-                    entity.getStatus().name()
+                    entity.getStatus().name(),
+                    customerEmail,
+                    customerName
             );
         } else {
             log.warn("Skipping Kafka return event publication for status: {}", entity.getStatus());
