@@ -5,6 +5,38 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.1.0] — 2026-08-12 — Email Template System Overhaul & Docker Build Fix
+
+### 📧 Email Templates
+- **Full rewrite of `EmailService.java`** — unified design system across all 13 notification templates:
+  - Welcome, Password Reset
+  - Order Placed, Confirmed, Shipped, Delivered, Cancelled
+  - Return Initiated, Approved, Rejected, Refunded
+  - Payment Successful, Payment Failed
+  - Admin Report (with Excel + Word attachments)
+- **Design system**: colour-coded gradient headers — Indigo (account/order), Sky (shipped), Emerald (success/delivered), Rose (cancelled/failed), Amber (returns/in-progress)
+- **Outlook-safe**: full `<!DOCTYPE html>` documents, table-based layout, VML-compatible CTA buttons
+- **Mobile-responsive**: `@media` breakpoints for ≤600px viewports
+- **Security**: all user-supplied strings HTML-escaped via `esc()` helper (XSS prevention)
+- **Localisation**: amounts formatted as ₹X,XXX.XX via `formatAmount()` helper
+- **Async delivery**: `@Async` on `sendHtmlEmail()` — Kafka listener thread never blocked by SMTP
+
+### 🐳 Docker Build Fix
+- **`common-services/Dockerfile`** rewritten as multi-stage build:
+  - Stage 1 (`builder`): compiles `shared-lib` → `publishToMavenLocal` → builds `common-services` fat JAR — no local JDK or Gradle install needed
+  - Stage 2 (`runtime`): slim `eclipse-temurin:17-jre-alpine`, non-root `entitykart` user
+- **`docker-compose.yml`**: `common-services` build context changed to project root so `shared-lib/` source is accessible to the Dockerfile
+- **`.dockerignore`**: `shared-lib/` changed from blanket exclude to selective include — keeps `src/`, `gradlew`, `gradle/`, and `*.gradle.kts` while ignoring heavy generated artefacts
+
+### 📖 Documentation
+- **`docs/email-template-gallery.html`** — new interactive single-file gallery:
+  - Sidebar navigation grouped by category (Account / Orders / Returns / Payments / Admin)
+  - Live `<iframe srcdoc>` preview — no server required, open directly in browser
+  - All 13 templates rendered with realistic sample data
+  - Fully responsive (collapses to horizontal scroll bar on mobile)
+
+---
+
 ## [2.0.0] — 2026-07-10 — Enterprise Production Hardening
 
 ### 🔒 Security

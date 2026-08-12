@@ -3,7 +3,7 @@
     "name": "EntityKart",
     "displayName": "EntityKart – Enterprise E-commerce Microservices Platform",
     "description": "A cloud-native, microservices-based e-commerce platform built with Java 17, Spring Boot 3, Spring Cloud, Apache Kafka, and Docker. Features a responsive AngularJS SPA frontend with flash sales, price filters, coupon codes, image gallery, cancel orders, invoice download, mobile-responsive hamburger menu, and native Android + Flutter WebView clients with settings screen and bottom nav bar.",
-    "version": "1.6.0",
+    "version": "2.1.0",
     "license": "MIT",
     "repository": "https://github.com/Sadique721/entitykart-enterprise-ecommerce-microservices",
     "homepage": "https://github.com/Sadique721/entitykart-enterprise-ecommerce-microservices#readme"

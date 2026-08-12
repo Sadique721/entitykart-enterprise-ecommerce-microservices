@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EntityKart — Email Template Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#111827; --slate:#6B7280; --cloud:#EEF1FB; --line:#E4E8F5;
+  --indigo1:#4338CA; --indigo2:#6366F1; --violet:#7C3AED;
+  --sidebar:#0F172A; --sidebar-hover:#1E293B; --sidebar-text:#CBD5E1;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--cloud);color:var(--ink);display:flex;min-height:100vh;}
+.sidebar{width:272px;flex:0 0 272px;background:var(--sidebar);color:var(--sidebar-text);padding:22px 14px 20px;overflow-y:auto;height:100vh;position:sticky;top:0;}
+.brand{display:flex;align-items:center;gap:9px;padding:4px 10px 20px;font-family:'Poppins',sans-serif;font-weight:700;font-size:16px;color:#fff;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--indigo2),var(--violet));}
+.cat-label{font-size:10.5px;font-weight:700;letter-spacing:1.2px;color:#64748B;text-transform:uppercase;padding:16px 12px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 12px;border-radius:10px;background:transparent;border:none;color:var(--sidebar-text);font-size:13.5px;font-family:inherit;font-weight:500;cursor:pointer;margin-bottom:2px;transition:background .12s ease;}
+.nav-item:hover{background:var(--sidebar-hover);}
+.nav-item.active{background:linear-gradient(135deg,rgba(99,102,241,.22),rgba(124,58,237,.16));color:#fff;box-shadow:inset 3px 0 0 var(--indigo2);}
+.nav-item .emoji{font-size:15px;width:20px;text-align:center;}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh;}
+.topstrip{padding:18px 32px;border-bottom:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.topstrip h1{font-family:'Poppins',sans-serif;font-size:17px;margin:0 0 3px;font-weight:700;}
+.topstrip p{margin:0;font-size:12.5px;color:var(--slate);}
+.topstrip .badge{font-size:11px;font-weight:700;letter-spacing:.3px;color:var(--indigo1);background:#EEF0FE;padding:5px 12px;border-radius:999px;white-space:nowrap;}
+.stage{flex:1;overflow:auto;padding:30px 24px 50px;display:flex;justify-content:center;}
+.frame-wrap{width:100%;max-width:640px;}
+.frame-shell{background:#fff;border-radius:22px;box-shadow:0 20px 50px rgba(30,41,89,.16);overflow:hidden;}
+iframe{width:100%;height:840px;border:0;display:block;background:#fff;}
+@media (max-width:860px){
+  body{flex-direction:column;}
+  .sidebar{width:100%;flex:none;height:auto;position:relative;display:flex;overflow-x:auto;overflow-y:hidden;padding:14px 12px;gap:8px;white-space:nowrap;align-items:center;}
+  .brand{padding:0 10px 0 2px;flex:0 0 auto;}
+  .cat-label{display:none;}
+  .nav-item{flex:0 0 auto;margin-bottom:0;}
+  .main{height:auto;}
+  .stage{padding:20px 14px 40px;}
+  iframe{height:760px;}
+}
+</style>
+</head>
+<body>
+<nav class="sidebar" id="sidebar">
+  <div class="brand"><span class="dot"></span>EntityKart &middot; Emails</div>
+  <div id="navHost"></div>
+</nav>
+<main class="main">
+  <div class="topstrip">
+    <div>
+      <h1 id="title">Loading&hellip;</h1>
+      <p id="trigger">&mdash;</p>
+    </div>
+    <div class="badge" id="countBadge">13 templates</div>
+  </div>
+  <div class="stage">
+    <div class="frame-wrap">
+      <div class="frame-shell">
+        <iframe id="preview" title="Email preview" sandbox="allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+const BASE="https://entitykart.example.com";
+const YEAR=new Date().getFullYear();
+const CSS=`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap');
+*{box-sizing:border-box;}body{margin:0;padding:0;background:#EEF1FB;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;}
+table{border-collapse:collapse;}a{text-decoration:none;}
+.wrapper{width:100%;background:#EEF1FB;padding:32px 12px;}
+.container{max-width:600px;background:#FFFFFF;border-radius:20px;overflow:hidden;box-shadow:0 12px 32px rgba(31,41,89,0.10);}
+.topbar{padding:16px 28px;font-family:'Poppins',sans-serif;font-weight:700;font-size:14px;color:#4338CA;border-bottom:1px solid #F1F3FA;}
+.hero{padding:36px 32px 40px;text-align:center;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.78);margin-bottom:14px;}
+.bi{width:68px;height:68px;line-height:68px;border-radius:50%;background:rgba(255,255,255,0.20);font-size:30px;display:inline-block;margin-bottom:16px;}
+.hero h1{margin:0 0 8px;font-family:'Poppins',sans-serif;font-weight:700;font-size:24px;color:#FFF;}
+.hero .sub{margin:0;font-size:14px;color:rgba(255,255,255,0.88);}
+.content{padding:34px 32px 8px;}.content p{margin:0 0 14px;font-size:15px;line-height:1.65;color:#374151;}
+.greeting{font-size:16px;color:#111827;font-weight:600;margin-bottom:14px;}
+.receipt{border:1.5px dashed #D8DEEC;border-radius:14px;background:#F8FAFF;padding:4px 20px;margin:22px 0;}
+.receipt-row td{padding:10px 0;font-size:14px;border-bottom:1px solid #EDF0FA;}
+.receipt-row:last-child td{border-bottom:none;}.receipt-row .lbl{color:#6B7280;}.receipt-row .val{color:#111827;font-weight:700;text-align:right;}
+.pill{display:inline-block;padding:4px 14px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:0.4px;text-transform:uppercase;}
+.notice{border-radius:12px;padding:14px 16px 14px 18px;font-size:13.5px;line-height:1.55;margin:18px 0;border-left:4px solid currentColor;}
+.codebox{background:#F3F4F9;border:1.5px dashed #C7CEE6;border-radius:14px;padding:20px;text-align:center;font-family:'Courier New',monospace;font-size:26px;font-weight:700;letter-spacing:4px;color:#111827;margin:22px 0;}
+.stars{text-align:center;font-size:22px;letter-spacing:4px;color:#F59E0B;margin:2px 0 4px;}
+.bwrap{text-align:center;margin:26px 0 6px;}
+.ebtn{display:inline-block;padding:14px 36px;border-radius:999px;color:#FFFFFF !important;text-decoration:none;font-weight:700;font-size:14px;font-family:'Poppins',sans-serif;}
+.perks{width:100%;margin:18px 0 6px;}.perks td{text-align:center;padding:10px 4px;font-size:12px;color:#6B7280;width:33.33%;}
+.picon{font-size:22px;display:block;margin-bottom:4px;}
+.divider{border-top:1px solid #EEF1F6;margin:14px 32px 0;}
+.footer{padding:26px 32px 32px;text-align:center;}
+.footer .word{font-family:'Poppins',sans-serif;font-weight:700;color:#4338CA;font-size:15px;margin-bottom:8px;}
+.footer .tagline{margin:0;font-size:12px;color:#9CA3AF;}
+.social{margin:16px 0 4px;}.social a{display:inline-block;width:30px;height:30px;line-height:30px;border-radius:50%;background:#EEF1FB;color:#4338CA;text-align:center;font-size:12px;font-weight:800;margin:0 4px;}
+.legal{color:#9CA3AF;font-size:11px;line-height:1.7;margin-top:10px;}.legal a{color:#9CA3AF;text-decoration:underline;}
+@media only screen and (max-width:600px){
+  .hero{padding:28px 20px 30px;}.content{padding:26px 20px 4px;}.footer{padding:22px 20px 28px;}
+  .hero h1{font-size:21px;}.codebox{font-size:21px;letter-spacing:3px;padding:16px;}.divider{margin:14px 20px 0;}
+}`;
+
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function ft(){return `<div class="divider"></div><div class="footer"><div class="word">&#128717; EntityKart</div><p class="tagline">Shop smart. Shop happy.</p><div class="social"><a href="#">f</a><a href="#">in</a><a href="#">ig</a><a href="#">x</a></div><div class="legal">EntityKart Pvt. Ltd., Bengaluru, India<br/>You're receiving this because you have an account with EntityKart.<br/><a href="${BASE}/#!/profile">Manage email preferences</a> &nbsp;&middot;&nbsp; &copy; ${YEAR} EntityKart. All rights reserved.</div></div>`;}
+function shell(pre,g1,g2,ey,icon,h1,sub,body){
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>EntityKart</title><style>${CSS}</style></head><body><!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0"><tr><td><![endif]--><span style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(pre)}</span><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="wrapper"><tr><td><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="container" align="center"><tr><td style="padding:0;"><div class="topbar">&#128717; EntityKart</div><div class="hero" style="background-color:${g1};background-image:linear-gradient(135deg,${g1},${g2});"><div class="eyebrow">${ey}</div><div class="bi">${icon}</div><h1>${h1}</h1><p class="sub">${sub}</p></div><div class="content">${body}</div>${ft()}</td></tr></table></td></tr></table><!--[if mso]></td></tr></table><![endif]--></body></html>`;}
+function rcpt(rows){let h=`<div class="receipt"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">`;rows.forEach(r=>{const v=r.pill?`<span class="pill" style="${r.pill}">${r.value}</span>`:r.value;h+=`<tr class="receipt-row"><td class="lbl">${r.label}</td><td class="val">${v}</td></tr>`;});return h+`</table></div>`;}
+function ebtn(label,href,color){return `<div class="bwrap"><table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td style="border-radius:999px;background-color:${color};"><a href="${href}" class="ebtn" style="background-color:${color};">${label}</a></td></tr></table></div>`;}
+
+const TEMPLATES={
+  "welcome":{title:"Welcome",trigger:"Sent on successful account registration",emoji:"🎉",html:()=>shell("Welcome to EntityKart, Aarav Mehta","#7C3AED","#DB2777","WELCOME","🎉","Welcome Aboard!","Great things are just a click away.",`<p class="greeting">Hi Aarav Mehta,</p><p>We're thrilled to have you on board! Explore thousands of products across every category — from everyday essentials to the latest launches.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="perks"><tr><td><span class="picon">&#128666;</span>Fast delivery</td><td><span class="picon">&#128260;</span>Easy returns</td><td><span class="picon">&#128274;</span>Secure payments</td></tr></table>${ebtn("Start Shopping",BASE+"/#!/products","#4338CA")}`)},
+  "password-reset":{title:"Password Reset",trigger:"Sent when user requests a password reset",emoji:"🔒",html:()=>shell("Your password reset code","#4338CA","#7C3AED","ACCOUNT SECURITY","&#128274;","Reset Your Password","Use the code below to continue.",`<p class="greeting">Hi Aarav Mehta,</p><p>We received a request to reset your password. Use the verification code below to continue.</p><div class="codebox">482913</div><p>This code expires in <strong>15 minutes</strong>. If you didn't request this, no action is needed.</p>${ebtn("Reset Password",BASE+"/#!/reset-password","#F59E0B")}`)},
+  "order-placed":{title:"Order Placed",trigger:"Sent immediately after customer places an order",emoji:"🧾",html:()=>shell("Order #104582 received","#4338CA","#6366F1","ORDER UPDATE","&#129534;","Order Received","We're getting things moving.",`<p class="greeting">Hi Aarav Mehta,</p><p>Thanks for shopping with us! We've received your order and it's now being processed.</p>${rcpt([{label:"Order ID",value:"#104582"},{label:"Amount",value:"&#8377;2,499.00"},{label:"Status",value:"RECEIVED",pill:"background:#E0E7FF;color:#3730A3;"}])}${ebtn("View Order",BASE+"/#!/orders","#F59E0B")}`)},
+  "order-confirmed":{title:"Order Confirmed",trigger:"Sent when warehouse confirms the order",emoji:"✅",html:()=>shell("Order #104582 confirmed","#4338CA","#7C3AED","ORDER UPDATE","&#9989;","Order Confirmed","Your order is being prepared for shipment.",`<p class="greeting">Hi Aarav Mehta,</p><p>Good news — your order has been confirmed and is being packed for shipment.</p>${rcpt([{label:"Order ID",value:"#104582"},{label:"Amount",value:"&#8377;2,499.00"},{label:"Status",value:"CONFIRMED",pill:"background:#E0E7FF;color:#3730A3;"}])}${ebtn("Track Order",BASE+"/#!/orders","#F59E0B")}`)},
+  "order-shipped":{title:"Order Shipped",trigger:"Sent when the order is dispatched from warehouse",emoji:"🚚",html:()=>shell("Order #104582 is on its way","#0EA5E9","#6366F1","ORDER UPDATE","&#128666;","On Its Way!","Your package has left our warehouse.",`<p class="greeting">Hi Aarav Mehta,</p><p>Your order has shipped and is on its way to you. Keep your phone handy — our delivery partner may reach out before arrival.</p>${rcpt([{label:"Order ID",value:"#104582"},{label:"Amount",value:"&#8377;2,499.00"},{label:"Status",value:"SHIPPED",pill:"background:#E0F2FE;color:#075985;"}])}${ebtn("Track Shipment",BASE+"/#!/orders","#F59E0B")}`)},
+  "order-delivered":{title:"Order Delivered",trigger:"Sent when delivery is marked complete",emoji:"🥳",html:()=>shell("Order #104582 has been delivered","#059669","#4338CA","ORDER UPDATE","&#129395;","Delivered!","We hope you love it.",`<p class="greeting">Hi Aarav Mehta,</p><p>Your order has been delivered. We hope it's everything you expected!</p>${rcpt([{label:"Order ID",value:"#104582"},{label:"Amount Paid",value:"&#8377;2,499.00"},{label:"Status",value:"DELIVERED",pill:"background:#DCFCE7;color:#166534;"}])}<p style="text-align:center;margin-top:20px;">How was it?</p><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>${ebtn("Write a Review",BASE+"/#!/orders","#F59E0B")}`)},
+  "order-cancelled":{title:"Order Cancelled",trigger:"Sent when an order is cancelled",emoji:"❌",html:()=>shell("Your order #104582 has been cancelled","#DC2626","#F59E0B","ORDER UPDATE","&#10060;","Order Cancelled","We're sorry to see this happen.",`<p class="greeting">Hi Aarav Mehta,</p><p>Your order <strong>#104582</strong> has been cancelled.</p>${rcpt([{label:"Order ID",value:"#104582"},{label:"Amount",value:"&#8377;2,499.00"},{label:"Status",value:"CANCELLED",pill:"background:#FEE2E2;color:#991B1B;"}])}<div class="notice" style="background:#FFF7ED;color:#92400E;border-color:#F59E0B;">If payment was made, a refund will be processed within <strong>5–7 business days</strong>.</div>${ebtn("Shop Again",BASE+"/#!/products","#4338CA")}`)},
+  "return-initiated":{title:"Return Initiated",trigger:"Sent when customer submits a return request",emoji:"📦",html:()=>shell("Your return for #104582 received","#F59E0B","#EF4444","RETURN REQUEST","&#128230;","Return Initiated","We've received your request.",`<p class="greeting">Hi Aarav Mehta,</p><p>Your return request for order <strong>#104582</strong> has been submitted and is under review.</p>${rcpt([{label:"Return ID",value:"#RET-7821"},{label:"Order ID",value:"#104582"},{label:"Refund Amt",value:"&#8377;2,499.00"},{label:"Status",value:"UNDER REVIEW",pill:"background:#FEF9C3;color:#854D0E;"}])}<div class="notice" style="background:#FFF7ED;color:#92400E;border-color:#F59E0B;">Our team typically reviews returns within <strong>24–48 hours</strong>.</div>${ebtn("View Return Status",BASE+"/#!/orders","#F59E0B")}`)},
+  "return-approved":{title:"Return Approved",trigger:"Sent when admin approves the return request",emoji:"✅",html:()=>shell("Your return #RET-7821 approved","#059669","#0EA5E9","RETURN UPDATE","&#9989;","Return Approved!","Your refund is on its way.",`<p class="greeting">Hi Aarav Mehta,</p><p>Your return request has been <strong>approved</strong>. Please ship the item back as instructed.</p>${rcpt([{label:"Return ID",value:"#RET-7821"},{label:"Order ID",value:"#104582"},{label:"Refund Amt",value:"&#8377;2,499.00"},{label:"Status",value:"APPROVED",pill:"background:#DCFCE7;color:#166534;"}])}<div class="notice" style="background:#F0FDF4;color:#166534;border-color:#22C55E;">Refund will be credited within <strong>5–7 business days</strong> after inspection.</div>${ebtn("View Return Status",BASE+"/#!/orders","#059669")}`)},
+  "return-rejected":{title:"Return Rejected",trigger:"Sent when admin rejects the return request",emoji:"🚫",html:()=>shell("Update on return request #RET-7821","#DC2626","#9CA3AF","RETURN UPDATE","&#128683;","Return Not Approved","We're sorry for the inconvenience.",`<p class="greeting">Hi Aarav Mehta,</p><p>After reviewing your return request for order <strong>#104582</strong>, we were unable to approve it.</p>${rcpt([{label:"Return ID",value:"#RET-7821"},{label:"Order ID",value:"#104582"},{label:"Status",value:"REJECTED",pill:"background:#FEE2E2;color:#991B1B;"}])}<div class="notice" style="background:#FFF1F2;color:#9F1239;border-color:#F43F5E;"><strong>Reason:</strong> Item does not meet return policy criteria.</div>${ebtn("Contact Support",BASE+"/#!/orders","#4338CA")}`)},
+  "return-refunded":{title:"Return Refunded",trigger:"Sent when refund is processed after return",emoji:"💰",html:()=>shell("Refund for #RET-7821 processed","#059669","#4338CA","RETURN UPDATE","&#128176;","Refund Processed!","Money is on its way.",`<p class="greeting">Hi Aarav Mehta,</p><p>Your refund has been successfully processed and will reflect within <strong>5–7 business days</strong>.</p>${rcpt([{label:"Return ID",value:"#RET-7821"},{label:"Order ID",value:"#104582"},{label:"Refund Amount",value:"&#8377;2,499.00"},{label:"Status",value:"REFUNDED",pill:"background:#DCFCE7;color:#166534;"}])}<div class="notice" style="background:#F0FDF4;color:#166534;border-color:#22C55E;">Refund initiated to your original payment method.</div>${ebtn("Shop Again",BASE+"/#!/products","#059669")}`)},
+  "payment-success":{title:"Payment Successful",trigger:"Sent on successful payment capture",emoji:"💳",html:()=>shell("Payment confirmed for order #104582","#059669","#0EA5E9","PAYMENT","&#9989;","Payment Successful!","Your transaction is complete.",`<p class="greeting">Hi Aarav Mehta,</p><p>Your payment has been processed successfully. Thank you for your purchase!</p>${rcpt([{label:"Order ID",value:"#104582"},{label:"Amount Paid",value:"&#8377;2,499.00"},{label:"Transaction Ref",value:"TXN-8A2F9C1D"},{label:"Status",value:"SUCCESS",pill:"background:#DCFCE7;color:#166534;"}])}${ebtn("View Order",BASE+"/#!/orders","#059669")}`)},
+  "payment-failed":{title:"Payment Failed",trigger:"Sent when payment gateway reports failure",emoji:"⚠️",html:()=>shell("Payment could not be processed — order #104582","#DC2626","#F59E0B","PAYMENT ALERT","&#9888;&#65039;","Payment Failed","Don't worry — your cart is safe.",`<p class="greeting">Hi Aarav Mehta,</p><p>Unfortunately, we couldn't process your payment for order <strong>#104582</strong>.</p>${rcpt([{label:"Order ID",value:"#104582"},{label:"Amount",value:"&#8377;2,499.00"},{label:"Status",value:"FAILED",pill:"background:#FEE2E2;color:#991B1B;"}])}<div class="notice" style="background:#FFF1F2;color:#9F1239;border-color:#F43F5E;">Please retry with the same card or try a different payment method.</div>${ebtn("Retry Payment",BASE+"/#!/orders","#DC2626")}`)},
+  "admin-report":{title:"Admin Report",trigger:"Sent to admin when a scheduled report is ready",emoji:"📊",html:()=>shell("Your EntityKart admin report is ready","#4338CA","#7C3AED","ADMIN DASHBOARD","&#128202;","Report Ready","Your requested data export is attached.",`<p class="greeting">Hi Admin,</p><p>Your requested <strong>SALES</strong> report has been generated and is attached to this email.</p>${rcpt([{label:"Report Type",value:"Sales Summary"},{label:"Period",value:"July 2026"},{label:"Format",value:"Excel + Word"},{label:"Generated",value:"12 Aug 2026, 10:30 AM"}])}<div class="notice" style="background:#EEF2FF;color:#3730A3;border-color:#6366F1;">Attachments: <strong>sales_report.xlsx</strong> and <strong>sales_report.doc</strong></div>${ebtn("Go to Dashboard",BASE+"/#!/admin/dashboard","#4338CA")}`)},
+};
+
+const NAV=[
+  {cat:"Account"},{key:"welcome",label:"Welcome",emoji:"🎉"},{key:"password-reset",label:"Password Reset",emoji:"🔒"},
+  {cat:"Orders"},{key:"order-placed",label:"Order Placed",emoji:"🧾"},{key:"order-confirmed",label:"Order Confirmed",emoji:"✅"},{key:"order-shipped",label:"Order Shipped",emoji:"🚚"},{key:"order-delivered",label:"Order Delivered",emoji:"🥳"},{key:"order-cancelled",label:"Order Cancelled",emoji:"❌"},
+  {cat:"Returns"},{key:"return-initiated",label:"Return Initiated",emoji:"📦"},{key:"return-approved",label:"Return Approved",emoji:"✅"},{key:"return-rejected",label:"Return Rejected",emoji:"🚫"},{key:"return-refunded",label:"Return Refunded",emoji:"💰"},
+  {cat:"Payments"},{key:"payment-success",label:"Payment Success",emoji:"💳"},{key:"payment-failed",label:"Payment Failed",emoji:"⚠️"},
+  {cat:"Admin"},{key:"admin-report",label:"Admin Report",emoji:"📊"},
+];
+
+const navHost=document.getElementById("navHost"),preview=document.getElementById("preview"),titleEl=document.getElementById("title"),triggerEl=document.getElementById("trigger"),countBadge=document.getElementById("countBadge");
+const keys=Object.keys(TEMPLATES);
+countBadge.textContent=keys.length+" templates";
+let active=null;
+NAV.forEach(item=>{
+  if(item.cat){const l=document.createElement("div");l.className="cat-label";l.textContent=item.cat;navHost.appendChild(l);return;}
+  const b=document.createElement("button");b.className="nav-item";b.dataset.key=item.key;b.innerHTML=`<span class="emoji">${item.emoji}</span>${item.label}`;
+  b.addEventListener("click",()=>load(item.key));navHost.appendChild(b);
+});
+function load(key){
+  const t=TEMPLATES[key];if(!t)return;
+  if(active){const p=navHost.querySelector(`[data-key="${active}"]`);if(p)p.classList.remove("active");}
+  const c=navHost.querySelector(`[data-key="${key}"]`);if(c)c.classList.add("active");
+  active=key;titleEl.textContent=t.title;triggerEl.textContent=t.trigger;
+  preview.srcdoc=t.html();
+}
+load(keys[0]);
+</script>
+</body>
+</html>

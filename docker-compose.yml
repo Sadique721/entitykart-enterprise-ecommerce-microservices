@@ -69,7 +69,9 @@ services:
   # ── Common Services (Gateway, Discovery, Notification) ──────────────────────
 
   common-services:
-    build: ./common-services
+    build:
+      context: .                                  # root → shared-lib + common-services accessible
+      dockerfile: common-services/Dockerfile
     container_name: common-services_entitykart
     mem_limit: 1024m
     cpus: 0.5

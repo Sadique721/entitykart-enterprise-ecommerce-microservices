@@ -23,4 +23,11 @@ HOW_TO_START.txt
 build_all.bat
 start_local.ps1
 desktop-app/
-shared-lib/
+# shared-lib: exclude heavy/generated dirs but keep source + build scripts
+# (common-services/Dockerfile builds shared-lib inside Docker)
+shared-lib/**
+!shared-lib/gradlew
+!shared-lib/gradle/
+!shared-lib/build.gradle.kts
+!shared-lib/settings.gradle.kts
+!shared-lib/src/
