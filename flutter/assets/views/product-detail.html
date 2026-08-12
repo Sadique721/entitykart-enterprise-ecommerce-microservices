@@ -1,4 +1,4 @@
-﻿<div class="page-container" ng-init="initDetails()">
+<div class="page-container" ng-init="initDetails()">
     <div ng-if="selectedProduct">
 
     <!-- Breadcrumb -->
@@ -67,9 +67,9 @@
             <!-- Price Box -->
             <div class="detail-price-box">
                 <div class="price-row">
-                    <span class="price-now" style="font-size: 2rem;">â‚¹{{ selectedProduct.price | number:2 }}</span>
+                    <span class="price-now" style="font-size: 2rem;">₹{{ selectedProduct.price | number:2 }}</span>
                     <span class="price-mrp" ng-if="selectedProduct.mrp > selectedProduct.price">
-                        â‚¹{{ selectedProduct.mrp | number:2 }}
+                        ₹{{ selectedProduct.mrp | number:2 }}
                     </span>
                     <span class="price-discount badge-discount" ng-if="selectedProduct.discountPercent > 0">
                         {{ selectedProduct.discountPercent }}% OFF
@@ -77,7 +77,7 @@
                 </div>
                 <div class="savings-text" ng-if="selectedProduct.mrp > selectedProduct.price">
                     <i class="fa fa-tag text-accent"></i>
-                    You save â‚¹{{ (selectedProduct.mrp - selectedProduct.price) | number:2 }}!
+                    You save ₹{{ (selectedProduct.mrp - selectedProduct.price) | number:2 }}!
                 </div>
             </div>
 
@@ -130,7 +130,7 @@
                 </button>
             </div>
 
-            <!-- Out of Stock â€” Notify Me -->
+            <!-- Out of Stock - Notify Me -->
             <div ng-if="selectedProduct.stockQuantity <= 0" style="margin-top: 1.5rem;">
                 <div class="alert alert-error" style="margin-bottom: 1rem;">
                     <i class="fa fa-circle-exclamation"></i>
@@ -158,7 +158,7 @@
                     <i class="fa fa-truck text-accent"></i>
                     <div>
                         <strong>Free Delivery</strong>
-                        <span>On orders above â‚¹499</span>
+                        <span>On orders above ₹499</span>
                     </div>
                 </div>
                 <div class="delivery-item">

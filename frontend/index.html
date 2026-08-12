@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <title>EntityKart â€” Premium E-Commerce Platform | Shop Electronics, Fashion & More</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
+    <title>EntityKart - Premium E-Commerce Platform | Shop Electronics, Fashion & More</title>
     <!-- SEO Meta Tags -->
     <meta name="description" content="EntityKart is a modern e-commerce platform offering premium electronics, fashion, home decor and more. Fast delivery, easy returns, and secure payments.">
     <meta name="keywords" content="e-commerce, online shopping, electronics, fashion, home decor, EntityKart">
     <meta name="robots" content="index, follow">
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="EntityKart â€” Premium E-Commerce Platform">
+    <meta property="og:title" content="EntityKart - Premium E-Commerce Platform">
     <meta property="og:description" content="Shop premium products across electronics, fashion, home and more. Free delivery, easy returns, secure payments.">
     <meta property="og:site_name" content="EntityKart">
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="EntityKart â€” Premium E-Commerce Platform">
+    <meta name="twitter:title" content="EntityKart - Premium E-Commerce Platform">
     <meta name="twitter:description" content="Shop premium products with free delivery and easy returns.">
     
     <!-- Premium Google Fonts -->
@@ -202,7 +203,7 @@
             <div class="footer-links">
                 <h4>Contact</h4>
                 <ul>
-                    <li><i class="fa fa-envelope"></i> support@entitykart.com</li>
+                    <li><i class="fa fa-envelope"></i> entitykart@gmail.com</li>
                     <li><i class="fa fa-phone"></i> +91 92747 02850</li>
                     <li><i class="fa fa-location-dot"></i> Tech Park, Building 4, Bengaluru</li>
                 </ul>
@@ -240,6 +241,23 @@
     <script src="js/controllers/returnController.js?v=1.0.2"></script>
     <script src="js/controllers/adminController.js?v=1.0.2"></script>
     <script src="js/controllers/profileController.js?v=1.0.2"></script>
+
+    <!-- Cookie Consent Popup -->
+    <div class="cookie-consent-banner" ng-if="showCookieConsent">
+        <div class="cookie-content">
+            <div class="cookie-icon">
+                <i class="fa-solid fa-cookie-bite"></i>
+            </div>
+            <div class="cookie-text">
+                <h4>Cookie Preferences</h4>
+                <p>We use cookies to improve your shopping experience, remember preferences, and analyze our traffic. Manage your preferences below.</p>
+            </div>
+        </div>
+        <div class="cookie-actions">
+            <button class="btn btn-sm btn-secondary-glass" ng-click="rejectCookies()">Decline Non-Essential</button>
+            <button class="btn btn-sm btn-primary-gradient" ng-click="acceptCookies()">Accept All</button>
+        </div>
+    </div>
 
 </body>
 </html>

@@ -247,7 +247,7 @@ app.controller('orderController', [
 </div></div>\
 <div class="footer">\
   <p>Thank you for shopping with EntityKart!</p>\
-  <p>For support: support@entitykart.com | +1 (555) 019-2834</p>\
+  <p>For support: entitykart@gmail.com | +1 (555) 019-2834</p>\
   <p>This is a computer-generated invoice and does not require a signature.</p>\
 </div>\
 </body></html>';

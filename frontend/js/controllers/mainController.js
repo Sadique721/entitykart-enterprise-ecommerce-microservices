@@ -130,6 +130,21 @@ app.controller('mainController', ['$scope', '$location', 'authService', 'cartSer
         $scope.addToast('Logged Out', 'You have been successfully logged out.', 'success');
     };
 
+    // Cookie Consent Setup
+    $scope.showCookieConsent = !localStorage.getItem('ekCookieConsent');
+
+    $scope.acceptCookies = function() {
+        localStorage.setItem('ekCookieConsent', 'accepted');
+        $scope.showCookieConsent = false;
+        $scope.addToast('Preferences Saved', 'All cookies have been accepted.', 'success');
+    };
+
+    $scope.rejectCookies = function() {
+        localStorage.setItem('ekCookieConsent', 'declined');
+        $scope.showCookieConsent = false;
+        $scope.addToast('Preferences Saved', 'Non-essential cookies declined.', 'info');
+    };
+
     // UI helpers
     $scope.toggleUserMenu = function() {
         $scope.userMenuOpen = !$scope.userMenuOpen;

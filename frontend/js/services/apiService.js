@@ -1,8 +1,10 @@
 /**
  * API Helper Service and Global HTTP Interceptor
  */
-app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootScope, $q, API_BASE) {
+app.factory('apiInterceptor', ['$rootScope', '$q', '$injector', 'API_BASE', function($rootScope, $q, $injector, API_BASE) {
     var activeRequests = 0;
+    var isRefreshing = false;
+    var refreshQueue = [];
 
     function showLoading() {
         if (activeRequests === 0) {
@@ -17,6 +19,19 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
             activeRequests = 0;
             $rootScope.$broadcast('loading:hide');
         }
+    }
+
+    function processQueue(error, token) {
+        refreshQueue.forEach(function(promise) {
+            if (error) {
+                promise.reject(error);
+            } else {
+                promise.config.headers['Authorization'] = 'Bearer ' + token;
+                var $http = $injector.get('$http');
+                $http(promise.config).then(promise.resolve, promise.reject);
+            }
+        });
+        refreshQueue = [];
     }
 
     // Human-readable messages for common HTTP status codes
@@ -56,18 +71,55 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
             hideLoading();
 
             var status = rejection.status;
+            var config = rejection.config;
+
+            // Prevent intercept loops if the failed call was authentication itself
+            var isAuthRequest = config && config.url && (
+                config.url.indexOf('/api/users/login') > -1 || 
+                config.url.indexOf('/api/users/refresh-token') > -1 ||
+                config.url.indexOf('/api/users/register') > -1
+            );
 
             // ── 401: Session expired ─────────────────────────────────────────
-            if (status === 401) {
-                localStorage.removeItem('ekToken');
-                localStorage.removeItem('ekUser');
-                $rootScope.$broadcast('auth:logout');
-                $rootScope.$broadcast('showToast', {
-                    title: 'Session Expired',
-                    message: 'Your session has expired. Please sign in again.',
-                    type: 'error'
-                });
-                return $q.reject(rejection);
+            if (status === 401 && !isAuthRequest) {
+                var authService = $injector.get('authService');
+                
+                if (localStorage.getItem('ekRefreshToken')) {
+                    if (!isRefreshing) {
+                        isRefreshing = true;
+                        authService.refreshToken()
+                            .then(function(newToken) {
+                                isRefreshing = false;
+                                processQueue(null, newToken);
+                            })
+                            .catch(function(err) {
+                                isRefreshing = false;
+                                processQueue(err, null);
+                                authService.logout();
+                                $rootScope.$broadcast('showToast', {
+                                    title: 'Session Expired',
+                                    message: 'Your session has expired. Please sign in again.',
+                                    type: 'error'
+                                });
+                            });
+                    }
+
+                    var deferred = $q.defer();
+                    refreshQueue.push({
+                        config: config,
+                        resolve: deferred.resolve,
+                        reject: deferred.reject
+                    });
+                    return deferred.promise;
+                } else {
+                    authService.logout();
+                    $rootScope.$broadcast('showToast', {
+                        title: 'Session Expired',
+                        message: 'Your session has expired. Please sign in again.',
+                        type: 'error'
+                    });
+                    return $q.reject(rejection);
+                }
             }
 
             // ── 403: Forbidden ───────────────────────────────────────────────
@@ -82,7 +134,6 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
 
             // ── Network offline / CORS blocked ───────────────────────────────
             if (status === -1) {
-                // Silently reject — avoid spamming toasts on slow/offline networks
                 return $q.reject(rejection);
             }
 
@@ -100,7 +151,6 @@ app.factory('apiInterceptor', ['$rootScope', '$q', 'API_BASE', function($rootSco
             var errorMsg = getStatusMessage(status);
             if (rejection.data) {
                 if (typeof rejection.data === 'string' && rejection.data.trim().charAt(0) !== '<') {
-                    // Only use raw string if it's not an HTML error page (like nginx 502 HTML)
                     errorMsg = rejection.data;
                 } else if (rejection.data && rejection.data.message) {
                     errorMsg = rejection.data.message;

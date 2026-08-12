@@ -150,6 +150,17 @@ app.run(['$rootScope', '$location', 'authService', function ($rootScope, $locati
     $rootScope.$on('$routeChangeStart', function (event, next, current) {
         var path = $location.path();
 
+        // --- Guard: Redirect already logged-in users visiting auth pages ---
+        var authPages = ['/login', '/register', '/forgot-password', '/reset-password'];
+        var isAuthPage = authPages.some(function (page) {
+            return path === page;
+        });
+        if (isAuthPage && authService.isLoggedIn()) {
+            event.preventDefault();
+            $location.path('/');
+            return;
+        }
+
         // --- Guard: Never block access to public pages ---
         var isPublic = publicPages.some(function (page) {
             return path === page || path.indexOf(page) === 0;
