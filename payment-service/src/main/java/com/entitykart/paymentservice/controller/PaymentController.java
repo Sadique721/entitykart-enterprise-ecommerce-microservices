@@ -1,11 +1,14 @@
 package com.entitykart.paymentservice.controller;
 
+import com.entitykart.paymentservice.client.OrderServiceClient;
 import com.entitykart.paymentservice.dto.EmiPaymentRequest;
+import com.entitykart.paymentservice.dto.OrderDTO;
 import com.entitykart.paymentservice.dto.PaymentDTO;
 import com.entitykart.paymentservice.dto.PaymentRequest;
 import com.entitykart.paymentservice.entity.PaymentEntity;
 import com.entitykart.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,9 +17,11 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final OrderServiceClient orderServiceClient;
 
     // ─── Card (Authorize.Net sandbox or mock) ──────────────────────────────────
     @PostMapping("/process-card")
@@ -74,19 +79,33 @@ public class PaymentController {
         return paymentService.assignCodTransaction(orderId);
     }
 
-    // ─── Read endpoints ───────────────────────────────────────────────────────
     @GetMapping("/order/{orderId}")
-    public org.springframework.http.ResponseEntity<PaymentDTO> getPaymentByOrder(@PathVariable Long orderId) {
+    public org.springframework.http.ResponseEntity<PaymentDTO> getPaymentByOrder(
+            @PathVariable Long orderId,
+            @RequestHeader(value = "X-Customer-Id", required = false) Long requestingCustomerId,
+            @RequestHeader(value = "X-User-Role", required = false) String requestingRole) {
+
+        if (!"ADMIN".equalsIgnoreCase(requestingRole)) {
+            try {
+                OrderDTO order = orderServiceClient.getOrder(orderId);
+                if (order == null || requestingCustomerId == null
+                        || !requestingCustomerId.equals(order.getCustomerId())) {
+                    log.warn("Blocked payment lookup for orderId={} — requester customerId={} does not own it",
+                            orderId, requestingCustomerId);
+                    return org.springframework.http.ResponseEntity.status(403).build();
+                }
+            } catch (Exception e) {
+                log.error("Could not verify order ownership for orderId={}: {}", orderId, e.getMessage());
+                return org.springframework.http.ResponseEntity.status(502).build();
+            }
+        }
+
         try {
             PaymentEntity entity = paymentService.getPaymentByOrderId(orderId);
             return org.springframework.http.ResponseEntity.ok(toDTO(entity));
         } catch (Exception e) {
-            PaymentDTO dto = new PaymentDTO();
-            dto.setOrderId(orderId);
-            dto.setPaymentStatus("PENDING");
-            dto.setPaymentMode("UNKNOWN");
-            dto.setTransactionRef("N/A");
-            return org.springframework.http.ResponseEntity.ok(dto);
+            log.info("No payment record yet for orderId={}: {}", orderId, e.getMessage());
+            return org.springframework.http.ResponseEntity.notFound().build();
         }
     }
 

@@ -1,6 +1,8 @@
 package com.entitykart.paymentservice.service;
 
 import com.entitykart.paymentservice.client.OrderServiceClient;
+import com.entitykart.paymentservice.client.UserServiceClient;
+import com.entitykart.paymentservice.dto.OrderDTO;
 import com.entitykart.shared.dto.PaymentProcessedEvent;
 import com.entitykart.paymentservice.dto.PaymentRequest;
 import com.entitykart.paymentservice.entity.PaymentEntity;
@@ -37,6 +39,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final OrderServiceClient orderServiceClient;
+    private final UserServiceClient userServiceClient;
 
     @Value("${authorize.net.api-login-id}")
     private String apiLoginId;
@@ -306,12 +309,28 @@ public class PaymentService {
     private PaymentEntity saveAndPublish(PaymentEntity payment, String customerEmail, String customerName) {
         PaymentEntity saved = paymentRepository.save(payment);
 
+        String resolvedEmail = customerEmail;
+        String resolvedName = customerName;
+        try {
+            OrderDTO order = orderServiceClient.getOrder(saved.getOrderId());
+            if (order != null && order.getCustomerId() != null) {
+                UserServiceClient.UserInfo userInfo = userServiceClient.getUser(order.getCustomerId());
+                if (userInfo != null && userInfo.getEmail() != null && !userInfo.getEmail().isBlank()) {
+                    resolvedEmail = userInfo.getEmail();
+                    resolvedName = userInfo.getName() != null ? userInfo.getName() : resolvedName;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not authoritatively resolve customer email for orderId={}, falling back to caller-supplied value: {}",
+                    saved.getOrderId(), e.getMessage());
+        }
+
         PaymentProcessedEvent event = new PaymentProcessedEvent();
         event.setOrderId(saved.getOrderId());
         event.setStatus(saved.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS ? "SUCCESS" : "FAILED");
         event.setTransactionRef(saved.getTransactionRef());
-        event.setCustomerEmail(customerEmail);
-        event.setCustomerName(customerName);
+        event.setCustomerEmail(resolvedEmail);
+        event.setCustomerName(resolvedName);
         event.setAmount(saved.getAmount());
 
         if (saved.getPaymentStatus() == PaymentEntity.PaymentStatus.SUCCESS) {
