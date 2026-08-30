@@ -4,6 +4,12 @@
   <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&amp;weight=600&amp;size=24&amp;duration=3000&amp;pause=500&amp;color=22D3EE&amp;center=true&amp;vCenter=true&amp;width=700&amp;lines=Cloud-Native%20Microservices;Spring%20Boot%20%26%20Spring%20Cloud;Apache%20Kafka%20Event%20Streaming;Docker%20%26%20AWS%20Deployment" alt="Typing SVG">
 </p>
 
+<!-- ========== NEW: HIGH QUALITY PROJECT BANNER ========== -->
+<p align="center">
+  <img src="project_banner.svg" width="100%">
+</p>
+
+
 <!-- ========== NEW: AUTHOR & ARCHITECT SECTION ========== -->
 ## 👨‍💻 Author & Architect
 
