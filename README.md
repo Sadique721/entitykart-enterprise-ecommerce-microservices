@@ -1,11 +1,7 @@
 <!-- ========== NEW: ANIMATED WAVE HEADER ========== -->
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:22d3ee,100:8b5cf6&height=200&section=header&text=entitykart-enterprise-ecommerce-microservices&fontSize=50&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=EntityKart%20Enterprise%20Microservices%20Platform&descAlignY=60&descAlign=50" width="100%">
-</p>
-
 <!-- ========== NEW: TYPING ANIMATION INTRO ========== -->
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&duration=3000&pause=500&color=22D3EE&center=true&vCenter=true&width=700&lines=Cloud-Native Microservices;Spring Boot %26 Spring Cloud;Apache Kafka Event Streaming;Docker %26 AWS Deployment" alt="Typing SVG">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&amp;weight=600&amp;size=24&amp;duration=3000&amp;pause=500&amp;color=22D3EE&amp;center=true&amp;vCenter=true&amp;width=700&amp;lines=Cloud-Native%20Microservices;Spring%20Boot%20%26%20Spring%20Cloud;Apache%20Kafka%20Event%20Streaming;Docker%20%26%20AWS%20Deployment" alt="Typing SVG">
 </p>
 
 <!-- ========== NEW: AUTHOR & ARCHITECT SECTION ========== -->
