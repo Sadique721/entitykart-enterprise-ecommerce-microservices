@@ -32,6 +32,23 @@
 </tr>
 </table>
 
+<!-- ========== NEW: SYSTEM DIAGRAM SECTION ========== -->
+## 📊 System Architecture & Workflow
+
+```mermaid
+flowchart TD
+    A[Client UI] --> B[API Gateway]
+    B --> C[Auth Microservice]
+    B --> D[Catalog Microservice]
+    B --> E[Order Microservice]
+    B --> F[Payment Microservice]
+    E -->|Event Streaming| G[Apache Kafka]
+    G --> H[Notification Service]
+    C --> I[(MySQL / Redis)]
+    D --> J[(PostgreSQL)]
+    E --> K[(PostgreSQL)]
+```
+
 ---
 
 <p align="center">
