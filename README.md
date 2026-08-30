@@ -1,3 +1,39 @@
+<!-- ========== NEW: ANIMATED WAVE HEADER ========== -->
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:22d3ee,100:8b5cf6&height=200&section=header&text=entitykart-enterprise-ecommerce-microservices&fontSize=50&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=EntityKart%20Enterprise%20Microservices%20Platform&descAlignY=60&descAlign=50" width="100%">
+</p>
+
+<!-- ========== NEW: TYPING ANIMATION INTRO ========== -->
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&duration=3000&pause=500&color=22D3EE&center=true&vCenter=true&width=700&lines=Cloud-Native Microservices;Spring Boot %26 Spring Cloud;Apache Kafka Event Streaming;Docker %26 AWS Deployment" alt="Typing SVG">
+</p>
+
+<!-- ========== NEW: AUTHOR & ARCHITECT SECTION ========== -->
+## 👨‍💻 Author & Architect
+
+<table>
+<tr>
+<td align="center" width="160">
+  <a href="https://github.com/Sadique721">
+    <img src="https://avatars.githubusercontent.com/Sadique721" width="110" style="border-radius:50%"><br>
+    <b>Md Sadique Amin</b><br>
+    <sub>Backend Java Developer</sub>
+  </a>
+</td>
+<td>
+
+**Md Sadique Amin** — Backend Java Developer.
+
+- 🔗 GitHub: [@Sadique721](https://github.com/Sadique721)
+- 📧 Email: mdsadiqueamin721786@gmail.com
+- 🏗️ Built: Enterprise BSS-OSS Telecom Suite, Backend Java Developer, IR Interconnect & Roaming
+
+</td>
+</tr>
+</table>
+
+---
+
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=0:22d3ee,100:8b5cf6&height=200&section=header&text=EntityKart&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Cloud-Native%20Microservices%20E-commerce&descAlignY=60&descAlign=50" width="100%">
 </p>
@@ -667,3 +703,9 @@ Software Engineer | Java & Spring Boot Developer | AI Enthusiast
 </p>
 
 <p align="center">⭐ If this project helps you, don't forget to star the repository! ⭐</p>
+
+
+<!-- ========== NEW: FOOTER WAVE ANIMATION ========== -->
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:22d3ee,100:8b5cf6&height=120&section=footer&width=100%">
+</p>
